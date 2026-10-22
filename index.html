@@ -16,9 +16,7 @@
       --border: #353535;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -52,12 +50,13 @@
       margin: 0 auto;
     }
 
-    .panel {
+    .panel, .story {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 18px;
       margin-bottom: 22px;
+      overflow-wrap: anywhere;
     }
 
     h2 {
@@ -89,16 +88,25 @@
       color: #17130a;
       border: 0;
       border-radius: 7px;
-      padding: 11px 17px;
+      padding: 10px 14px;
       margin-top: 10px;
       font-weight: bold;
-      font-size: 15px;
+      font-size: 14px;
       cursor: pointer;
     }
 
     button:disabled {
       opacity: 0.6;
       cursor: wait;
+    }
+
+    .reply-button {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid #625332;
+      padding: 5px 10px;
+      font-size: 12px;
+      margin-top: 7px;
     }
 
     .hint {
@@ -113,22 +121,18 @@
       overflow-wrap: anywhere;
     }
 
-    .story {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 17px;
-      margin-bottom: 17px;
-      overflow-wrap: anywhere;
-    }
-
-    .story-content {
+    .story-content, .comment-content {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
 
-    .story-date {
+    .story-date, .comment-date {
       color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .story-date {
       font-size: 12px;
       margin-top: 12px;
     }
@@ -151,22 +155,23 @@
       margin: 9px 0;
       background: #171717;
       border-radius: 0 6px 6px 0;
+      min-width: 0;
     }
 
-    .comment-content {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .comment-date {
-      color: var(--muted);
-      font-size: 11px;
-      margin-top: 4px;
+    .comment-replies {
+      margin-left: 12px;
+      padding-left: 8px;
+      border-left: 1px solid #393939;
     }
 
     .comment-form textarea {
       min-height: 75px;
       margin-top: 12px;
+    }
+
+    .reply-form textarea {
+      min-height: 65px;
+      margin-top: 8px;
     }
 
     .empty, .loading {
@@ -206,10 +211,7 @@
 
         <p class="hint">Ispovijest može imati od 10 do 5000 znakova.</p>
 
-        <button id="storyButton" type="submit">
-          Objavi ispovijest
-        </button>
-
+        <button id="storyButton" type="submit">Objavi ispovijest</button>
         <div id="storyStatus" class="status" role="status"></div>
       </form>
     </section>
@@ -251,9 +253,7 @@
         throw new Error(errorText || "Greška servera: " + response.status);
       }
 
-      if (response.status === 204) {
-        return null;
-      }
+      if (response.status === 204) return null;
 
       const text = await response.text();
       return text ? JSON.parse(text) : null;
@@ -263,7 +263,6 @@
       if (!value) return "";
 
       const date = new Date(value);
-
       if (Number.isNaN(date.getTime())) return "";
 
       return date.toLocaleString("sr-Latn", {
@@ -278,13 +277,8 @@
     function makeElement(tag, className, content) {
       const element = document.createElement(tag);
 
-      if (className) {
-        element.className = className;
-      }
-
-      if (content !== undefined) {
-        element.textContent = content;
-      }
+      if (className) element.className = className;
+      if (content !== undefined) element.textContent = content;
 
       return element;
     }
@@ -296,9 +290,9 @@
 
       try {
         const comments = await apiRequest(
-          "/comments?select=id,content,created_at" +
+          "/comments?select=id,content,created_at,parent_id" +
           "&confession_id=eq." + encodeURIComponent(confessionId) +
-          "&order=created_at.asc&limit=100"
+          "&order=created_at.asc&limit=1000"
         );
 
         countLabel.textContent = "Komentari (" + comments.length + ")";
@@ -311,7 +305,28 @@
           return;
         }
 
+        // Organizujemo komentare i odgovore prema parent_id.
+        const children = new Map();
+        const knownIds = new Set(comments.map(item => String(item.id)));
+
         comments.forEach(item => {
+          const parentId = item.parent_id == null
+            ? null
+            : String(item.parent_id);
+
+          // Ne prikazujemo odgovor kao glavni komentar ako
+          // njegov roditelj nije pronađen u učitanim podacima.
+          const validParent = parentId !== null &&
+            knownIds.has(parentId) &&
+            parentId !== String(item.id);
+
+          const key = validParent ? parentId : "root";
+
+          if (!children.has(key)) children.set(key, []);
+          children.get(key).push(item);
+        });
+
+        function renderComment(item, depth, ancestors) {
           const comment = makeElement("div", "comment");
           const content = makeElement(
             "div",
@@ -331,40 +346,147 @@
             );
           }
 
-          container.append(comment);
+          const replyButton = makeElement(
+            "button",
+            "reply-button",
+            "Odgovori"
+          );
+          replyButton.type = "button";
+
+          const replyForm = makeElement("form", "reply-form");
+          replyForm.hidden = true;
+
+          const replyInput = document.createElement("textarea");
+          replyInput.required = true;
+          replyInput.minLength = 1;
+          replyInput.maxLength = 3000;
+          replyInput.placeholder = "Napiši odgovor...";
+
+          const sendButton = makeElement("button", "", "Objavi odgovor");
+          sendButton.type = "submit";
+
+          const cancelButton = makeElement(
+            "button",
+            "reply-button",
+            "Odustani"
+          );
+          cancelButton.type = "button";
+
+          const status = makeElement("div", "status");
+
+          replyForm.append(
+            replyInput,
+            sendButton,
+            cancelButton,
+            status
+          );
+
+          replyButton.addEventListener("click", () => {
+            replyForm.hidden = !replyForm.hidden;
+
+            if (!replyForm.hidden) replyInput.focus();
+          });
+
+          cancelButton.addEventListener("click", () => {
+            replyForm.hidden = true;
+            replyInput.value = "";
+            status.textContent = "";
+          });
+
+          replyForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const replyContent = replyInput.value.trim();
+
+            if (!replyContent) {
+              status.textContent = "Napiši odgovor.";
+              return;
+            }
+
+            sendButton.disabled = true;
+            replyButton.disabled = true;
+            status.textContent = "Objavljujem odgovor...";
+
+            try {
+              await apiRequest("/comments", {
+                method: "POST",
+                headers: {
+                  "Prefer": "return=minimal"
+                },
+                body: JSON.stringify({
+                  confession_id: confessionId,
+                  parent_id: item.id,
+                  content: replyContent
+                })
+              });
+
+              await loadComments(
+                confessionId,
+                container,
+                countLabel
+              );
+            } catch (error) {
+              console.error("Greška pri objavljivanju odgovora:", error);
+              status.textContent =
+                "Odgovor nije objavljen. Detalji: " + error.message;
+              sendButton.disabled = false;
+              replyButton.disabled = false;
+            }
+          });
+
+          comment.append(replyButton, replyForm);
+
+          const replies = makeElement("div", "comment-replies");
+          const nextAncestors = new Set(ancestors);
+          nextAncestors.add(String(item.id));
+
+          const directReplies = children.get(String(item.id)) || [];
+
+          directReplies.forEach(reply => {
+            // Zaštita od beskonačne petlje u slučaju neispravne veze.
+            if (!nextAncestors.has(String(reply.id))) {
+              replies.append(
+                renderComment(reply, depth + 1, nextAncestors)
+              );
+            }
+          });
+
+          if (replies.childElementCount > 0) {
+            comment.append(replies);
+          }
+
+          return comment;
+        }
+
+        (children.get("root") || []).forEach(item => {
+          container.append(renderComment(item, 0, new Set()));
         });
+
       } catch (error) {
+        console.error("Greška pri učitavanju komentara:", error);
+
         container.replaceChildren(
           makeElement(
             "p",
             "hint",
             "Komentari se trenutno ne mogu učitati. " +
-            "Provjeri podešavanja tabele comments u Supabaseu."
+            "Provjeri da li je kolona parent_id dostupna u Supabaseu. " +
+            "Detalji: " + error.message
           )
         );
-
-        console.error("Greška pri učitavanju komentara:", error);
       }
     }
 
     function createStory(item) {
       const story = makeElement("article", "story");
 
-      const content = makeElement(
-        "div",
-        "story-content",
-        item.content
+      story.append(
+        makeElement("div", "story-content", item.content)
       );
-
-      story.append(content);
 
       if (item.created_at) {
         story.append(
-          makeElement(
-            "div",
-            "story-date",
-            formatDate(item.created_at)
-          )
+          makeElement("div", "story-date", formatDate(item.created_at))
         );
       }
 
@@ -376,7 +498,6 @@
       );
 
       const commentsList = makeElement("div", "comment-list");
-
       const commentForm = makeElement("form", "comment-form");
       const commentInput = document.createElement("textarea");
 
@@ -385,27 +506,19 @@
       commentInput.maxLength = 3000;
       commentInput.placeholder = "Napiši komentar...";
 
-      const commentButton = makeElement(
-        "button",
-        "",
-        "Objavi komentar"
-      );
+      const commentButton = makeElement("button", "", "Objavi komentar");
       commentButton.type = "submit";
 
       const commentStatus = makeElement("div", "status");
 
-      commentForm.append(
-        commentInput,
-        commentButton,
-        commentStatus
-      );
+      commentForm.append(commentInput, commentButton, commentStatus);
 
       commentForm.addEventListener("submit", async event => {
         event.preventDefault();
 
-        const commentContent = commentInput.value.trim();
+        const content = commentInput.value.trim();
 
-        if (commentContent.length < 1) {
+        if (!content) {
           commentStatus.textContent = "Napiši komentar.";
           return;
         }
@@ -421,34 +534,24 @@
             },
             body: JSON.stringify({
               confession_id: item.id,
-              content: commentContent
+              content: content
             })
           });
 
           commentInput.value = "";
           commentStatus.textContent = "Komentar je objavljen.";
 
-          await loadComments(
-            item.id,
-            commentsList,
-            commentTitle
-          );
+          await loadComments(item.id, commentsList, commentTitle);
         } catch (error) {
           console.error("Greška pri objavljivanju komentara:", error);
           commentStatus.textContent =
-            "Komentar nije objavljen. Provjeri vezu i podešavanja. " +
-            "Detalji: " + error.message;
+            "Komentar nije objavljen. Detalji: " + error.message;
         } finally {
           commentButton.disabled = false;
         }
       });
 
-      commentsSection.append(
-        commentTitle,
-        commentsList,
-        commentForm
-      );
-
+      commentsSection.append(commentTitle, commentsList, commentForm);
       story.append(commentsSection);
 
       loadComments(item.id, commentsList, commentTitle);
@@ -493,7 +596,8 @@
             "p",
             "empty",
             "Ispovijesti se trenutno ne mogu učitati. " +
-            "Provjeri internet i Supabase podešavanja."
+            "Provjeri internet i Supabase podešavanja. " +
+            "Detalji: " + error.message
           )
         );
       }
@@ -524,9 +628,7 @@
             headers: {
               "Prefer": "return=minimal"
             },
-            body: JSON.stringify({
-              content: content
-            })
+            body: JSON.stringify({ content: content })
           });
 
           input.value = "";
@@ -535,10 +637,8 @@
           await loadStories();
         } catch (error) {
           console.error("Greška pri objavljivanju ispovijesti:", error);
-
           status.textContent =
-            "Ispovijest nije objavljena. Provjeri vezu i podešavanja. " +
-            "Detalji: " + error.message;
+            "Ispovijest nije objavljena. Detalji: " + error.message;
         } finally {
           button.disabled = false;
         }
