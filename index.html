@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ispovesti.ba — Reci šta ti je na duši</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #111;
+      color: #f5f0e6;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    header {
+      padding: 30px 16px;
+      border-bottom: 1px solid #b99550;
+    }
+    h1 { color: #d9b66f; font-size: 32px; }
+    .tagline { color: #ccc; }
+    main { max-width: 650px; margin: 30px auto; padding: 16px; }
+    .card {
+      background: #1d1d1d;
+      border: 1px solid #4b3a20;
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #d9b66f;
+      color: #111;
+      border: 0;
+      padding: 13px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 8px;
+      background: #292929;
+      color: white;
+      border: 1px solid #555;
+    }
+    footer { padding: 25px; color: #888; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Ispovesti.ba</h1>
+    <div class="tagline">Reci šta ti je na duši. :)</div>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Dobro došao u svijet anonimnih priča</h2>
+      <p>Bez javnog imena. Bez osuđivanja. Samo priče koje vrijedi čuti.</p>
+      <p>🕶️ Tvoja priča. Tvoja odluka koliko ćeš otkriti.</p>
+    </section>
+    <section class="card">
+      <h2>Podijeli svoju ispovijest</h2>
+      <p>Ovo je probna verzija. Priča se još ne šalje na server.</p>
+      <textarea id="story" placeholder="Reci šta ti je na duši..."></textarea>
+      <button onclick="previewStory()">Prikaži pregled</button>
+      <p id="result"></p>
+    </section>
+  </main>
+  <footer>Ispovesti.ba · Neke stvari zaslužuju drugu šansu.</footer>
+  <script>
+    function previewStory() {
+      const story = document.getElementById('story').value.trim();
+      document.getElementById('result').textContent =
+        story ? 'Pregled tvoje ispovijesti: ' + story :
+        'Prvo napiši svoju ispovijest.';
+    }
+  </script>
+</body>
+</html>
