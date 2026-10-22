@@ -1,195 +1,549 @@
 
 <!DOCTYPE html>
-<html lang="bs">
+<html lang="sr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Ispovesti.ba — anonimne priče koje vrijedi čuti.">
-  <title>Ispovesti.ba — Reci šta ti je na duši</title>
+  <title>Ispovesti.ba — Neke priče zaslužuju drugu šansu</title>
+  <meta name="description" content="Mjesto za anonimne ispovijesti, priče i komentare.">
   <style>
-    * { box-sizing: border-box; }
+    :root {
+      --bg: #111111;
+      --panel: #1c1c1c;
+      --gold: #d6b15e;
+      --text: #eeeeee;
+      --muted: #aaaaaa;
+      --border: #353535;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      background: #111;
-      color: #f5f0e6;
+      padding: 0 14px 40px;
+      background: var(--bg);
+      color: var(--text);
       font-family: Arial, sans-serif;
+      line-height: 1.6;
     }
+
     header {
-      padding: 28px 16px;
       text-align: center;
-      border-bottom: 1px solid #b99550;
+      padding: 32px 10px 22px;
     }
-    h1 { color: #d9b66f; font-size: 32px; }
-    .tagline { color: #ccc; }
-    main { max-width: 700px; margin: 28px auto; padding: 16px; }
-    .card {
-      background: #1d1d1d;
-      border: 1px solid #4b3a20;
-      border-radius: 12px;
-      padding: 22px;
-      margin-bottom: 20px;
+
+    header h1 {
+      margin: 0;
+      color: var(--gold);
+      font-size: clamp(30px, 7vw, 44px);
     }
-    textarea {
+
+    header p {
+      color: var(--muted);
+      margin: 8px auto 0;
+      max-width: 540px;
+    }
+
+    main {
       width: 100%;
-      min-height: 140px;
-      padding: 12px;
-      margin: 12px 0;
-      border-radius: 8px;
-      background: #292929;
-      color: white;
-      border: 1px solid #555;
-      font: inherit;
-      resize: vertical;
+      max-width: 760px;
+      margin: 0 auto;
     }
-    button {
-      background: #d9b66f;
-      color: #111;
-      border: 0;
-      padding: 13px 20px;
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      color: var(--gold);
+      font-size: 21px;
+      margin: 0 0 12px;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 130px;
+      resize: vertical;
+      background: #101010;
+      color: var(--text);
+      border: 1px solid #454545;
       border-radius: 8px;
+      padding: 12px;
+      font: inherit;
+    }
+
+    textarea:focus {
+      outline: 1px solid var(--gold);
+      border-color: var(--gold);
+    }
+
+    button {
+      background: var(--gold);
+      color: #17130a;
+      border: 0;
+      border-radius: 7px;
+      padding: 11px 17px;
+      margin-top: 10px;
       font-weight: bold;
+      font-size: 15px;
       cursor: pointer;
     }
-    button:disabled { opacity: .6; cursor: wait; }
-    .status { color: #d9b66f; overflow-wrap: anywhere; }
-    .story {
-      background: #242424;
-      border-radius: 8px;
-      padding: 16px;
-      margin: 14px 0;
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
     }
-    .date { color: #999; font-size: 12px; margin-top: 12px; }
-    footer { padding: 25px; color: #888; text-align: center; }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 7px 0 0;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .story {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 17px;
+      margin-bottom: 17px;
+      overflow-wrap: anywhere;
+    }
+
+    .story-content {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .story-date {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    .comments {
+      border-top: 1px solid var(--border);
+      margin-top: 17px;
+      padding-top: 13px;
+    }
+
+    .comment-title {
+      color: var(--gold);
+      font-size: 16px;
+      margin: 0 0 10px;
+    }
+
+    .comment {
+      border-left: 2px solid #555555;
+      padding: 7px 10px;
+      margin: 9px 0;
+      background: #171717;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .comment-content {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .comment-date {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .comment-form textarea {
+      min-height: 75px;
+      margin-top: 12px;
+    }
+
+    .empty, .loading {
+      color: var(--muted);
+      text-align: center;
+      padding: 18px 5px;
+    }
+
+    footer {
+      max-width: 760px;
+      margin: 28px auto 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
   </style>
 </head>
+
 <body>
   <header>
     <h1>Ispovesti.ba</h1>
-    <div class="tagline">Reci šta ti je na duši. :)</div>
+    <p>Neke priče nikad nisu zaboravljene. Neke nikad nisu ni ispričane.</p>
   </header>
 
   <main>
-    <section class="card">
-      <h2>Dobro došao u svijet anonimnih priča</h2>
-      <p>Bez javnog imena. Bez osuđivanja. Samo priče koje vrijedi čuti.</p>
-      <p>🕶️ Tvoja priča. Tvoja odluka koliko ćeš otkriti.</p>
-    </section>
-
-    <section class="card">
+    <section class="panel">
       <h2>Podijeli svoju ispovijest</h2>
-      <p>Ne upisuj svoje pravo ime ni druge podatke po kojima bi te neko mogao prepoznati.</p>
+
       <form id="storyForm">
-        <textarea id="story" maxlength="5000"
-          placeholder="Reci šta ti je na duši..." required></textarea>
-        <button id="submitButton" type="submit">Objavi ispovijest</button>
+        <textarea
+          id="storyInput"
+          minlength="10"
+          maxlength="5000"
+          required
+          placeholder="Napiši ono što želiš da podijeliš..."
+        ></textarea>
+
+        <p class="hint">Ispovijest može imati od 10 do 5000 znakova.</p>
+
+        <button id="storyButton" type="submit">
+          Objavi ispovijest
+        </button>
+
+        <div id="storyStatus" class="status" role="status"></div>
       </form>
-      <p id="status" class="status" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="card">
-      <h2>Posljednje ispovijesti</h2>
-      <p id="loading">Učitavam ispovijesti...</p>
-      <div id="stories"></div>
+    <section>
+      <h2>Najnovije ispovijesti</h2>
+      <div id="stories">
+        <p class="loading">Učitavam ispovijesti...</p>
+      </div>
     </section>
   </main>
 
-  <footer>Ispovesti.ba · Neke stvari zaslužuju drugu šansu.</footer>
+  <footer>
+    Ispovesti.ba — neke stvari jednostavno zaslužuju drugu šansu.
+  </footer>
 
   <script>
-    const SUPABASE_URL = 'https://roxajqagksffbsbzdrap.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_OZ1dhjzKkN82uRpqjzbfbA_trakwga6';
+    const SUPABASE_URL =
+      "https://roxajqagksffbsbzdrap.supabase.co";
 
-    const headers = {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`
-    };
+    const SUPABASE_KEY =
+      "sb_publishable_OZ1dhzKkN82uRpqjzbfbA_trakwga6";
 
-    const stories = document.getElementById('stories');
-    const loading = document.getElementById('loading');
-    const status = document.getElementById('status');
-    const form = document.getElementById('storyForm');
-    const button = document.getElementById('submitButton');
+    const API = SUPABASE_URL + "/rest/v1";
 
-    async function loadStories() {
-      loading.textContent = 'Učitavam ispovijesti...';
+    async function apiRequest(path, options = {}) {
+      const response = await fetch(API + path, {
+        ...options,
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json",
+          ...options.headers
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Greška servera: " + response.status);
+      }
+
+      if (response.status === 204) {
+        return null;
+      }
+
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) return "";
+
+      return date.toLocaleString("sr-Latn", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function makeElement(tag, className, content) {
+      const element = document.createElement(tag);
+
+      if (className) {
+        element.className = className;
+      }
+
+      if (content !== undefined) {
+        element.textContent = content;
+      }
+
+      return element;
+    }
+
+    async function loadComments(confessionId, container, countLabel) {
+      container.replaceChildren(
+        makeElement("p", "hint", "Učitavam komentare...")
+      );
+
       try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/confessions?select=id,content,created_at&order=created_at.desc&limit=50`,
-          { headers }
+        const comments = await apiRequest(
+          "/comments?select=id,content,created_at" +
+          "&confession_id=eq." + encodeURIComponent(confessionId) +
+          "&order=created_at.asc&limit=100"
         );
 
-        if (!response.ok) throw new Error('Učitavanje nije uspjelo.');
+        countLabel.textContent = "Komentari (" + comments.length + ")";
+        container.replaceChildren();
 
-        const data = await response.json();
-        stories.replaceChildren();
-
-        if (data.length === 0) {
-          loading.textContent = 'Još nema objavljenih ispovijesti.';
+        if (comments.length === 0) {
+          container.append(
+            makeElement("p", "hint", "Još nema komentara.")
+          );
           return;
         }
 
-        loading.textContent = '';
+        comments.forEach(item => {
+          const comment = makeElement("div", "comment");
+          const content = makeElement(
+            "div",
+            "comment-content",
+            item.content
+          );
 
-        data.forEach(item => {
-          const article = document.createElement('article');
-          article.className = 'story';
+          comment.append(content);
 
-          const content = document.createElement('div');
-          content.textContent = item.content;
+          if (item.created_at) {
+            comment.append(
+              makeElement(
+                "div",
+                "comment-date",
+                formatDate(item.created_at)
+              )
+            );
+          }
 
-          const date = document.createElement('div');
-          date.className = 'date';
-          date.textContent = new Date(item.created_at).toLocaleString('bs-BA');
-
-          article.append(content, date);
-          stories.appendChild(article);
+          container.append(comment);
         });
       } catch (error) {
-        loading.textContent = 'Ispovijesti trenutno nisu dostupne. Pokušaj ponovo kasnije.';
+        container.replaceChildren(
+          makeElement(
+            "p",
+            "hint",
+            "Komentari se trenutno ne mogu učitati. " +
+            "Provjeri podešavanja tabele comments u Supabaseu."
+          )
+        );
+
+        console.error("Greška pri učitavanju komentara:", error);
       }
     }
 
-    form.addEventListener('submit', async event => {
-      event.preventDefault();
-      const content = document.getElementById('story').value.trim();
+    function createStory(item) {
+      const story = makeElement("article", "story");
 
-      if (content.length < 10) {
-        status.textContent = 'Ispovijest mora imati najmanje 10 znakova.';
-        return;
+      const content = makeElement(
+        "div",
+        "story-content",
+        item.content
+      );
+
+      story.append(content);
+
+      if (item.created_at) {
+        story.append(
+          makeElement(
+            "div",
+            "story-date",
+            formatDate(item.created_at)
+          )
+        );
       }
 
-      button.disabled = true;
-      status.textContent = 'Šaljem ispovijest...';
+      const commentsSection = makeElement("section", "comments");
+      const commentTitle = makeElement(
+        "h3",
+        "comment-title",
+        "Komentari..."
+      );
 
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/confessions`,
-          {
-            method: 'POST',
-            headers: {
-              ...headers,
-              'Content-Type': 'application/json',
-              Prefer: 'return=minimal'
-            },
-            body: JSON.stringify({ content })
-          }
-        );
+      const commentsList = makeElement("div", "comment-list");
 
-        if (!response.ok) {
-          throw new Error('Slanje nije uspjelo. Provjeri pristup bazi.');
+      const commentForm = makeElement("form", "comment-form");
+      const commentInput = document.createElement("textarea");
+
+      commentInput.required = true;
+      commentInput.minLength = 1;
+      commentInput.maxLength = 3000;
+      commentInput.placeholder = "Napiši komentar...";
+
+      const commentButton = makeElement(
+        "button",
+        "",
+        "Objavi komentar"
+      );
+      commentButton.type = "submit";
+
+      const commentStatus = makeElement("div", "status");
+
+      commentForm.append(
+        commentInput,
+        commentButton,
+        commentStatus
+      );
+
+      commentForm.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const commentContent = commentInput.value.trim();
+
+        if (commentContent.length < 1) {
+          commentStatus.textContent = "Napiši komentar.";
+          return;
         }
 
-        form.reset();
-        status.textContent = 'Ispovijest je sačuvana.';
-        await loadStories();
+        commentButton.disabled = true;
+        commentStatus.textContent = "Objavljujem komentar...";
+
+        try {
+          await apiRequest("/comments", {
+            method: "POST",
+            headers: {
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify({
+              confession_id: item.id,
+              content: commentContent
+            })
+          });
+
+          commentInput.value = "";
+          commentStatus.textContent = "Komentar je objavljen.";
+
+          await loadComments(
+            item.id,
+            commentsList,
+            commentTitle
+          );
+        } catch (error) {
+          console.error("Greška pri objavljivanju komentara:", error);
+          commentStatus.textContent =
+            "Komentar nije objavljen. Provjeri vezu i podešavanja. " +
+            "Detalji: " + error.message;
+        } finally {
+          commentButton.disabled = false;
+        }
+      });
+
+      commentsSection.append(
+        commentTitle,
+        commentsList,
+        commentForm
+      );
+
+      story.append(commentsSection);
+
+      loadComments(item.id, commentsList, commentTitle);
+
+      return story;
+    }
+
+    async function loadStories() {
+      const storiesContainer = document.getElementById("stories");
+
+      storiesContainer.replaceChildren(
+        makeElement("p", "loading", "Učitavam ispovijesti...")
+      );
+
+      try {
+        const stories = await apiRequest(
+          "/confessions?select=id,content,created_at" +
+          "&order=created_at.desc&limit=50"
+        );
+
+        storiesContainer.replaceChildren();
+
+        if (!stories.length) {
+          storiesContainer.append(
+            makeElement(
+              "p",
+              "empty",
+              "Još nema ispovijesti. Budi prvi koji će je podijeliti."
+            )
+          );
+          return;
+        }
+
+        stories.forEach(item => {
+          storiesContainer.append(createStory(item));
+        });
       } catch (error) {
-        status.textContent = error.message;
-      } finally {
-        button.disabled = false;
+        console.error("Greška pri učitavanju ispovijesti:", error);
+
+        storiesContainer.replaceChildren(
+          makeElement(
+            "p",
+            "empty",
+            "Ispovijesti se trenutno ne mogu učitati. " +
+            "Provjeri internet i Supabase podešavanja."
+          )
+        );
       }
-    });
+    }
+
+    document.getElementById("storyForm").addEventListener(
+      "submit",
+      async event => {
+        event.preventDefault();
+
+        const input = document.getElementById("storyInput");
+        const button = document.getElementById("storyButton");
+        const status = document.getElementById("storyStatus");
+        const content = input.value.trim();
+
+        if (content.length < 10 || content.length > 5000) {
+          status.textContent =
+            "Ispovijest mora imati između 10 i 5000 znakova.";
+          return;
+        }
+
+        button.disabled = true;
+        status.textContent = "Objavljujem ispovijest...";
+
+        try {
+          await apiRequest("/confessions", {
+            method: "POST",
+            headers: {
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify({
+              content: content
+            })
+          });
+
+          input.value = "";
+          status.textContent = "Ispovijest je objavljena.";
+
+          await loadStories();
+        } catch (error) {
+          console.error("Greška pri objavljivanju ispovijesti:", error);
+
+          status.textContent =
+            "Ispovijest nije objavljena. Provjeri vezu i podešavanja. " +
+            "Detalji: " + error.message;
+        } finally {
+          button.disabled = false;
+        }
+      }
+    );
 
     loadStories();
   </script>
