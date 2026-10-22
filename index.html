@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ispovesti.ba — anonimne priče koje vrijedi čuti.">
   <title>Ispovesti.ba — Reci šta ti je na duši</title>
   <style>
     * { box-sizing: border-box; }
@@ -12,21 +13,33 @@
       background: #111;
       color: #f5f0e6;
       font-family: Arial, sans-serif;
-      text-align: center;
     }
     header {
-      padding: 30px 16px;
+      padding: 28px 16px;
+      text-align: center;
       border-bottom: 1px solid #b99550;
     }
     h1 { color: #d9b66f; font-size: 32px; }
     .tagline { color: #ccc; }
-    main { max-width: 650px; margin: 30px auto; padding: 16px; }
+    main { max-width: 700px; margin: 28px auto; padding: 16px; }
     .card {
       background: #1d1d1d;
       border: 1px solid #4b3a20;
       border-radius: 12px;
       padding: 22px;
       margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 8px;
+      background: #292929;
+      color: white;
+      border: 1px solid #555;
+      font: inherit;
+      resize: vertical;
     }
     button {
       background: #d9b66f;
@@ -35,18 +48,20 @@
       padding: 13px 20px;
       border-radius: 8px;
       font-weight: bold;
+      cursor: pointer;
     }
-    textarea {
-      width: 100%;
-      min-height: 120px;
-      padding: 12px;
-      margin: 12px 0;
+    button:disabled { opacity: .6; cursor: wait; }
+    .status { color: #d9b66f; overflow-wrap: anywhere; }
+    .story {
+      background: #242424;
       border-radius: 8px;
-      background: #292929;
-      color: white;
-      border: 1px solid #555;
+      padding: 16px;
+      margin: 14px 0;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
     }
-    footer { padding: 25px; color: #888; }
+    .date { color: #999; font-size: 12px; margin-top: 12px; }
+    footer { padding: 25px; color: #888; text-align: center; }
   </style>
 </head>
 <body>
@@ -54,28 +69,129 @@
     <h1>Ispovesti.ba</h1>
     <div class="tagline">Reci šta ti je na duši. :)</div>
   </header>
+
   <main>
     <section class="card">
       <h2>Dobro došao u svijet anonimnih priča</h2>
       <p>Bez javnog imena. Bez osuđivanja. Samo priče koje vrijedi čuti.</p>
       <p>🕶️ Tvoja priča. Tvoja odluka koliko ćeš otkriti.</p>
     </section>
+
     <section class="card">
       <h2>Podijeli svoju ispovijest</h2>
-      <p>Ovo je probna verzija. Priča se još ne šalje na server.</p>
-      <textarea id="story" placeholder="Reci šta ti je na duši..."></textarea>
-      <button onclick="previewStory()">Prikaži pregled</button>
-      <p id="result"></p>
+      <p>Ne upisuj svoje pravo ime ni druge podatke po kojima bi te neko mogao prepoznati.</p>
+      <form id="storyForm">
+        <textarea id="story" maxlength="5000"
+          placeholder="Reci šta ti je na duši..." required></textarea>
+        <button id="submitButton" type="submit">Objavi ispovijest</button>
+      </form>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card">
+      <h2>Posljednje ispovijesti</h2>
+      <p id="loading">Učitavam ispovijesti...</p>
+      <div id="stories"></div>
     </section>
   </main>
+
   <footer>Ispovesti.ba · Neke stvari zaslužuju drugu šansu.</footer>
+
   <script>
-    function previewStory() {
-      const story = document.getElementById('story').value.trim();
-      document.getElementById('result').textContent =
-        story ? 'Pregled tvoje ispovijesti: ' + story :
-        'Prvo napiši svoju ispovijest.';
+    const SUPABASE_URL = 'https://roxajqagksffbsbzdrap.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_OZ1dhjzKkN82uRpqjzbfbA_trakwga6';
+
+    const headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    };
+
+    const stories = document.getElementById('stories');
+    const loading = document.getElementById('loading');
+    const status = document.getElementById('status');
+    const form = document.getElementById('storyForm');
+    const button = document.getElementById('submitButton');
+
+    async function loadStories() {
+      loading.textContent = 'Učitavam ispovijesti...';
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/confessions?select=id,content,created_at&order=created_at.desc&limit=50`,
+          { headers }
+        );
+
+        if (!response.ok) throw new Error('Učitavanje nije uspjelo.');
+
+        const data = await response.json();
+        stories.replaceChildren();
+
+        if (data.length === 0) {
+          loading.textContent = 'Još nema objavljenih ispovijesti.';
+          return;
+        }
+
+        loading.textContent = '';
+
+        data.forEach(item => {
+          const article = document.createElement('article');
+          article.className = 'story';
+
+          const content = document.createElement('div');
+          content.textContent = item.content;
+
+          const date = document.createElement('div');
+          date.className = 'date';
+          date.textContent = new Date(item.created_at).toLocaleString('bs-BA');
+
+          article.append(content, date);
+          stories.appendChild(article);
+        });
+      } catch (error) {
+        loading.textContent = 'Ispovijesti trenutno nisu dostupne. Pokušaj ponovo kasnije.';
+      }
     }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const content = document.getElementById('story').value.trim();
+
+      if (content.length < 10) {
+        status.textContent = 'Ispovijest mora imati najmanje 10 znakova.';
+        return;
+      }
+
+      button.disabled = true;
+      status.textContent = 'Šaljem ispovijest...';
+
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/confessions`,
+          {
+            method: 'POST',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal'
+            },
+            body: JSON.stringify({ content })
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Slanje nije uspjelo. Provjeri pristup bazi.');
+        }
+
+        form.reset();
+        status.textContent = 'Ispovijest je sačuvana.';
+        await loadStories();
+      } catch (error) {
+        status.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    loadStories();
   </script>
 </body>
 </html>
