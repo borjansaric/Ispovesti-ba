@@ -37,6 +37,13 @@
     .reply-form textarea{min-height:65px;margin-top:8px}
     .empty,.loading{color:var(--muted);text-align:center;padding:18px 5px}
     footer{max-width:760px;margin:28px auto 0;color:var(--muted);text-align:center;font-size:12px}
+    .private-panel{max-width:760px;margin:0 auto 22px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+    .private-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .private-actions button{margin:0}
+    .private-list{margin-top:12px}
+    .private-item{padding:10px 0;border-bottom:1px solid var(--border);white-space:pre-wrap;overflow-wrap:anywhere}
+    .private-item:last-child{border-bottom:0}
+    .small-button{padding:7px 10px;font-size:12px}
   </style>
 </head>
 <body>
@@ -44,6 +51,17 @@
     <h1>Ispovesti.ba</h1>
     <p>Neke priče nikad nisu zaboravljene. Neke nikad nisu ni ispričane.</p>
   </header>
+  <section class="private-panel" aria-label="Moje privatne liste">
+    <h2>Moje liste</h2>
+    <p class="hint">Liste su vezane za anonimni nalog ovog pregledača. Ne prikazuju se drugim posjetiocima.</p>
+    <div class="private-actions">
+      <button type="button" data-private-list="favorites">Omiljene ispovijesti</button>
+      <button type="button" data-private-list="recently_read">Nedavno pročitane</button>
+      <button type="button" data-private-list="my_comments">Moji komentari</button>
+    </div>
+    <div id="privateStatus" class="status" role="status"></div>
+    <div id="privateList" class="private-list"><p class="hint">Izaberi listu da je prikažeš.</p></div>
+  </section>
   <main>
     <section class="panel">
       <h2>Podijeli svoju ispovijest</h2>
@@ -60,12 +78,95 @@
     </section>
   </main>
   <footer>Ispovesti.ba — neke stvari jednostavno zaslužuju drugu šansu.</footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://roxajqagksffbsbzdrap.supabase.co";
     const SUPABASE_KEY = "sb_publishable_OZ1dhjzKkN82uRpqjzbfbA_trakwga6";
     const API = SUPABASE_URL + "/rest/v1";
     const SUBMIT_URL = SUPABASE_URL + "/functions/v1/submit-content";
     const VOTE_URL = SUPABASE_URL + "/functions/v1/vote-content9";
+    const PRIVATE_LIST_URL = SUPABASE_URL + "/functions/v1/private-user-lists";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let currentPrivateList = "favorites";
+    let privateListBusy = false;
+
+    async function ensureAnonymousSession() {
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (session) return session;
+      const { data, error } = await supabaseClient.auth.signInAnonymously();
+      if (error) throw error;
+      if (!data.session) throw new Error("Anonimni nalog nije napravljen. Osvježi stranicu i pokušaj ponovo.");
+      return data.session;
+    }
+
+    async function privateListRequest(payload) {
+      const session = await ensureAnonymousSession();
+      const response = await fetch(PRIVATE_LIST_URL, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + session.access_token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.success === false) throw new Error(result.error || "Privatne liste trenutno nisu dostupne.");
+      return result;
+    }
+
+    async function savePrivateItem(action, listType, itemType, itemId) {
+      if (!itemId) return;
+      return privateListRequest({action, list_type:listType, item_type:itemType, item_id:Number(itemId)});
+    }
+
+    async function showPrivateList(listType) {
+      currentPrivateList = listType;
+      const container = document.getElementById("privateList");
+      const status = document.getElementById("privateStatus");
+      container.replaceChildren(makeElement("p","hint","Učitavam listu..."));
+      status.textContent = "";
+      try {
+        const result = await privateListRequest({action:"list",list_type:listType});
+        const rows = result.items || result.data || result.list || [];
+        container.replaceChildren();
+        if (!rows.length) {
+          container.append(makeElement("p","hint", listType === "favorites" ? "Još nema omiljenih ispovijesti." : listType === "recently_read" ? "Još nema pročitanih ispovijesti." : "Još nema sačuvanih komentara."));
+          return;
+        }
+        for (const row of rows) {
+          const item = makeElement("div","private-item");
+          try {
+            if (row.item_type === "comment") {
+              const comments = await apiRequest("/comments?select=id,content,created_at,confession_id&id=eq." + encodeURIComponent(row.item_id) + "&limit=1");
+              item.textContent = comments.length ? comments[0].content : "Komentar #" + row.item_id;
+            } else {
+              const stories = await apiRequest("/confessions?select=id,content,created_at&id=eq." + encodeURIComponent(row.item_id) + "&limit=1");
+              item.textContent = stories.length ? stories[0].content : "Ispovijest #" + row.item_id;
+            }
+          } catch (_) { item.textContent = (row.item_type === "comment" ? "Komentar #" : "Ispovijest #") + row.item_id; }
+          if (listType === "favorites") {
+            const remove = makeElement("button","small-button","Ukloni iz omiljenih");
+            remove.type = "button";
+            remove.addEventListener("click", async () => {
+              remove.disabled = true;
+              try { await savePrivateItem("remove",listType,row.item_type,row.item_id); await showPrivateList(listType); }
+              catch (error) { status.textContent = error.message; remove.disabled = false; }
+            });
+            item.append(document.createElement("br"),remove);
+          }
+          container.append(item);
+        }
+      } catch (error) {
+        console.error("Greška pri učitavanju privatne liste:",error);
+        container.replaceChildren(makeElement("p","hint","Lista se nije učitala: " + (error.message || "nepoznata greška")));
+      }
+    }
+
+    document.querySelectorAll("[data-private-list]").forEach(button => {
+      button.addEventListener("click", () => showPrivateList(button.dataset.privateList));
+    });
 
     function getVoterKey(){
       let key = localStorage.getItem("ispovesti_vote_key");
@@ -212,6 +313,22 @@
     function createStory(item) {
       const story = makeElement("article","story");
       story.append(makeElement("div","story-content",item.content));
+      const privateActions = makeElement("div","vote-row");
+      const favoriteButton = makeElement("button","vote-button","♡ Sačuvaj u omiljene");
+      favoriteButton.type = "button";
+      favoriteButton.addEventListener("click",async () => {
+        favoriteButton.disabled = true;
+        try {
+          await savePrivateItem("add","favorites","confession",item.id);
+          favoriteButton.textContent = "♥ Sačuvano u omiljene";
+          document.getElementById("privateStatus").textContent = "Ispovijest je sačuvana u omiljene.";
+        } catch (error) {
+          document.getElementById("privateStatus").textContent = "Nije sačuvano: " + (error.message || "greška");
+        } finally { favoriteButton.disabled = false; }
+      });
+      privateActions.append(favoriteButton);
+      story.append(privateActions);
+      savePrivateItem("add","recently_read","confession",item.id).catch(error => console.warn("Nedavno pročitana lista nije ažurirana:",error));
       if (item.created_at) story.append(makeElement("div","story-date",formatDate(item.created_at)));
       story.append(createVoteControls(item));
       const commentsSection = makeElement("section","comments");
@@ -230,6 +347,10 @@
         try {
           await submitContent({type:"comment",confession_id:Number(item.id),content});
           commentInput.value = ""; commentStatus.textContent = "Komentar je objavljen.";
+          try {
+            const recent = await apiRequest("/comments?select=id,content,created_at&confession_id=eq." + encodeURIComponent(item.id) + "&content=eq." + encodeURIComponent(content) + "&order=created_at.desc&limit=1");
+            if (recent.length) await savePrivateItem("add","my_comments","comment",recent[0].id);
+          } catch (listError) { console.warn("Komentar je objavljen, ali nije dodat u privatnu listu:",listError); }
           await loadComments(item.id,commentsList,commentTitle);
         } catch(error) { console.error("Greška pri objavljivanju komentara:",error); commentStatus.textContent = error.message || "Komentar nije objavljen."; }
         finally { commentButton.disabled = false; }
@@ -262,6 +383,12 @@
       try { await submitContent({type:"confession",content}); input.value = ""; status.textContent = "Ispovijest je objavljena."; await loadStories(); }
       catch(error) { console.error("Greška pri objavljivanju ispovijesti:",error); status.textContent = error.message || "Ispovijest nije objavljena."; }
       finally { button.disabled = false; }
+    });
+    ensureAnonymousSession().then(() => {
+      document.getElementById("privateStatus").textContent = "Anonimni nalog je spreman.";
+    }).catch(error => {
+      console.error("Anonimni nalog nije dostupan:",error);
+      document.getElementById("privateStatus").textContent = "Privatne liste nisu spremne: " + (error.message || "provjeri Supabase podešavanja.");
     });
     loadStories();
   </script>
