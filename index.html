@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="sr">
 <head>
@@ -28,6 +29,8 @@
     .vote-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .vote-button{background:#222;color:var(--text);border:1px solid #625332;margin:0;padding:7px 12px}
     .vote-button.selected{background:#3b321e;border-color:var(--gold);color:var(--gold)}
+    .favorite-heart{font-size:20px;line-height:1;min-width:42px;padding:5px 10px;color:#e56b83}
+    .favorite-heart.selected{color:#ff5578;background:#3b2028;border-color:#ff5578}
     .vote-status{color:var(--muted);font-size:12px;margin-top:5px;min-height:18px}
     .comments{border-top:1px solid var(--border);margin-top:17px;padding-top:13px}
     .comment-title{color:var(--gold);font-size:16px;margin:0 0 10px}
@@ -44,9 +47,34 @@
     .private-item{padding:10px 0;border-bottom:1px solid var(--border);white-space:pre-wrap;overflow-wrap:anywhere}
     .private-item:last-child{border-bottom:0}
     .small-button{padding:7px 10px;font-size:12px}
+    .menu-toggle{position:fixed;top:14px;left:14px;z-index:1002;width:44px;height:44px;margin:0;padding:0;border:1px solid #4b4b4b;border-radius:9px;background:#1c1c1c;color:#eee;font-size:24px;line-height:1}
+    .menu-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.65);opacity:0;visibility:hidden;transition:opacity .22s,visibility .22s}
+    .side-menu{position:fixed;z-index:1001;inset:0 auto 0 0;width:min(290px,84vw);padding:22px 16px;background:#171717;border-right:1px solid #3b3b3b;transform:translateX(-102%);transition:transform .24s ease;box-shadow:8px 0 30px rgba(0,0,0,.35);overflow-y:auto}
+    body.menu-open{overflow:hidden}
+    body.menu-open .side-menu{transform:translateX(0)}
+    body.menu-open .menu-overlay{opacity:1;visibility:visible}
+    .menu-brand{color:var(--gold);font-size:23px;font-weight:bold;margin:8px 0 22px}
+    .menu-link{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 7px;padding:12px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text);text-align:left;font-size:15px;font-weight:normal}
+    .menu-link:hover,.menu-link:focus{background:#292929;border-color:#454545;color:var(--gold)}
+    .menu-icon{width:22px;text-align:center;font-size:18px}
+    .menu-caption{margin:22px 10px 8px;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+    @media(min-width:900px){header{padding-top:32px}}
   </style>
 </head>
 <body>
+  <button id="menuToggle" class="menu-toggle" type="button" aria-label="Otvori meni" aria-expanded="false">☰</button>
+  <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+  <nav id="sideMenu" class="side-menu" aria-label="Glavni meni" aria-hidden="true">
+    <div class="menu-brand">Ispovesti.ba</div>
+    <button class="menu-link" type="button" data-menu-action="favorites"><span class="menu-icon">♡</span>Omiljene ispovijesti</button>
+    <div class="menu-caption">Ispovijesti</div>
+    <button class="menu-link" type="button" data-menu-action="popular"><span class="menu-icon">🔥</span>Popularno</button>
+    <button class="menu-link" type="button" data-menu-action="best"><span class="menu-icon">★</span>Najbolje</button>
+    <button class="menu-link" type="button" data-menu-action="new"><span class="menu-icon">✦</span>Novo</button>
+    <div class="menu-caption">Moje liste</div>
+    <button class="menu-link" type="button" data-menu-action="recent"><span class="menu-icon">◷</span>Nedavno pročitane</button>
+    <button class="menu-link" type="button" data-menu-action="comments"><span class="menu-icon">☰</span>Moji komentari</button>
+  </nav>
   <header>
     <h1>Ispovesti.ba</h1>
     <p>Neke priče nikad nisu zaboravljene. Neke nikad nisu ni ispričane.</p>
@@ -73,7 +101,7 @@
       </form>
     </section>
     <section>
-      <h2>Najnovije ispovijesti</h2>
+      <h2 id="storiesHeading">Najnovije ispovijesti</h2>
       <div id="stories"><p class="loading">Učitavam ispovijesti...</p></div>
     </section>
   </main>
@@ -88,7 +116,6 @@
     const PRIVATE_LIST_URL = SUPABASE_URL + "/functions/v1/private-user-lists";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let currentPrivateList = "favorites";
-    let privateListBusy = false;
 
     async function ensureAnonymousSession() {
       const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
@@ -121,6 +148,18 @@
       return privateListRequest({action, list_type:listType, item_type:itemType, item_id:Number(itemId)});
     }
 
+    let favoritesCache = null;
+    async function getFavoriteIds() {
+      if (!favoritesCache) {
+        favoritesCache = privateListRequest({action:"list",list_type:"favorites"})
+          .then(result => new Set((result.items || [])
+            .filter(entry => entry.item_type === "confession")
+            .map(entry => Number(entry.item_id))))
+          .catch(error => { favoritesCache = null; throw error; });
+      }
+      return favoritesCache;
+    }
+
     async function showPrivateList(listType) {
       currentPrivateList = listType;
       const container = document.getElementById("privateList");
@@ -151,7 +190,7 @@
             remove.type = "button";
             remove.addEventListener("click", async () => {
               remove.disabled = true;
-              try { await savePrivateItem("remove",listType,row.item_type,row.item_id); await showPrivateList(listType); }
+              try { await savePrivateItem("remove",listType,row.item_type,row.item_id); favoritesCache = null; await showPrivateList(listType); }
               catch (error) { status.textContent = error.message; remove.disabled = false; }
             });
             item.append(document.createElement("br"),remove);
@@ -286,8 +325,46 @@
       const row = makeElement("div","vote-row");
       const likeButton = makeElement("button","vote-button","👍 0"); likeButton.type = "button";
       const dislikeButton = makeElement("button","vote-button","👎 0"); dislikeButton.type = "button";
+      const favoriteButton = makeElement("button","vote-button favorite-heart","♡");
+      favoriteButton.type = "button";
+      favoriteButton.title = "Sačuvaj u omiljene";
+      favoriteButton.setAttribute("aria-label","Sačuvaj u omiljene");
       const status = makeElement("div","vote-status","");
+      let favoriteBusy = false;
       let busy = false;
+      function showFavorite(isFavorite) {
+        favoriteButton.textContent = isFavorite ? "♥" : "♡";
+        favoriteButton.classList.toggle("selected",isFavorite);
+        favoriteButton.title = isFavorite ? "Ukloni iz omiljenih" : "Sačuvaj u omiljene";
+        favoriteButton.setAttribute("aria-label",favoriteButton.title);
+      }
+      getFavoriteIds().then(ids => showFavorite(ids.has(Number(item.id))))
+        .catch(error => console.warn("Omiljene nisu učitane za ispovijest:",error));
+      favoriteButton.addEventListener("click",async () => {
+        if (favoriteBusy) return;
+        favoriteBusy = true;
+        favoriteButton.disabled = true;
+        try {
+          const ids = await getFavoriteIds();
+          if (ids.has(Number(item.id))) {
+            await savePrivateItem("remove","favorites","confession",item.id);
+            ids.delete(Number(item.id));
+            showFavorite(false);
+            status.textContent = "Uklonjeno iz omiljenih.";
+          } else {
+            await savePrivateItem("add","favorites","confession",item.id);
+            ids.add(Number(item.id));
+            showFavorite(true);
+            status.textContent = "Sačuvano u omiljene.";
+          }
+        } catch(error) {
+          console.error("Greška pri čuvanju omiljene ispovijesti:",error);
+          status.textContent = "Nije sačuvano: " + (error.message || "greška");
+        } finally {
+          favoriteBusy = false;
+          favoriteButton.disabled = false;
+        }
+      });
       function show(result) {
         likeButton.textContent = "👍 " + result.likes;
         dislikeButton.textContent = "👎 " + result.dislikes;
@@ -304,7 +381,7 @@
       }
       likeButton.addEventListener("click",() => vote("like"));
       dislikeButton.addEventListener("click",() => vote("dislike"));
-      row.append(likeButton,dislikeButton);
+      row.append(likeButton,dislikeButton,favoriteButton);
       const wrapper = makeElement("div",""); wrapper.append(row,status);
       requestVote(item.id,"count").then(show).catch(error => { console.error("Greška pri učitavanju glasova:",error); status.textContent = "Glasovi se trenutno ne mogu učitati."; });
       return wrapper;
@@ -312,22 +389,9 @@
 
     function createStory(item) {
       const story = makeElement("article","story");
+      story.dataset.confessionId = String(item.id);
+      story.dataset.createdAt = item.created_at || "";
       story.append(makeElement("div","story-content",item.content));
-      const privateActions = makeElement("div","vote-row");
-      const favoriteButton = makeElement("button","vote-button","♡ Sačuvaj u omiljene");
-      favoriteButton.type = "button";
-      favoriteButton.addEventListener("click",async () => {
-        favoriteButton.disabled = true;
-        try {
-          await savePrivateItem("add","favorites","confession",item.id);
-          favoriteButton.textContent = "♥ Sačuvano u omiljene";
-          document.getElementById("privateStatus").textContent = "Ispovijest je sačuvana u omiljene.";
-        } catch (error) {
-          document.getElementById("privateStatus").textContent = "Nije sačuvano: " + (error.message || "greška");
-        } finally { favoriteButton.disabled = false; }
-      });
-      privateActions.append(favoriteButton);
-      story.append(privateActions);
       savePrivateItem("add","recently_read","confession",item.id).catch(error => console.warn("Nedavno pročitana lista nije ažurirana:",error));
       if (item.created_at) story.append(makeElement("div","story-date",formatDate(item.created_at)));
       story.append(createVoteControls(item));
@@ -374,6 +438,62 @@
       }
     }
 
+    const menuToggle = document.getElementById("menuToggle");
+    const sideMenu = document.getElementById("sideMenu");
+    const menuOverlay = document.getElementById("menuOverlay");
+    function closeMenu() {
+      document.body.classList.remove("menu-open");
+      menuToggle.setAttribute("aria-expanded","false");
+      menuToggle.setAttribute("aria-label","Otvori meni");
+      menuToggle.textContent = "☰";
+      sideMenu.setAttribute("aria-hidden","true");
+      menuOverlay.setAttribute("aria-hidden","true");
+    }
+    function openMenu() {
+      document.body.classList.add("menu-open");
+      menuToggle.setAttribute("aria-expanded","true");
+      menuToggle.setAttribute("aria-label","Zatvori meni");
+      menuToggle.textContent = "×";
+      sideMenu.setAttribute("aria-hidden","false");
+      menuOverlay.setAttribute("aria-hidden","false");
+    }
+    menuToggle.addEventListener("click",() => document.body.classList.contains("menu-open") ? closeMenu() : openMenu());
+    menuOverlay.addEventListener("click",closeMenu);
+    document.addEventListener("keydown",event => { if (event.key === "Escape") closeMenu(); });
+
+    async function sortStories(mode) {
+      const container = document.getElementById("stories");
+      const cards = Array.from(container.querySelectorAll(".story"));
+      if (mode === "new") {
+        cards.sort((a,b) => new Date(b.dataset.createdAt || 0) - new Date(a.dataset.createdAt || 0));
+      } else {
+        const counts = await Promise.all(cards.map(async card => {
+          try { const result = await requestVote(card.dataset.confessionId,"count"); return {card,likes:Number(result.likes)||0,dislikes:Number(result.dislikes)||0}; }
+          catch (_) { return {card,likes:0,dislikes:0}; }
+        }));
+        counts.sort((a,b) => mode === "popular"
+          ? (b.likes + b.dislikes) - (a.likes + a.dislikes) || b.likes - a.likes
+          : (b.likes - b.dislikes) - (a.likes - a.dislikes) || b.likes - a.likes);
+        cards.splice(0,cards.length,...counts.map(entry => entry.card));
+      }
+      cards.forEach(card => container.append(card));
+      document.getElementById("storiesHeading").textContent = mode === "popular" ? "Popularno" : mode === "best" ? "Najbolje ispovijesti" : "Najnovije ispovijesti";
+      document.getElementById("storiesHeading").scrollIntoView({behavior:"smooth",block:"start"});
+    }
+
+    document.querySelectorAll("[data-menu-action]").forEach(button => button.addEventListener("click",async () => {
+      const action = button.dataset.menuAction;
+      closeMenu();
+      if (action === "favorites" || action === "recent" || action === "comments") {
+        const listType = action === "favorites" ? "favorites" : action === "recent" ? "recently_read" : "my_comments";
+        await showPrivateList(listType);
+        document.querySelector(".private-panel").scrollIntoView({behavior:"smooth",block:"start"});
+      } else {
+        document.getElementById("storiesHeading").textContent = "Učitavam redoslijed...";
+        await sortStories(action);
+      }
+    }));
+
     document.getElementById("storyForm").addEventListener("submit",async event => {
       event.preventDefault();
       const input = document.getElementById("storyInput"), button = document.getElementById("storyButton"), status = document.getElementById("storyStatus");
@@ -384,6 +504,7 @@
       catch(error) { console.error("Greška pri objavljivanju ispovijesti:",error); status.textContent = error.message || "Ispovijest nije objavljena."; }
       finally { button.disabled = false; }
     });
+
     ensureAnonymousSession().then(() => {
       document.getElementById("privateStatus").textContent = "Anonimni nalog je spreman.";
     }).catch(error => {
