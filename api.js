@@ -58,7 +58,7 @@ export async function request(action, args = {}, adminSession = null, captchaHos
   return result;
 }
 // Explicit browser-local preview only. Production always enforces rules in SQL.
-const storageKey = 'ispovesti-isolated-preview-v2';
+const storageKey = config.previewStorageKey || 'ispovesti-isolated-preview-v2';
 const initial = () => ({
   contents: [
     { id:'1', kind:'confession', body:'Danas sam poslije mnogo godina prošao ulicom u kojoj sam odrastao. Sve je drugačije, a opet sam na trenutak bio onaj klinac koji žuri kući jer ga čeka ručak. Neka mjesta nas nikad ne puste sasvim.', nickname:null, published_at:'2026-10-20T11:00:00Z', state:'published' },

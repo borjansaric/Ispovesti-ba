@@ -1,6 +1,9 @@
+import {randomId} from './ads/ids.js';
+import {installAds} from './ads/ui.js?v=ads1';
 import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=launch1';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
+const ads=installAds();
 let currentView='oldest',offset=0, generation=0, openMenu=null,openBranch=null,busy=false;
 // One batched state request per group of 20 cards, rather than 40 separate requests.
 const stateListeners=new Set(),branchViews=new WeakMap();let stateTimer;
@@ -52,16 +55,19 @@ function contentForm(kind,extra,done){
  const status=node('p','hint'),counter=node('span','hint','0 znakova'),send=node('button','primary',kind==='confession'?'Pošalji ispovijest':'Pošalji');send.type='submit';
  const row=node('div','row');row.append(counter,send);text.oninput=()=>counter.textContent=[...text.value.trim()].length+' znakova';
  form.append(label,nickLabel,row,status);
+ const adForm=ads.attachForm(form,kind);
  let allowDuplicate=false,duplicateButton,sending=false,requestId=null,lastPayload=null;
- form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;text.disabled=true;nick.disabled=true;const submittedAt=performance.now();status.className='hint';status.textContent='Šaljem…';
+ form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;text.disabled=true;nick.disabled=true;const submittedAt=performance.now();let adTicket=null;status.className='hint';status.textContent='Šaljem…';
   try{
    const count=[...text.value.trim()].length,min=kind==='confession'?15:1,max=kind==='confession'?5000:1000;
    if(count<min||count>max)throw new Error(`Tekst mora imati od ${min} do ${max} znakova.`);
    const payload={kind,body:text.value,nickname:nick.value,...extra,allow_duplicate:allowDuplicate};
-   const fingerprint=JSON.stringify(payload);if(fingerprint!==lastPayload){requestId=crypto.randomUUID();lastPayload=fingerprint;}
+   const fingerprint=JSON.stringify(payload);if(fingerprint!==lastPayload){requestId=randomId();lastPayload=fingerprint;}
+   adTicket=adForm?.reserve();
    const r=await request('submit',{...payload,request_id:requestId},null,form);
    const confirmedAt=performance.now();
    if(r.duplicate){requestId=null;lastPayload=null;status.textContent='Ovaj tekst si već poslao. Ako želiš, možeš ga poslati ponovo.';if(!duplicateButton){duplicateButton=button('Ipak pošalji',()=>{allowDuplicate=true;form.requestSubmit();});form.append(duplicateButton);}return;}
+   adForm?.commit(adTicket,r.id);adTicket=null;
    const confirmed=r.item||{id:r.id,body:text.value.trim(),nickname:nick.value.trim()||null,created_at:new Date().toISOString(),parent_id:extra.parent_id||null,has_replies:false};
    requestId=null;lastPayload=null;status.textContent='';text.value='';nick.value='';counter.textContent='0 znakova';allowDuplicate=false;duplicateButton?.remove();duplicateButton=null;
    if(kind==='confession'){dialog.close();closeMenu();toast('Tvoja ispovijest je uspješno poslata. Čeka svoj red za objavljivanje.');}
@@ -70,7 +76,7 @@ function contentForm(kind,extra,done){
     const timings={};for(const name of ['session','captcha','network','render','total']){const measure=performance.getEntriesByName('ispovesti-submit-'+name).at(-1);if(measure)timings[name]=Math.round(measure.duration);}
     form.dataset.submissionTiming=JSON.stringify(timings);
     for(const name of ['session','captcha','network','render','total'])performance.clearMeasures('ispovesti-submit-'+name);});
-  }catch(err){status.textContent=err.message;status.className='hint error';}finally{sending=false;send.disabled=false;text.disabled=false;nick.disabled=false;}
+  }catch(err){status.textContent=err.message;status.className='hint error';}finally{adForm?.release(adTicket);sending=false;send.disabled=false;text.disabled=false;nick.disabled=false;}
  };
  text.addEventListener('input',()=>{allowDuplicate=false;duplicateButton?.remove();duplicateButton=null;});
  return form;
@@ -83,7 +89,7 @@ function voteControls(item){
  watchState(item.id,'vote',row,render);
  return row;
 }
-function report(item){const form=node('form','form');const label=node('label','','Razlog prijave'),select=node('select');for(const [value,text]of [['abuse','Vrijeđanje ili uznemiravanje'],['threat','Prijetnje'],['spam','Spam'],['other','Ostalo']]){const o=node('option','',text);o.value=value;select.append(o);}label.append(select);const send=node('button','primary','Pošalji prijavu');form.append(label,send);form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;text.disabled=true;nick.disabled=true;const submittedAt=performance.now();try{await request('report',{id:item.id,reason:select.value});dialog.close();toast('Prijava je zabilježena. Hvala.');}catch(err){toast(err.message);}finally{send.disabled=false;}};modal('Prijavi sadržaj',form);}
+function report(item){const form=node('form','form');const label=node('label','','Razlog prijave'),select=node('select');for(const [value,text]of [['abuse','Vrijeđanje ili uznemiravanje'],['threat','Prijetnje'],['spam','Spam'],['other','Ostalo']]){const o=node('option','',text);o.value=value;select.append(o);}label.append(select);const send=node('button','primary','Pošalji prijavu');form.append(label,send);let sending=false;form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;try{await request('report',{id:item.id,reason:select.value});dialog.close();toast('Prijava je zabilježena. Hvala.');}catch(err){toast(err.message);}finally{sending=false;send.disabled=false;}};modal('Prijavi sadržaj',form);}
 async function commentBranch(confessionId,parentId,container,refreshContext,confirmed){
  let loaded=0;const rendered=new Set(),pending=new Map();
  const list=node('div'),sent=node('div'),more=button('Učitaj još komentara ↓',load,'load-more');container.replaceChildren(list,more,sent);
