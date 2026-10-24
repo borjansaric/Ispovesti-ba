@@ -1,7 +1,8 @@
-import { captchaToken } from './captcha.js?v=admin1';
+import { captchaToken, prepareCaptcha } from './captcha.js?v=comments1';
 const config = window.ISPOVESTI_CONFIG || {};
 export const isPreview = config.mode === 'preview';
 export const isLocal = config.mode === 'local';
+export function prepareSubmission(){if(!isPreview&&!isLocal)void prepareCaptcha();}
 let client, sessionPromise;
 export function authClient(admin = false) {
   if (isPreview) throw new Error('Administracija je dostupna samo na povezanom testnom ili živom okruženju.');
