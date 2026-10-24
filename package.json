@@ -1,0 +1,15 @@
+{
+  "name": "ispovesti-ba",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "dev": "node scripts/local-preview.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.11"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
