@@ -15,7 +15,7 @@ async function settings(){
   settingsAt=Date.now();
   settingsPromise=(async()=>{
    const c=window.ISPOVESTI_CONFIG;
-   const r=await fetch(c.supabaseUrl+'/functions/v1/community-test-api',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
+   const r=await fetch(c.supabaseUrl+'/functions/v1/community-test-api?forceFunctionRegion=eu-central-1',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
    if(!r.ok)throw new Error('Nije moguće provjeriti sigurnosna podešavanja. Pokušaj ponovo.');
    return r.json();
   })().catch(e=>{settingsPromise=null;throw e;});

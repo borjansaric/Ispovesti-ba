@@ -49,7 +49,7 @@ export async function request(action, args = {}, adminSession = null, captchaHos
   }
   if(action==='submit'){const at=performance.now();args={...args,captcha_token:await captchaToken({kind:args.kind,host:captchaHost})};performance.measure('ispovesti-submit-captcha',{start:at,end:performance.now()});}
   const networkAt=performance.now();
-  const response = await fetch(config.supabaseUrl + '/functions/v1/community-test-api', {
+  const response = await fetch(config.supabaseUrl + '/functions/v1/community-test-api?forceFunctionRegion=eu-central-1', {
     method: 'POST', headers, body: JSON.stringify({ action, args }), signal: AbortSignal.timeout(20000), cache: 'no-store',
   });
   const result = await response.json();
