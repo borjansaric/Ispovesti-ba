@@ -1,4 +1,4 @@
-import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=latency2';
+import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=latency3';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 let currentView='oldest',offset=0, generation=0, openMenu=null,openBranch=null,busy=false;
