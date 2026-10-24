@@ -25,3 +25,12 @@ export async function captchaToken({kind,host,sitekey,action}={}){
   try{id=window.turnstile.render(box,{sitekey,action:action||'submit_'+kind,theme:'dark',size:'flexible',appearance:'interaction-only',execution:'execute','response-field':false,callback:token=>end(token),'error-callback':()=>end(),'expired-callback':()=>end(),'timeout-callback':()=>end(),'unsupported-callback':()=>end(null,'Ovaj preglednik ne podržava sigurnosnu provjeru.')});window.turnstile.execute(id);}catch(e){end(null,'Sigurnosna provjera nije dostupna. Pokušaj ponovo.');}
  });
 }
+
+let preparation;
+export function prepareCaptcha(){
+ return preparation ||= (async()=>{
+  const c=window.ISPOVESTI_CONFIG;
+  const r=await fetch(c.supabaseUrl+'/functions/v1/community-test-api',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
+  if(r.ok&&(await r.json()).enabled===true)await loadTurnstile();
+ })().catch(()=>{preparation=null;});
+}

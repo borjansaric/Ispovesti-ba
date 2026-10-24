@@ -20,6 +20,7 @@ before(async()=>{
  await db.exec(await readFile(new URL('../supabase/migrations/20261023212548_community_v2.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../supabase/admin-captcha.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../supabase/admin-email.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../supabase/comments-response.sql',import.meta.url),'utf8'));
  await db.query("insert into auth.users(id,email,is_anonymous) values($1,'bob@example.invalid',false),($2,null,true)",[bob,anon]);
  await db.query('insert into auth.sessions values($1,$2,null),($3,$4,null)',[sid,owner,bobSid,bob]);
  const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(code));
@@ -174,3 +175,25 @@ test('CAPTCHA can be disabled by owner without provider availability and cannot 
 });
 
 test('gateway has no extra access to the shared Auth user table',async()=>{await db.exec('set role service_role');try{await assert.rejects(db.query('select id,email,is_anonymous,email_confirmed_at from auth.users'),/permission denied/);await assert.rejects(db.query('select encrypted_password from auth.users'),/permission denied/);}finally{await db.exec('reset role');}});
+
+test('successful submission returns the committed safe comment and private caller context in one response',async()=>{
+ const args={kind:'comment',confession_id:confession,body:'  Potvrđen komentar. 🙂\nDrugi red.  ',nickname:'  Nadimak  '};
+ const result=await sql(owner,'submit',args);
+ assert.equal(result.success,true);assert.equal(result.item.id,result.id);assert.equal(result.item.body,args.body.trim());assert.equal(result.item.nickname,'Nadimak');
+ assert.deepEqual(Object.keys(result.item).sort(),['body','created_at','has_replies','id','nickname','parent_id']);
+ const row=(await db.query('select body,nickname,created_at from community_test.content where id=$1',[result.id])).rows[0];
+ assert.equal(result.item.body,row.body);assert.equal(Date.parse(result.item.created_at),new Date(row.created_at).getTime());
+ assert.deepEqual(result.context,await sql(owner,'context',{id:confession}));assert.ok(result.context.comment_count>0);
+ const duplicate=await sql(owner,'submit',args);assert.deepEqual(duplicate,{duplicate:true});
+});
+test('reply receipt is correctly nested and includes no identities or premature vote totals',async()=>{
+ const result=await sql(owner,'submit',{kind:'reply',confession_id:confession,parent_id:comment,body:'Odgovor koji je odmah spreman za prikaz.'});
+ assert.equal(result.success,true);assert.equal(result.item.parent_id,comment);assert.equal(result.item.has_replies,false);
+ for(const key of ['author_id','user_id','state','likes','dislikes','removed_at'])assert.equal(key in result.item,false);
+ assert.deepEqual(result.context,await sql(owner,'context',{id:confession}));
+});
+test('queued confession receipt cannot be mistaken for an immediately published comment',async()=>{
+ const result=await sql(owner,'submit',{kind:'confession',body:'Ova nova ispovijest i dalje čeka svoj red za objavljivanje.'});
+ assert.equal(result.success,true);assert.equal('item' in result,false);assert.equal('context' in result,false);
+ assert.ok(!(await sql(null,'feed')).items.some(i=>i.id===result.id));
+});
