@@ -63,9 +63,46 @@ Deno.serve(async(req:Request)=>{
    if(action.startsWith('admin_')){
     if(user.is_anonymous!==false||!user.email_confirmed_at)fail('Potreban je administratorski nalog sa dvofaktorskom potvrdom.',403);
     const payload=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-    if(!payload.session_id||(action!=='admin_session'&&payload.aal!=='aal2'))fail('Potreban je administratorski nalog sa dvofaktorskom potvrdom.',403);
+    if(!payload.session_id)fail('Potrebna je administratorska sesija.',403);
+    if(action==='admin_email_begin'||action==='admin_email_verify'){
+     const passwordProof=Array.isArray(payload.amr)&&payload.amr.some((a:{method:string,timestamp:number})=>a.method==='password'&&Number.isFinite(a.timestamp)&&a.timestamp*1000<=Date.now()+60000&&Date.now()-a.timestamp*1000<600000);
+     if(!passwordProof)fail('Prijavi se ponovo lozinkom prije potvrde e-maila.',403);
+    }
     args._session_id=payload.session_id;args._aal=payload.aal;
    }
+  }
+  if(action==='admin_email_status')return send(await rpc('community_test_admin_email',uid,'status',{_session_id:args._session_id}));
+  if(action==='admin_email_begin'){
+   const challenge=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+   const proof={_session_id:args._session_id,challenge_hash:await digest(challenge)};
+   const prepared=await rpc('community_test_admin_email',uid,'begin',proof);
+   if(prepared.limited)fail('Sačekaj najmanje jednu minutu prije novog koda.',429);
+   const r=await fetch(url+'/auth/v1/otp',{method:'POST',headers:{apikey:serviceKey,'Content-Type':'application/json'},body:JSON.stringify({email:prepared.email,create_user:false}),signal:AbortSignal.timeout(15000)});
+   if(!r.ok)fail('Kod trenutno nije moguće poslati. Provjeri Supabase podešavanje e-maila ili pokušaj kasnije.',503);
+   return send({challenge,expires_in:600});
+  }
+  if(action==='admin_email_verify'){
+   if(typeof args.challenge!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(args.challenge)||typeof args.code!=='string'||!/^\d{6,10}$/.test(args.code))fail('Unesi ispravan kod sa e-maila.');
+   const proof={_session_id:args._session_id,challenge_hash:await digest(args.challenge)};
+   const attempt=await rpc('community_test_admin_email',uid,'attempt',proof);
+   if(attempt.denied)fail('Kod je istekao, iskorišten ili je potrošeno pet pokušaja. Zatraži novi kod.',403);
+   const r=await fetch(url+'/auth/v1/verify',{method:'POST',headers:{apikey:serviceKey,'Content-Type':'application/json'},body:JSON.stringify({email:attempt.email,token:args.code,type:'email'}),signal:AbortSignal.timeout(15000)});
+   const verified=await r.json();
+   if(!r.ok||verified.user?.id!==uid||verified.user?.email?.toLowerCase()!==attempt.email||verified.user?.is_anonymous!==false||!verified.user?.email_confirmed_at){await rpc('community_test_admin_email',uid,'failed',proof);fail('Kod nije ispravan ili je istekao.',403);}
+   // Only after verified e-mail ownership may the server retire this owner's old TOTP factor.
+   const ownerResponse=await fetch(url+'/auth/v1/admin/users/'+uid,{headers:{apikey:serviceKey,Authorization:'Bearer '+serviceKey},signal:AbortSignal.timeout(10000)});
+   if(!ownerResponse.ok)fail('Potvrda nije dovršena. Pokušaj ponovo.',503);
+   const owner=await ownerResponse.json();let relogin=false;
+   for(const factor of (owner.factors||owner.user?.factors||[]).filter((f:{factor_type:string})=>f.factor_type==='totp')){
+    const removed=await fetch(url+'/auth/v1/admin/users/'+uid+'/factors/'+encodeURIComponent(factor.id),{method:'DELETE',headers:{apikey:serviceKey,Authorization:'Bearer '+serviceKey},signal:AbortSignal.timeout(10000)});
+    if(!removed.ok)fail('Stari način potvrde nije uklonjen. Pokušaj ponovo.',503);
+    if(factor.status==='verified')relogin=true;
+   }
+   // Supabase revokes sessions when a verified factor is deleted. Require a fresh password+email login.
+   if(relogin)return send({verified:false,relogin:true});
+   const result=await rpc('community_test_admin_email',uid,'finish',{...proof,verified_uid:verified.user.id,verified_email:verified.user.email.toLowerCase()});
+   if(!result.verified)fail('Potvrda nije dovršena. Prijavi se ponovo.',403);
+   return send({verified:true});
   }
   if(action==='admin_security_get')return send(await rpc('community_test_security',uid,action,{_session_id:args._session_id,_aal:args._aal}));
   if(action==='admin_security_set'){

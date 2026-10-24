@@ -1,7 +1,7 @@
-name: Admin and CAPTCHA local checks
+name: Admin email and CAPTCHA local checks
 on:
   push:
-    branches: [work/admin-captcha-20261024]
+    branches: [work/admin-email-20261024]
 permissions:
   contents: read
 jobs:
