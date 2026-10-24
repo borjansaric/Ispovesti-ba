@@ -1,4 +1,4 @@
-import { captchaToken } from './captcha.js';
+import { captchaToken } from './captcha.js?v=admin1';
 const config = window.ISPOVESTI_CONFIG || {};
 export const isPreview = config.mode === 'preview';
 export const isLocal = config.mode === 'local';
@@ -6,7 +6,7 @@ let client, sessionPromise;
 export function authClient(admin = false) {
   if (isPreview) throw new Error('Administracija je dostupna samo na povezanom testnom ili živom okruženju.');
   if (!config.supabaseUrl || !config.publishableKey || !window.supabase) throw new Error('Veza sa serverom nije podešena.');
-  if (admin) return window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-test-admin-session' } });
+  if (admin) return window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-test-admin-session', storage: window.sessionStorage } });
   return client ||= window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-test-user-session' } });
 }
 async function session() {
@@ -15,7 +15,7 @@ async function session() {
     let { data, error } = await sb.auth.getSession();
     if (error) throw error;
     if (data.session) return data.session;
-    ({ data, error } = await sb.auth.signInAnonymously({ options: { captchaToken: await captchaToken() } }));
+    ({ data, error } = await sb.auth.signInAnonymously());
     if (error) throw new Error('Anonimna sesija trenutno nije dostupna. Pokušaj kasnije.');
     return data.session;
   })().finally(() => { sessionPromise = null; });
@@ -36,14 +36,15 @@ async function localRequest(action,args,retry=true){
  if(response.status===401&&protectedAction&&retry){localSessionReady=false;return localRequest(action,args,false);}
  const result=await response.json();if(!response.ok)throw new Error(result.error||'Lokalna provjera nije uspjela.');return result;
 }
-export async function request(action, args = {}, adminSession = null) {
+export async function request(action, args = {}, adminSession = null, captchaHost = null) {
   if(config.mode==='local')return localRequest(action,args);
   if (isPreview) return previewRequest(action, args);
   const headers = { apikey: config.publishableKey, 'Content-Type': 'application/json' };
-  if (!['feed', 'comments', 'confession'].includes(action)) {
+  if (!['feed', 'comments', 'confession', 'captcha_config', 'activate_admin'].includes(action)) {
     const s = adminSession || await session();
     headers.Authorization = 'Bearer ' + s.access_token;
   }
+  if(action==='submit')args={...args,captcha_token:await captchaToken({kind:args.kind,host:captchaHost})};
   const response = await fetch(config.supabaseUrl + '/functions/v1/community-test-api', {
     method: 'POST', headers, body: JSON.stringify({ action, args }), signal: AbortSignal.timeout(20000), cache: 'no-store',
   });

@@ -1,4 +1,4 @@
-import { request, isPreview, isLocal } from './api.js';
+import { request, isPreview, isLocal } from './api.js?v=admin1';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 let currentView='oldest',offset=0, generation=0, openMenu=null,openBranch=null,busy=false;
@@ -57,7 +57,7 @@ function contentForm(kind,extra,done){
   try{
    const count=[...text.value.trim()].length,min=kind==='confession'?15:1,max=kind==='confession'?5000:1000;
    if(count<min||count>max)throw new Error(`Tekst mora imati od ${min} do ${max} znakova.`);
-   const r=await request('submit',{kind,body:text.value,nickname:nick.value,...extra,allow_duplicate:allowDuplicate});
+   const r=await request('submit',{kind,body:text.value,nickname:nick.value,...extra,allow_duplicate:allowDuplicate},null,form);
    if(r.duplicate){status.textContent='Ovaj tekst si već poslao. Ako želiš, možeš ga poslati ponovo.';if(!duplicateButton){duplicateButton=button('Ipak pošalji',()=>{allowDuplicate=true;form.requestSubmit();});form.append(duplicateButton);}return;}
    text.value='';nick.value='';counter.textContent='0 znakova';allowDuplicate=false;duplicateButton?.remove();duplicateButton=null;
    if(kind==='confession'){dialog.close();closeMenu();toast('Tvoja ispovijest je uspješno poslata. Čeka svoj red za objavljivanje.');}
