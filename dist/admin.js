@@ -11,7 +11,7 @@ async function gate(){
  if(!session){status('Prijavi se svojim administratorskim nalogom.');return;}
  await request('admin_session',{},session);
  const confirmation=await request('admin_email_status',{},session);
- if(!confirmation.verified){$('#email-check').hidden=false;status('Još potvrdi pristup kodom koji će stići na tvoj e-mail.');return;}
+ if(!confirmation.verified){const claims=JSON.parse(atob(session.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(!claims.amr?.some(a=>a.method==='password'&&Date.now()-a.timestamp*1000<540000)){await sb.auth.signOut({scope:'local'});await gate();status('Prijavi se lozinkom da bi zatražio novi kod na e-mail.');return;}$('#email-check').hidden=false;status('Još potvrdi pristup kodom koji će stići na tvoj e-mail.');return;}
  await load(true);await loadSecurity();$('#tools').hidden=false;status('Zaštićen pristup · lozinka i potvrda e-mailom');
 }
 async function load(reset=false){

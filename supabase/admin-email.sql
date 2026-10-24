@@ -1,4 +1,5 @@
 begin;
+alter table community_test.security_settings add column admin_auth_method text not null default 'totp' check(admin_auth_method in ('totp','email'));
 create table community_test.admin_email_sessions (
  user_id uuid primary key references community_test.admins(user_id),
  session_id uuid not null,
@@ -54,12 +55,23 @@ begin
  elsif p_action='finish' then
   if s.verifying_until is null or s.verifying_until<=clock_timestamp() or p_args->>'verified_uid' is distinct from p_uid::text or lower(p_args->>'verified_email') is distinct from v_email then return '{"denied":true}'; end if;
   update community_test.admin_email_sessions set verified_until=clock_timestamp()+interval '8 hours',expires_at=clock_timestamp(),verifying_until=null where user_id=p_uid;
+  update community_test.security_settings set admin_auth_method='email',updated_at=clock_timestamp() where singleton;
   return '{"verified":true}';
  end if;
  raise exception 'Nepoznata radnja.';
 end $$;
 revoke all on function community_test.assert_admin_email(uuid,text),public.community_test_admin_email(uuid,text,jsonb) from public,anon,authenticated;
 grant execute on function community_test.assert_admin_email(uuid,text),public.community_test_admin_email(uuid,text,jsonb) to service_role;
+-- Preserve existing TOTP until this owner successfully proves the new e-mail flow.
+create function community_test.assert_admin_access(p_uid uuid,p_session text,p_aal text) returns void
+language plpgsql security invoker set search_path='' as $$
+begin
+ perform community_test.assert_admin(p_uid,p_session);
+ if (select admin_auth_method from community_test.security_settings where singleton)='totp' and p_aal='aal2' then return; end if;
+ perform community_test.assert_admin_email(p_uid,p_session);
+end $$;
+revoke all on function community_test.assert_admin_access(uuid,text,text) from public,anon,authenticated;
+grant execute on function community_test.assert_admin_access(uuid,text,text) to service_role;
 create or replace function public.community_test_dispatch(p_uid uuid,p_action text,p_args jsonb default '{}') returns jsonb
 language plpgsql security invoker set search_path='' as $$
 declare v_result jsonb;v_id bigint;v_state text;v_previous text;v_kind text;v_at timestamptz;v_offset integer;
@@ -68,7 +80,7 @@ begin
  if p_action like 'admin_%' then
   perform community_test.assert_admin(p_uid,p_args->>'_session_id');
   if p_action='admin_session' then return '{"admin":true}'; end if;
-  perform community_test.assert_admin_email(p_uid,p_args->>'_session_id');
+  perform community_test.assert_admin_access(p_uid,p_args->>'_session_id',p_args->>'_aal');
   if p_action='admin_remove' then
    perform pg_advisory_xact_lock(73142011);
    v_id=(p_args->>'id')::bigint;select state into v_state from community_test.content where id=v_id for update;
@@ -139,7 +151,7 @@ begin
   end if;
  else
   perform community_test.assert_admin(p_uid,p_args->>'_session_id');
-  perform community_test.assert_admin_email(p_uid,p_args->>'_session_id');
+  perform community_test.assert_admin_access(p_uid,p_args->>'_session_id',p_args->>'_aal');
   if p_action='admin_security_get' then
    select * into s from community_test.security_settings where singleton;
    return jsonb_build_object('enabled',s.captcha_enabled,'sitekey',s.captcha_sitekey,'secret_set',s.captcha_secret_ciphertext is not null,'hostname',s.captcha_hostname);

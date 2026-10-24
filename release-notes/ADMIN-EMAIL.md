@@ -23,3 +23,17 @@ Postojeća objavljena verzija sačuvana je u `backup/before-email-admin-20261024
 ## Testovi
 
 `npm test`: svih 50 testova prolazi. SQL na izolovanom PGlite/PostgreSQL okruženju; Auth i Cloudflare transporti su simulirani. Pokriveni su neuspjeli/istekli/iskorišteni kodovi, 5 pokušaja, zabrana preskakanja, passwordless odbijanje, nedostupan mailer, uklanjanje starog neaktiviranog TOTP faktora nakon potvrde, RLS/ACL, opozvane i istekle sesije, kao i postojeći red, glasovi, privatne liste, prijave, uklanjanje/vraćanje i CAPTCHA. Ručni pozitivni e-mail test i pregled na telefonu čekaju podešavanje šablona i vlasnika.
+
+## Stanje nakon SMTP pripreme — 24.10.2026.
+
+Vlasnik je na telefonu napravio Resend nalog, unio Sending access API ključ direktno u Supabase SMTP, sačuvao SMTP i Magic Link/OTP šablon sa `{{ .Token }}`. Ključ nije preuzet u radno okruženje niti javni kod.
+
+Stvarni Auth OTP zahtjev na vlasnikov e-mail prihvaćen je HTTP 200. To potvrđuje prihvatanje slanja, ne isporuku u Gmail ili uspješnu prijavu.
+
+Primijenjena je migracija `test_admin_email_verification_with_guarded_cutover`, a `community-test-api` je aktivna verzija 3. Novo polje `admin_auth_method` inicijalno ostaje `totp`. Stari AAL2 pristup ostaje važeći dok vlasnik ne potvrdi prvi stvarni e-mail kod. Nakon potvrđenog koda server prelazi na `email`; od tada AAL2 bez session-bound e-mail potvrde nije dovoljan. Stari TOTP faktor se uklanja samo nakon Auth-provjerenog e-maila. U ovom projektu stari faktor je bio neprovjeren, pa njegovo uklanjanje ne treba opozvati aktivnu sesiju.
+
+Probni frontend je zaseban `/test/admin-email.html` sa `/test/admin-email.js`. Standardni `/test/admin.html` i glavni index.html ostaju prethodna verzija do vlasnikove potvrde. Nakon uspješnog vlasnikovog testa treba objaviti isti provjereni email UI kao normalni `/test/admin.html` i admin.js.
+
+Svih 52 automatska testa prolaze. Dodate provjere: očuvanje TOTP pristupa prije pozitivnog e-mail testa; zabrana starog AAL2-only pristupa nakon prelaska na email. Otisci postojećih podataka u 11 sadržajnih/administratorskih tabela prije i poslije migracije identični su. Novi privatni store ima RLS i nema anon/authenticated read/execute privilegije. Rezervni ZIP prošao je CRC provjeru. Root index ostaje originalni blob 9f83f627a4917953a70b4efe9c01a05a5c130372.
+
+Sigurnosni advisor prijavljuje privatne RLS tabele bez javnih policies (namjerni deny-all za direktni klijentski pristup). Ostali nalazi vezani su za ranije public.rls_auto_enable, cron policies i globalno isključenu provjeru kompromitovanih lozinki; nisu mijenjani ovom migracijom. Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable i https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .

@@ -61,9 +61,13 @@ test('activation is owner-bound, secret-protected, single-use and never writes p
  assert.ok(!JSON.stringify(sqlPayloads).includes('long secure password'));assert.ok(!JSON.stringify(sqlPayloads).includes(code));
  await assert.rejects(db.query('insert into community_test.admins values($1)',[bob]),/unique/);
 });
-test('email step cannot be skipped with AAL2, forged args or a non-owner; password is mandatory',async()=>{
- assert.equal((await send('admin_list',{view:'reports',_aal:'aal2',verified:true})).status,403);
- assert.equal((await send('admin_security_get')).status,403);
+test('rollout preserves existing TOTP and switches to email only after verified owner code',async()=>{
+ assert.equal((await db.query('select admin_auth_method from community_test.security_settings')).rows[0].admin_auth_method,'totp');
+ assert.equal((await send('admin_list',{view:'reports'})).status,200);
+});
+test('email step cannot be skipped with forged args or a non-owner; password is mandatory',async()=>{
+ assert.equal((await send('admin_list',{view:'reports',_aal:'aal2',verified:true},token(owner,'aal1'))).status,403);
+ assert.equal((await send('admin_security_get',{},token(owner,'aal1'))).status,403);
  assert.equal((await send('admin_email_begin',{},token(bob,'aal1',bobSid))).status,403);
  assert.equal(otpCalls,0);
  const passwordless='e30.'+Buffer.from(JSON.stringify({sub:owner,aal:'aal1',session_id:sid,amr:[{method:'otp',timestamp:Math.floor(Date.now()/1000)}]})).toString('base64url')+'.signed';
@@ -82,7 +86,7 @@ test('wrong code consumes a persistent attempt; wrong challenge does not call Au
  assert.equal((await send('admin_email_verify',{challenge:'B'.repeat(43),code:'654321'})).status,403);assert.equal(verifyCalls,0);
  assert.equal((await send('admin_email_verify',{challenge,code:'000000'})).status,403);assert.equal(verifyCalls,1);
  assert.equal((await db.query('select attempts from community_test.admin_email_sessions')).rows[0].attempts,1);
- assert.equal((await send('admin_list',{view:'reports'})).status,403);assert.equal(factorDeletes,0);
+ assert.equal((await send('admin_list',{view:'reports'},token(owner,'aal1'))).status,403);assert.equal(factorDeletes,0);
 });
 test('five incorrect attempts block valid codes; expired challenges and unavailable email fail closed',async()=>{
  await db.exec('update community_test.admin_email_sessions set attempts=5');
@@ -100,6 +104,11 @@ test('successful email verification retires old TOTP only after code proof, and 
  assert.equal((await send('admin_email_status')).body.verified,true);
  const n=verifyCalls;assert.equal((await send('admin_email_verify',{challenge,code:'654321'})).status,403);assert.equal(verifyCalls,n);
  assert.ok(!JSON.stringify(sqlPayloads).includes('654321'));
+});
+test('after successful email code old AAL2-only sessions no longer authorize administration',async()=>{
+ assert.equal((await db.query('select admin_auth_method from community_test.security_settings')).rows[0].admin_auth_method,'email');
+ const otherSid='00000000-0000-4000-8000-000000000099';await db.query('insert into auth.sessions values($1,$2,null)',[otherSid,owner]);
+ assert.equal((await send('admin_list',{view:'reports'},token(owner,'aal2',otherSid))).status,403);
 });
 test('server proof is session-bound, expires, and cannot survive session revocation or bypass table/RPC ACLs',async()=>{
  assert.equal((await send('admin_list',{view:'reports'},token(anon))).status,403);
