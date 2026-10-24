@@ -17,12 +17,10 @@ alter table community_test.security_settings enable row level security;
 revoke all on community_test.security_settings from public,anon,authenticated;
 grant all on community_test.security_settings to service_role;
 insert into community_test.security_settings(singleton) values(true);
-grant select on auth.users to service_role;
 create function community_test.assert_admin(p_uid uuid,p_session text) returns void
 language plpgsql security invoker set search_path='' as $$
 begin
- if not exists(select 1 from community_test.admins a join auth.users u on u.id=a.user_id
-  where a.user_id=p_uid and u.is_anonymous=false and u.email_confirmed_at is not null)
+ if not exists(select 1 from community_test.admins a where a.user_id=p_uid)
  or not exists(select 1 from auth.sessions s where s.id=p_session::uuid and s.user_id=p_uid and (s.not_after is null or s.not_after>clock_timestamp())) then
   raise exception 'Zabranjena ili istekla administratorska sesija.' using errcode='42501';
  end if;
@@ -96,7 +94,9 @@ begin
    update community_test.security_settings set activation_claim_until=null where singleton;return '{"success":true}';
   elsif p_action='bootstrap_finish' then
    v_uid=(p_args->>'user_id')::uuid;
-   if not exists(select 1 from auth.users where id=v_uid and lower(email)=s.owner_email and is_anonymous=false and email_confirmed_at is not null) then
+   -- These claims come only from the gateway's verified Auth response, not client arguments.
+   -- The admins.user_id foreign key additionally requires a real Auth identity.
+   if lower(p_args->>'verified_email') is distinct from s.owner_email or (p_args->>'verified_anonymous')::boolean is distinct from false or nullif(p_args->>'verified_confirmed_at','') is null then
     raise exception 'Nalog nije potvrđen.' using errcode='42501';
    end if;
    insert into community_test.admins(user_id) values(v_uid);
@@ -120,8 +120,9 @@ begin
  end if;
  raise exception 'Nepoznata sigurnosna radnja.';
 end $$;
-revoke all on all functions in schema community_test from public,anon,authenticated;
-grant execute on all functions in schema community_test to service_role;
-revoke all on function public.community_test_dispatch(uuid,text,jsonb),public.community_test_dispatch_base(uuid,text,jsonb),public.community_test_security(uuid,text,jsonb) from public,anon,authenticated;
-grant execute on function public.community_test_dispatch(uuid,text,jsonb),public.community_test_dispatch_base(uuid,text,jsonb),public.community_test_security(uuid,text,jsonb) to service_role;
+revoke all on function community_test.assert_admin(uuid,text) from public,anon,authenticated;
+grant execute on function community_test.assert_admin(uuid,text) to service_role;
+revoke all on function public.community_test_dispatch(uuid,text,jsonb),public.community_test_security(uuid,text,jsonb) from public,anon,authenticated;
+grant execute on function public.community_test_dispatch(uuid,text,jsonb),public.community_test_security(uuid,text,jsonb) to service_role;
+notify pgrst, 'reload schema';
 commit;

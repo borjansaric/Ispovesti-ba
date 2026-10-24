@@ -26,15 +26,15 @@ async function activate(args:Record<string,unknown>){
  const proof={hash:await digest(code),email};await rpc('community_test_security',null,'bootstrap_claim',proof);
  try{
   const r=await fetch(url+'/auth/v1/admin/users',{method:'POST',headers:{apikey:serviceKey,Authorization:'Bearer '+serviceKey,'Content-Type':'application/json'},body:JSON.stringify({email,password,email_confirm:true}),signal:AbortSignal.timeout(15000)});
-  let d=await r.json(),id=d.id||d.user?.id;
+  let d=await r.json(),account=d.user||d,id=account.id;
   if(!r.ok){
    // Resume only by proving the existing account's password; never reset it here.
    if(!['email_exists','user_already_exists'].includes(d.code))fail('Nalog nije moguće aktivirati. Provjeri da lozinka ima najmanje 12 znakova.');
    const login=await fetch(url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:serviceKey,'Content-Type':'application/json'},body:JSON.stringify({email,password}),signal:AbortSignal.timeout(15000)});
-   d=await login.json();id=d.user?.id;if(!login.ok||!id)fail('Postojeći nalog zahtijeva njegovu ispravnu lozinku.');
+   d=await login.json();account=d.user;id=account?.id;if(!login.ok||!id)fail('Postojeći nalog zahtijeva njegovu ispravnu lozinku.');
   }
-  if(!id)fail('Nalog nije moguće aktivirati.',503);
-  await rpc('community_test_security',null,'bootstrap_finish',{...proof,user_id:id});return {success:true};
+  if(!id||account.email?.toLowerCase()!==email||account.is_anonymous!==false||!account.email_confirmed_at)fail('Nalog nije moguće aktivirati.',503);
+  await rpc('community_test_security',null,'bootstrap_finish',{...proof,user_id:id,verified_email:account.email.toLowerCase(),verified_anonymous:account.is_anonymous,verified_confirmed_at:account.email_confirmed_at});return {success:true};
  }catch(e){await rpc('community_test_security',null,'bootstrap_release',proof).catch(()=>{});throw e;}
 }
 Deno.serve(async(req:Request)=>{
@@ -61,7 +61,7 @@ Deno.serve(async(req:Request)=>{
    if(!response.ok)fail('Sesija je istekla. Osvježi stranicu.',401);
    const user=await response.json();uid=user.id;if(!uid)fail('Neispravna sesija.',401);
    if(action.startsWith('admin_')){
-    if(user.is_anonymous!==false)fail('Potreban je administratorski nalog sa dvofaktorskom potvrdom.',403);
+    if(user.is_anonymous!==false||!user.email_confirmed_at)fail('Potreban je administratorski nalog sa dvofaktorskom potvrdom.',403);
     const payload=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
     if(!payload.session_id||(action!=='admin_session'&&payload.aal!=='aal2'))fail('Potreban je administratorski nalog sa dvofaktorskom potvrdom.',403);
     args._session_id=payload.session_id;args._aal=payload.aal;

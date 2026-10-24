@@ -16,7 +16,7 @@ async function send(action,args={},jwt=token()){
  const r=await handler(new Request('https://gateway.invalid',{method:'POST',headers:{Origin:'https://allowed.invalid',...(jwt?{Authorization:'Bearer '+jwt}:{})},body:JSON.stringify({action,args})}));return{status:r.status,body:await r.json()};
 }
 before(async()=>{
- await db.exec("create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key,email text,is_anonymous boolean default false,email_confirmed_at timestamptz default now());create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);");
+ await db.exec("create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key,email text,is_anonymous boolean default false,email_confirmed_at timestamptz default now(),encrypted_password text);create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);");
  await db.exec(await readFile(new URL('../supabase/migrations/20261023212548_community_v2.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../supabase/admin-captcha.sql',import.meta.url),'utf8'));
  await db.query("insert into auth.users(id,email,is_anonymous) values($1,'bob@example.invalid',false),($2,null,true)",[bob,anon]);
@@ -33,11 +33,11 @@ before(async()=>{
     if(cfResult?.success)used.add(payload.response);return Response.json(cfResult||{success:false});
    }
    if(url.endsWith('/auth/v1/user')){
-    const jwt=options.headers.Authorization?.slice(7);try{const p=JSON.parse(Buffer.from(jwt.split('.')[1],'base64url').toString());if(![owner,bob,anon].includes(p.sub))throw Error();return Response.json({id:p.sub,is_anonymous:p.sub===anon});}catch{return Response.json({error:'invalid'},{status:401});}
+    const jwt=options.headers.Authorization?.slice(7);try{const p=JSON.parse(Buffer.from(jwt.split('.')[1],'base64url').toString());if(![owner,bob,anon].includes(p.sub))throw Error();return Response.json({id:p.sub,is_anonymous:p.sub===anon,email_confirmed_at:p.sub===anon?null:new Date().toISOString()});}catch{return Response.json({error:'invalid'},{status:401});}
    }
    if(url.endsWith('/auth/v1/admin/users')){
     authCreates++;const a=JSON.parse(options.body);assert.equal(a.email,email);assert.equal(a.email_confirm,true);assert.ok(a.password.length>=12);
-    await db.query('insert into auth.users(id,email,is_anonymous) values($1,$2,false)',[owner,email]);return Response.json({id:owner});
+    await db.query('insert into auth.users(id,email,is_anonymous) values($1,$2,false)',[owner,email]);return Response.json({id:owner,email,is_anonymous:false,email_confirmed_at:new Date().toISOString()});
    }
    const name=url.endsWith('/community_test_security')?'community_test_security':url.endsWith('/community_test_dispatch')?'community_test_dispatch':null;
    if(!name)throw Error('Unexpected external request');
@@ -116,3 +116,5 @@ test('CAPTCHA can be disabled by owner without provider availability and cannot 
  const before=cfCalls;assert.equal((await send('submit',{kind:'comment',confession_id:confession,body:'Komentar nakon isključivanja zaštite.'},token(bob,'aal1',bobSid))).status,200);assert.equal(cfCalls,before);
  await db.exec('set role anon');await assert.rejects(security(null,'runtime_config'));await assert.rejects(sql(owner,'admin_session',adminArgs({})));await db.exec('reset role');
 });
+
+test('gateway has no extra access to the shared Auth user table',async()=>{await db.exec('set role service_role');try{await assert.rejects(db.query('select id,email,is_anonymous,email_confirmed_at from auth.users'),/permission denied/);await assert.rejects(db.query('select encrypted_password from auth.users'),/permission denied/);}finally{await db.exec('reset role');}});

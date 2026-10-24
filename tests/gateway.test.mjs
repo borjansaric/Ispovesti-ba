@@ -36,9 +36,9 @@ test('gateway: rejects invalid auth tokens and anonymous admin attempts',async()
  assert.equal(g.calls.length,1);
 });
 test('gateway: admin requires AAL2 and a server-verified session ID; body cannot override',async()=>{
- const low=gateway({id:'admin',is_anonymous:false},{aal:'aal1',session_id:'real-session'});
+ const low=gateway({id:'admin',is_anonymous:false,email_confirmed_at:new Date().toISOString()},{aal:'aal1',session_id:'real-session'});
  assert.equal((await low.send({action:'admin_list'},'Bearer '+low.token)).status,403);
- const g=gateway({id:'admin',is_anonymous:false},{aal:'aal2',session_id:'real-session'});
+ const g=gateway({id:'admin',is_anonymous:false,email_confirmed_at:new Date().toISOString()},{aal:'aal2',session_id:'real-session'});
  assert.equal((await g.send({action:'admin_list',args:{_session_id:'forged'}},'Bearer '+g.token)).status,200);
  const payload=JSON.parse(g.calls.at(-1).opts.body);assert.equal(payload.p_args._session_id,'real-session');
 });
