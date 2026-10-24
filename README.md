@@ -1,4 +1,4 @@
-# Administracija i Turnstile — pripremljeno, još nije postavljeno
+# Administracija i Turnstile — postavljeno na /test/
 
 Ova promjena odnosi se samo na testnu putanju i testnu šemu. Ne briše sadržaj. Naslovna stranica ostaje ista.
 
@@ -14,14 +14,16 @@ Provjera se izvršava prilikom slanja ispovijesti, komentara i odgovora. Widget 
 
 Vlasnik može uključiti ili isključiti zaštitu u panelu. Uključivanje zahtijeva uspješnu stvarnu provjeru s odabranim ključevima. Dokumentacioni probni ključevi su zabranjeni. Tajni ključ se šifruje AES-GCM na serveru ključem izvedenim iz postojeće serverske tajne. Ne šalje se klijentu niti u SQL u otvorenom obliku. Nakon rotacije osnovne serverske tajne Turnstile ključ treba ponovo unijeti; ovo je namjerno zatvaranje pristupa pri nemogućnosti dešifrovanja.
 
-Cloudflare nalog još nije povezan i stvarni widget/ključevi nisu napravljeni. Zato se zaštita ne smije označiti kao aktivna. Pripremljena forma prima sitekey i tajni ključ bez pisanja koda. U Cloudflare nalogu treba besplatni Managed widget za hostname borjansaric.github.io.
+Vlasnik je napravio stvarni Cloudflare widget i ima ključeve. Njih još treba unijeti kroz zaštićeni panel; do uspješne provjere zaštita ostaje isključena. Pripremljena forma prima sitekey i tajni ključ bez pisanja koda. U Cloudflare nalogu treba besplatni Managed widget za hostname borjansaric.github.io.
 
 ## Provjere
 
-Prolaze 44 automatizovane provjere nad stvarnom lokalnom PostgreSQL/PGlite bazom, lokalnim HTTP serverom i gatewayem. Auth transport i Cloudflare odgovori u novim integracionim provjerama su simulirani. Vlasnik treba lično završiti aktivaciju, TOTP i stvarni widget da bi se potvrdilo kompletno korišćenje u pregledniku. Nije korišćen probni Cloudflare ključ kao produkciona zaštita.
+Prolaze 45 automatizovanih provjere nad stvarnom lokalnom PostgreSQL/PGlite bazom, lokalnim HTTP serverom i gatewayem. Auth transport i Cloudflare odgovori u novim integracionim provjerama su simulirani. Vlasnik treba lično završiti aktivaciju, TOTP i stvarni widget da bi se potvrdilo kompletno korišćenje u pregledniku. Nije korišćen probni Cloudflare ključ kao produkciona zaštita.
 
 Kopija podataka prije izmjena provjerena je lokalnim PostgreSQL vraćanjem 112 redova iz 14 tabela. Plan čišćenja je privatan, zahtijeva zasebnu potvrdu i svjež inventar, i ne briše Auth korisnike, administratora ni podešavanja. Nije izvršen na postojećoj bazi. To je kopija sadržaja i strukturnih metapodataka, ne provider-level PITR ili backup lozinki/MFA tajni.
 
-## Blokada postavljanja
+## Primjena nakon izričitog odobrenja
 
-Automatska provjera odbila je primjenu migracije na postojećem Supabase projektu jer traži dodatno konačno odobrenje za upis. Novi SQL i frontend zato još nisu postavljeni. Postojeća testna verzija nastavlja da radi kao ranije. Nakon potvrde treba primijeniti admin-captcha.sql, postaviti gateway, izraditi privatni aktivacioni hash vezan za vlasnika i objaviti samo promijenjene test/ datoteke.
+Postavljene su testne SQL funkcije, testni gateway i frontend isključivo pod /test/. Prvobitni zahtjev za dodatni Auth grant je uklonjen: nikakva nova prava na auth.users nisu dodata. Identitet i potvrda e-maila provjeravaju se preko Auth servisa, a SQL provjerava članstvo, aktivnu sesiju i testne dozvole.
+
+Kontrolni zbirovi starog sadržaja i njegovih grantova prije i poslije primjene su jednaki. Naslovna ima isti originalni Git blob. Rezervna kopija je dostupna i provjerena, a plan čišćenja nije izvršen. Aktivacioni pristup je privatno izdat vlasniku, važi 48 sati i koristi se samo jednom. Vlasnik tek treba izabrati lozinku, završiti TOTP i unijeti Cloudflare ključeve. Ni lozinka, aktivacioni kod, stvarni Cloudflare ključevi ni servisni ključevi nisu u ovom repozitorijumu.
