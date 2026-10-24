@@ -1,0 +1,4 @@
+@supabase/supabase-js 2.118.0
+Source: official npm registry package, dist/umd/supabase.js
+License: MIT (see SUPABASE-LICENSE)
+Vendored locally so visitors need not contact a third-party script CDN.
