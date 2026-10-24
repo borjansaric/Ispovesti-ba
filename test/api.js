@@ -1,8 +1,8 @@
-import { captchaToken, prepareCaptcha } from './captcha.js?v=comments1';
+import { captchaToken, prepareCaptcha } from './captcha.js?v=latency2';
 const config = window.ISPOVESTI_CONFIG || {};
 export const isPreview = config.mode === 'preview';
 export const isLocal = config.mode === 'local';
-export function prepareSubmission(){if(!isPreview&&!isLocal)void prepareCaptcha();}
+export function prepareSubmission(kind,host){if(!isPreview&&!isLocal){prepareCaptcha({kind,host});void session().catch(()=>{});}}
 let client, sessionPromise;
 export function authClient(admin = false) {
   if (isPreview) throw new Error('Administracija je dostupna samo na povezanom testnom ili živom okruženju.');
@@ -42,14 +42,18 @@ export async function request(action, args = {}, adminSession = null, captchaHos
   if (isPreview) return previewRequest(action, args);
   const headers = { apikey: config.publishableKey, 'Content-Type': 'application/json' };
   if (!['feed', 'comments', 'confession', 'captcha_config', 'activate_admin'].includes(action)) {
+    const authAt=performance.now();
     const s = adminSession || await session();
+    if(action==='submit')performance.measure('ispovesti-submit-session',{start:authAt,end:performance.now()});
     headers.Authorization = 'Bearer ' + s.access_token;
   }
-  if(action==='submit')args={...args,captcha_token:await captchaToken({kind:args.kind,host:captchaHost})};
+  if(action==='submit'){const at=performance.now();args={...args,captcha_token:await captchaToken({kind:args.kind,host:captchaHost})};performance.measure('ispovesti-submit-captcha',{start:at,end:performance.now()});}
+  const networkAt=performance.now();
   const response = await fetch(config.supabaseUrl + '/functions/v1/community-test-api', {
     method: 'POST', headers, body: JSON.stringify({ action, args }), signal: AbortSignal.timeout(20000), cache: 'no-store',
   });
   const result = await response.json();
+  if(action==='submit')performance.measure('ispovesti-submit-network',{start:networkAt,end:performance.now()});
   if (!response.ok) throw new Error(result.error || 'Radnja nije uspjela. Pokušaj ponovo.');
   return result;
 }
