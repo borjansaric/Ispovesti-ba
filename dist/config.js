@@ -1,2 +1,1 @@
-// Safe default: no production connection. Change only in approved deployment build.
-window.ISPOVESTI_CONFIG = { mode: 'preview', supabaseUrl: '', publishableKey: '' };
+window.ISPOVESTI_CONFIG={mode:'preview',supabaseUrl:'',publishableKey:''};

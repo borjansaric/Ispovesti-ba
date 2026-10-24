@@ -24,22 +24,23 @@ const seedStories=[
 export async function createLocalPreview({dataDir,seed=true}={}){
  const db=new PGlite(dataDir);
  const migration=await readFile(path.join(root,'supabase/migrations/20261023212548_community_v2.sql'),'utf8');
- const hash=createHash('sha256').update(migration).digest('hex');
- const exists=(await db.query("select to_regclass('community_private.content') as t")).rows[0].t;
+ const securityMigration=await readFile(path.join(root,'supabase/admin-captcha.sql'),'utf8');
+ const hash=createHash('sha256').update(migration+securityMigration).digest('hex');
+ const exists=(await db.query("select to_regclass('community_test.content') as t")).rows[0].t;
  if(!exists){
-  await db.exec('create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key);create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);');
-  await db.exec(migration);
+  await db.exec('create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key,email text,is_anonymous boolean default false,email_confirmed_at timestamptz default now());create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);');
+  await db.exec(migration);await db.exec(securityMigration);
   await db.exec('create schema preview_meta;create table preview_meta.schema_version(hash text not null);');
   await db.query('insert into preview_meta.schema_version values($1)',[hash]);
   if(seed){
    const owner=randomUUID();await db.query('insert into auth.users values($1)',[owner]);
    let first;
    for(let i=0;i<seedStories.length;i++){
-    const r=await db.query("insert into community_private.content(kind,author_id,body,nickname,state,published_at) values('confession',$1,$2,$3,'published',clock_timestamp()-make_interval(hours=>$4)) returning id",[owner,...seedStories[i],seedStories.length-i]);
+    const r=await db.query("insert into community_test.content(kind,author_id,body,nickname,state,published_at) values('confession',$1,$2,$3,'published',clock_timestamp()-make_interval(hours=>$4)) returning id",[owner,...seedStories[i],seedStories.length-i]);
     first??=r.rows[0].id;
    }
-   const c=await db.query("insert into community_private.content(kind,author_id,confession_id,body,state,published_at) values('comment',$1,$2,$3,'published',clock_timestamp()) returning id",[owner,first,'Nekad je dovoljan jedan miris iz nečije kuhinje i opet smo kod kuće.']);
-   await db.query("insert into community_private.content(kind,author_id,confession_id,parent_id,body,state,published_at) values('reply',$1,$2,$3,$4,'published',clock_timestamp())",[owner,first,c.rows[0].id,'Meni miris pečenih paprika. Odmah septembar kod bake. 🙂']);
+   const c=await db.query("insert into community_test.content(kind,author_id,confession_id,body,state,published_at) values('comment',$1,$2,$3,'published',clock_timestamp()) returning id",[owner,first,'Nekad je dovoljan jedan miris iz nečije kuhinje i opet smo kod kuće.']);
+   await db.query("insert into community_test.content(kind,author_id,confession_id,parent_id,body,state,published_at) values('reply',$1,$2,$3,$4,'published',clock_timestamp())",[owner,first,c.rows[0].id,'Meni miris pečenih paprika. Odmah septembar kod bake. 🙂']);
   }
  }else{
   const version=(await db.query('select hash from preview_meta.schema_version')).rows[0]?.hash;
@@ -55,7 +56,7 @@ export async function createLocalPreview({dataDir,seed=true}={}){
   return session;
  };
  vm.runInNewContext(edgeSource,{
-  Request,Response,Uint8Array,TextDecoder,JSON,Set,AbortSignal,SyntaxError,atob,
+  Request,Response,Uint8Array,TextDecoder,TextEncoder,crypto,btoa,JSON,Set,AbortSignal,SyntaxError,atob,
   Deno:{env:{get:key=>({SUPABASE_URL:'https://isolated.local.invalid',SUPABASE_SERVICE_ROLE_KEY:'isolated-local-key',ALLOWED_ORIGINS:'http://local.invalid'})[key]},serve:fn=>edgeHandler=fn},
   fetch:async(url,options)=>{
    // This adapter intentionally cannot forward requests to any external system.
@@ -63,10 +64,10 @@ export async function createLocalPreview({dataDir,seed=true}={}){
     const token=options.headers.Authorization?.replace(/^Bearer /,'');const session=tokens.get(token);
     return Response.json(session&&session.expiresAt>Date.now()?{id:session.uid,is_anonymous:true}:{error:'Invalid local session'},{status:session&&session.expiresAt>Date.now()?200:401});
    }
-   if(url!=='https://isolated.local.invalid/rest/v1/rpc/community_dispatch')throw new Error('External network access forbidden in local staging.');
+   if(!['https://isolated.local.invalid/rest/v1/rpc/community_test_dispatch','https://isolated.local.invalid/rest/v1/rpc/community_test_security'].includes(url))throw new Error('External network access forbidden in local staging.');
    try{
-    const args=JSON.parse(options.body);
-    const r=await db.query('select public.community_dispatch($1::uuid,$2,$3::jsonb) as result',[args.p_uid,args.p_action,JSON.stringify(args.p_args)]);
+    const args=JSON.parse(options.body);const rpcName=url.endsWith('community_test_security')?'community_test_security':'community_test_dispatch';
+    const r=await db.query('select public.'+rpcName+'($1::uuid,$2,$3::jsonb) as result',[args.p_uid,args.p_action,JSON.stringify(args.p_args)]);
     return Response.json(r.rows[0].result);
    }catch(error){return Response.json({code:error.code,message:error.message},{status:400});}
   },
@@ -112,7 +113,7 @@ export async function createLocalPreview({dataDir,seed=true}={}){
    return send(res,200,req.method==='HEAD'?'':bytes,{'Content-Type':types[path.extname(filename)]||'application/octet-stream'});
   }catch{return json(res,500,{error:'Lokalni test trenutno nije dostupan.'});}
  });
- const publisher=setInterval(()=>db.query('select community_private.publish_one()').catch(()=>{}),60000);publisher.unref();
+ const publisher=setInterval(()=>db.query('select community_test.publish_one()').catch(()=>{}),60000);publisher.unref();
  const cleanup=setInterval(()=>{for(const[key,s]of sessions)if(s.expiresAt<=Date.now()){sessions.delete(key);tokens.delete(s.authToken);}},60000);cleanup.unref();
  return{server,db,async close(){clearInterval(publisher);clearInterval(cleanup);if(server.listening)await new Promise(resolve=>server.close(resolve));await db.close();}};
 }

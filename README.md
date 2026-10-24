@@ -1,20 +1,27 @@
-# Ispovesti.ba — izolovana razvojna verzija
+# Administracija i Turnstile — pripremljeno, još nije postavljeno
 
-Ova grana sadrži isključivo razvojni kod i lokalne testove. Nema produkcionih kredencijala, inventara stvarnih podataka, starog produkcionog frontenda ili izvještaja o infrastrukturi. Ne objavljuje GitHub Pages.
+Ova promjena odnosi se samo na testnu putanju i testnu šemu. Ne briše sadržaj. Naslovna stranica ostaje ista.
 
-## Lokalna proba
+## Administracija
 
-Node 24+: `npm ci`, `npm test`, `npm run dev`.
-Server pokreće stvarni SQL i Edge handler u izolovanom PostgreSQL/PGlite runtime-u. Lokalni Auth adapter je probni i nema vezu s vanjskim Supabase projektom. Probni podaci su u ignorisanom `.local-stage/` folderu. Administracija je zaključana u lokalnom režimu.
+Jedan glavni administrator. Jednokratni slučajni aktivacioni kod od 256 bita veže aktivaciju za unaprijed odobreni e-mail na serveru i briše se nakon prve uspješne aktivacije. U bazi se čuva samo SHA-256 tog koda. Lozinku vlasnik sam unosi preko HTTPS u formu; nije u URL-u, GitHubu ni SQL-u. Auth Admin API pravi potvrđen nalog; ponovni pokušaj za postojeći nalog zahtijeva ispravnu lozinku, bez resetovanja. Nakon prijave obavezan je TOTP. Server provjerava potpisan Auth token, AAL2, aktivnu sesiju i članstvo. AAL1 može samo provjeriti sopstveno članstvo prije TOTP podešavanja, bez čitanja sadržaja ili postavki. Admin sesija se čuva u sessionStorage.
 
-`dist/config.js` je podrazumijevano prazna preview konfiguracija. Browser-local demonstracija i lokalni HTTP test nisu dokaz rada pravog Auth/MFA/CAPTCHA/cron servisa.
+Prijave obuhvataju sve vrste sadržaja. Uklanjanje je arhiviranje. Vraćanje čuva ranije stanje: ispovijest koja je čekala red ponovo čeka red. Vraćanje roditelja ne vraća posebno uklonjene odgovore. Arhiva prikazuje i naslijeđeno skrivenu granu.
 
-## Zasebni Supabase test
+## Turnstile
 
-Novi testni projekat nije napravljen: nalog je dostigao limit dva aktivna Free projekta. Za nastavak treba korisnikov izbor kako osloboditi kapacitet; nije uključen plaćeni plan, niti su postojeći projekti pauzirani, brisani ili mijenjani.
+Provjera se izvršava prilikom slanja ispovijesti, komentara i odgovora. Widget se prikazuje samo ako traži interakciju. Server poziva Cloudflare Siteverify i provjerava success, hostname, action i vrijeme izazova. Cloudflare jednokratnost odbija ponovnu upotrebu tokena. Neispravna provjera ne može doći do upisa sadržaja. Podešavanja važe samo za testni gateway, ne uključuju globalnu Supabase Auth CAPTCHA koja bi uticala na staru naslovnu.
 
-Nakon što postoji izričito odobren zasebni testni projekat, treba primijeniti šemu, postaviti community-api i ALLOWED_ORIGINS za testni domen, podesiti anonimni Auth/CAPTCHA i zaštićeni admin pristup, pa provjeriti pravila kroz stvarne sesije. Servisni ključ nikada ne ide u frontend ni repozitorijum. Produkcioni prelazak zahtijeva posebnu konačnu saglasnost.
+Vlasnik može uključiti ili isključiti zaštitu u panelu. Uključivanje zahtijeva uspješnu stvarnu provjeru s odabranim ključevima. Dokumentacioni probni ključevi su zabranjeni. Tajni ključ se šifruje AES-GCM na serveru ključem izvedenim iz postojeće serverske tajne. Ne šalje se klijentu niti u SQL u otvorenom obliku. Nakon rotacije osnovne serverske tajne Turnstile ključ treba ponovo unijeti; ovo je namjerno zatvaranje pristupa pri nemogućnosti dešifrovanja.
 
-## Korisnički izgled
+Cloudflare nalog još nije povezan i stvarni widget/ključevi nisu napravljeni. Zato se zaštita ne smije označiti kao aktivna. Pripremljena forma prima sitekey i tajni ključ bez pisanja koda. U Cloudflare nalogu treba besplatni Managed widget za hostname borjansaric.github.io.
 
-Zadržan je postojeći tamni stil. U formama piše samo Nadimak, bez pomoćnih napomena o dužini i linkovima. Ograničenja pri slanju ostaju.
+## Provjere
+
+Prolaze 44 automatizovane provjere nad stvarnom lokalnom PostgreSQL/PGlite bazom, lokalnim HTTP serverom i gatewayem. Auth transport i Cloudflare odgovori u novim integracionim provjerama su simulirani. Vlasnik treba lično završiti aktivaciju, TOTP i stvarni widget da bi se potvrdilo kompletno korišćenje u pregledniku. Nije korišćen probni Cloudflare ključ kao produkciona zaštita.
+
+Kopija podataka prije izmjena provjerena je lokalnim PostgreSQL vraćanjem 112 redova iz 14 tabela. Plan čišćenja je privatan, zahtijeva zasebnu potvrdu i svjež inventar, i ne briše Auth korisnike, administratora ni podešavanja. Nije izvršen na postojećoj bazi. To je kopija sadržaja i strukturnih metapodataka, ne provider-level PITR ili backup lozinki/MFA tajni.
+
+## Blokada postavljanja
+
+Automatska provjera odbila je primjenu migracije na postojećem Supabase projektu jer traži dodatno konačno odobrenje za upis. Novi SQL i frontend zato još nisu postavljeni. Postojeća testna verzija nastavlja da radi kao ranije. Nakon potvrde treba primijeniti admin-captcha.sql, postaviti gateway, izraditi privatni aktivacioni hash vezan za vlasnika i objaviti samo promijenjene test/ datoteke.

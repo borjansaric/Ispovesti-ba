@@ -35,7 +35,7 @@ test('HTTP stage: queue stays private and ten-minute vote lock is enforced by re
  assert.ok(!(await api(null,'feed')).body.items.some(c=>c.id===sent.body.id));
  assert.deepEqual((await api(aliceCookie,'vote',{id:comment,value:1})).body,{my_vote:1});
  assert.deepEqual((await api(bobCookie,'vote_status',{id:comment})).body,{my_vote:null});
- await stage.db.query("update community_private.votes set first_voted_at=clock_timestamp()-interval '11 minutes' where content_id=$1",[comment]);
+ await stage.db.query("update community_test.votes set first_voted_at=clock_timestamp()-interval '11 minutes' where content_id=$1",[comment]);
  assert.deepEqual((await api(aliceCookie,'vote',{id:comment,value:-1})).body,{my_vote:1,likes:1,dislikes:0});
 });
 test('HTTP stage rejects cross-origin writes, oversized bodies, custom report reasons and anonymous admins',async()=>{

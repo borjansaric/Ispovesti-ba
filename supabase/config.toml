@@ -1,3 +1,0 @@
-project_id = "ispovesti-ba-isolated"
-[functions.community-api]
-verify_jwt = false

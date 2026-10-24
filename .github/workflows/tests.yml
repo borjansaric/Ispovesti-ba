@@ -1,8 +1,7 @@
-name: Isolated local tests
+name: Admin and CAPTCHA local checks
 on:
   push:
-    branches: [work/isolated-v2-20261024]
-  pull_request:
+    branches: [work/admin-captcha-20261024]
 permissions:
   contents: read
 jobs:
