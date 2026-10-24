@@ -1,16 +1,19 @@
 import {randomId} from './ids.js';
 // Browser-memory simulation only. This ledger never grants server permissions.
+export const AD_COSTS=Object.freeze({confession:3,comment:1,reply:2});
 export const KINDS=Object.freeze(['confession','comment','reply']);
 const kindOf=kind=>{if(!KINDS.includes(kind))throw Error('Nepoznata vrsta otključavanja.');return kind;};
 export class DemoRewards{
- #balances={confession:0,comment:0,reply:0};#events=new Set();#holds=new Map();#listeners=new Set();
+ #balances={confession:0,comment:0,reply:0};#events=new Set();#submissions=new Set();#holds=new Map();#listeners=new Set();
  constructor({demo=false}={}){if(demo!==true)throw Error('Probne nagrade nisu dozvoljene u stvarnom režimu.');}
- balance(kind){kindOf(kind);return this.#balances[kind]-[...this.#holds.values()].filter(h=>h.kind===kind).length;}
+ credits(kind){kindOf(kind);return this.#balances[kind]-[...this.#holds.values()].filter(h=>h.kind===kind).length*AD_COSTS[kind];}
+ balance(kind){return Math.floor(this.credits(kind)/AD_COSTS[kind]);}
+ progress(kind){return this.credits(kind)%AD_COSTS[kind];}
  subscribe(fn){this.#listeners.add(fn);return()=>this.#listeners.delete(fn);}
  #notify(){for(const fn of this.#listeners)try{fn();}catch{}}
  grant({id,kind,provider,completed}){kindOf(kind);if(provider!=='mock'||completed!==true||typeof id!=='string'||!id)throw Error('Nema potvrđene probne nagrade.');if(this.#events.has(id))return false;this.#events.add(id);this.#balances[kind]++;this.#notify();return true;}
- reserve(kind){kindOf(kind);if(this.balance(kind)<1)throw Error('Nema probnog otključavanja. Možeš izabrati besplatno slanje.');const id=randomId();this.#holds.set(id,{kind});this.#notify();return id;}
- commit(ticket,submissionId){const h=this.#holds.get(ticket);if(!h)return false;if(!submissionId)throw Error('Objava nije potvrđena.');this.#holds.delete(ticket);this.#balances[h.kind]--;this.#notify();return true;}
+ reserve(kind){kindOf(kind);if(this.balance(kind)<1)throw Error('Objavljivanje je zaključano. Potrebno je završiti odgovarajući broj probnih reklama.');const id=randomId();this.#holds.set(id,{kind});this.#notify();return id;}
+ commit(ticket,submissionId){const h=this.#holds.get(ticket);if(!h)return false;if(!submissionId)throw Error('Objava nije potvrđena.');if(this.#submissions.has(String(submissionId))){this.release(ticket);return false;}this.#submissions.add(String(submissionId));this.#holds.delete(ticket);this.#balances[h.kind]-=AD_COSTS[h.kind];this.#notify();return true;}
  release(ticket){const removed=this.#holds.delete(ticket);if(removed)this.#notify();return removed;}
 }
 export class DemoAd{

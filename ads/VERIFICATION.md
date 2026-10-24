@@ -1,11 +1,11 @@
-# Provjera pripreme reklama
+# Provjera ispravke reklamnih pravila — 24.10.2026.
 
-- 81 automatski test prolazi. Testovi koriste lokalnu privremenu bazu, ne Supabase projekat.
-- U pregledniku je završena probna reklama za komentar: saldo je postao 1, a za druge vrste ostao 0.
-- Označeno probno otključavanje potrošeno je tek nakon lokalnog uspješnog upisa komentara; saldo je ponovo 0.
-- U mobilnom okviru 390 × 844 izmjerena širina stranice i viewporta je jednaka (375 bez trake skrolovanja): nema horizontalnog prelivanja.
-- Mobilni prekid probne reklame ostavio je sve salde na 0 i prikazao poruku o prekidu.
-- Baner je u normalnom toku stranice, iznad priča; ne prekriva tekst, a dugme + je odvojeno.
-- Za lokalni HTTP pregled dodata je kriptografska UUID kompatibilnost; tajmer radi u stvarnom pregledniku.
-- Stvarne reklamne mreže nisu kontaktirane. Nema odobrenja mreže, prihoda, pravih pregleda ili potvrđenih produkcijskih nagrada.
-- Produkciona baza, postojeći podaci, /test/, main grana i ranije pripremljeni produkcijski PR nisu mijenjani.
+- 85 lokalnih automatskih testova prolazi, bez Supabase veze. Prethodna 81 provjera ostaje u paketu; očekivanja salda usklađena su s izričito odobrenom kvotom.
+- Testirane su tačne kvote 3/2/1, odbijanje nepotpune kvote, odvojenost vrsta, rezervacija, otpuštanje pri grešci, jedinstvenost reklamnog događaja i upisa te trošenje pune kvote samo nakon uspjeha.
+- Sva tri stvarna obrasca, izvršena u lokalnom testnom okruženju, čuvaju kvotu na grešku, troše pri uspjehu i odbijaju novi zahtjev prije API poziva kad nema kvote. Tekst ostaje sačuvan u obrascu.
+- Dvadeset uzastopnih objava ne uključuje besplatni režim. Nema opcionalnog checkboxa ili rezervne putanje za besplatno slanje u reklamnoj demonstraciji.
+- Testovi prekida, skrivenog taba, paralelnog gledanja, prijave sadržaja i izolacije pregleda ostaju uspješni.
+- CSS, raspored, baner i mobilni okvir nisu mijenjani ovom ispravkom. Ranija mobilna vizuelna provjera odnosila se na taj nepromijenjeni raspored; novi tekst i tok nisu ponovo ručno provjeravani u mobilnom pregledniku.
+- Ostali testovi obuhvataju lokalnu bazu, red objavljivanja, CAPTCHA/server sigurnost postojećeg kandidata, moderaciju, glasanje i privatnost. Ne predstavljaju test nove stvarne reklamne integracije.
+- Stvarna mreža i serverski saldo nisu implementirani niti testirani. Integracija je blokirana do odluke o usklađenom dobavljaču; browser demonstracija nije produkcijska zaštita.
+- Izmijenjeni su samo ads/rewards.js, ads/ui.js, tests/ads.test.mjs i reklamna/projektna dokumentacija. Produkcijska baza, postojeći podaci, /test/, main i produkcijski PR nisu mijenjani.

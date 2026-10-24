@@ -1,50 +1,23 @@
-# Probne reklame — priprema, bez objavljivanja
+# Reklame — razvojna priprema, ništa nije objavljeno
 
-Status: samo odvojena razvojna grana. Nema novih reklamnih naloga, naplate, pravih oglasa, slanja podataka mrežama ni izmjena baze. Produkcija, postojeći podaci i `/test/` nisu mijenjani. Priprema se ne spaja u već odobrenu produkcijsku verziju bez novog odobrenja.
+Mjerodavna specifikacija: [PROJECT_RULES.md](../PROJECT_RULES.md). Raniji opcionalni saldo i besplatno slanje u ovoj razvojnoj pripremi su uklonjeni; raniji prijedlog nije odobreno poslovno pravilo.
 
-## Prikaz i probni tok
+## Implementirana demonstracija
 
-- `ads-preview.html` je pregled bez Supabase veze. Koristi zasebne probne podatke u pregledniku, a CSP zabranjuje vanjske mrežne zahtjeve.
-- Mali pravougaoni prostor 320 × 50 je gore desno, s jasnom oznakom. Na uskom ekranu zauzima svoj red ispod menija. Ne pluta preko priča, nema zvuk, automatski video ili nagradu za klik na baner.
-- Zasebno dugme `+` otvara izbor: ispovijest, komentar ili odgovor. Prije svakog gledanja navode se radnja i probna nagrada. Reklama počinje tek pritiskom na odgovarajuće dugme.
-- Simulacija traje pet sekundi vidljivog vremena, može se prekinuti i pauzira se u skrivenom tabu. Završetak dodaje jedno probno otključavanje samo izabranoj vrsti; dupli događaj ne dodaje drugo.
-- Otključavanje je opcionalno pri slanju. Slanje bez njega ostaje dostupno. Rezervacija sprečava trošenje jednog salda u dva istovremena slanja. Saldo se troši tek kada server/preview API potvrdi upis; greška ili upozorenje o duplom tekstu ga vraćaju. Ispovijest se i dalje čuva u redu, bez preskakanja CAPTCHA, validacije, moderacije i ograničenja protiv spama.
-- Probni saldo je samo u memoriji stranice i nestaje osvježavanjem. To nisu stvarne serverske dozvole, reklamni pregledi ili prihod. Jedna reklama po probnom otključavanju služi demonstraciji, nije odluka o konačnim kvotama. Raniji planovi kvota nisu aktivirani niti zamijenjeni ovim primjerom.
-- Simulacija se uključuje isključivo kroz `mode: preview` i izričit `ads.enabled: true, provider: mock`. U režimima `live` i `live-test` ostaje isključena. Stvarni provajder je namjerno nedostupan dok ne postoji potvrđena integracija.
+- Mali normalno pozicioniran probni baner 320 × 50 gore desno i zasebno dugme +; bez prekrivanja teksta i nagrada za klik na baner.
+- 3 završena gledanja za jednu ispovijest, 2 za odgovor, 1 za komentar. Prije svakog gledanja prikazuju se radnja, cijela kvota i napredak. Nema besplatnog slanja ni kasnijeg oslobađanja od reklama.
+- Jedna simulacija traje pet sekundi vidljivog vremena. Prekid i skriveni tab ne daju lažni napredak. Vrste su odvojene, događaji jedinstveni, saldi rezervisani protiv dvostrukog trošenja. Potpuna kvota se troši tek nakon uspješnog upisa; neuspjeh ili odbijen duplikat je čuvaju.
+- `ads-preview.html` koristi zasebne lokalne probne podatke; CSP zabranjuje vanjske veze. Probni saldo je samo u memoriji i resetuje se osvježavanjem; to ograničenje demonstracije nije pravilo o isteku stvarnih prava.
+- Samo `mode: preview` uz `ads.enabled: true, provider: mock` aktivira demonstraciju. Neaktivni modul u neobjavljenom kandidatu ne predstavlja implementaciju stvarnog serverskog zaključavanja. Produkcija i /test/ nisu promijenjeni. Stvarne mreže, dozvole, SDK-ovi i migracije nisu povezani.
 
-Usput je u novoj razvojnoj kopiji ispravljen postojeći kandidat obrasca za prijavu sadržaja, koji je koristio promjenljive iz obrasca za objavljivanje. Dodat je regresioni test. Objavljeni kod i `/test/` nisu prepravljani.
+## Prepreka: Google rewarded
 
-## Preporučeno rješenje za web
+Provjereno 24.10.2026: [zvanična Google pravila](https://support.google.com/admob/answer/7313578?hl=en), Implementation requirements 2, zahtijevaju da preskakanje ili odbijanje reklame ne ometa normalno korištenje platforme. Dozvoljavaju jasno objašnjene grupe više reklama za jednu nagradu, ali to nije potvrda da je obavezno gledanje za svaku osnovnu objavu dozvoljeno. Zato Ad Manager za web i AdMob za Android nisu potvrđeno usklađeni s našim modelom. Njihovo povezivanje je ZAUSTAVLJENO. Pravila vlasnika ostaju 3/2/1; nema samostalnog kompromisa ili besplatnog toka.
 
-Google Ad Manager + Google Publisher Tag za odvojeni display baner i pravi rewarded format. GPT daje događaje spremnosti, dodjele i zatvaranja; nagrada se veže za događaj dodjele, ne za zatvaranje. Format se traži samo gdje je podržan; prazan odgovor ili nepodržan uređaj ne zaključavaju besplatni tok. Dostupnost formata, naloga i potražnje mora se potvrditi na stvarnom odobrenom nalogu. Ne obećava se prikaz niti zarada.
+## Alternativa za odluku vlasnika — nije povezana
 
-Dokumentovani GPT događaj iz preglednika sam po sebi nije dokaz za naš server. Prije stvarnog zaključavanja dodatne kvote potrebno je ugovoriti/potvrditi način vjerodostojne serverske potvrde za izabrani web proizvod. Dokumentacija za AdMob SSV nije automatski specifikacija web GPT potvrde. Priprema zato ne pretvara browser događaj u stvarnu dozvolu.
+Direktno ugovorene sponzorske video-reklame za vlastiti web player i budući Android player, bez Google rewarded inventara. Ugovor sa sponzorom i dobavljačem videa mora izričito dozvoljavati nagrađeno gledanje za obavezno otključavanje sadržaja po modelu 3/2/1. To je drugačiji način nabavke oglasa koji može sačuvati poslovna pravila; nije tvrdnja da već imamo dozvolu mreže ili pravno odobren ugovor. Nisu traženi sponzori, slane poruke, otvarani računi ili prihvaćeni ugovori.
 
-## Preporučeno rješenje za Android APK
+Prije implementacije vlasnik bira tu opciju ili zahtjev za izričitu pisanu saglasnost druge mreže za tačno ovaj model. Treba potvrditi prava na video, privatnost, način mjerenja i zaštitu od lažnih pregleda. Web player/tajmer sam po sebi nije siguran dokaz gledanja: potreban je provjeren serverski protokol; ne obećavati potpunu zaštitu od automatizacije. Kod nedostatka oglasa nema automatskog besplatnog slanja. Način rješavanja dostupnosti oglasa zahtijeva odluku vlasnika prije stvarne integracije.
 
-Za stvarni Android sloj: AdMob rewarded format kroz Google Mobile Ads SDK i verifikacija SSV potpisa na serveru. Nagrada se čuva nakon provjerenog callbacka; klijentski `OnUserEarnedRewardListener` može pokazati da se čeka potvrda. Koristiti zvanične testne jedinice tokom razvoja.
-
-Važna granica za plan bez Play prodavnice: direktno dijeljeni APK bez podržane prodavnice ne može dobiti punu AdMob provjeru i ima ograničen prikaz oglasa. Google Play nije jedina opcija: među podržanima su Samsung Galaxy Store i druge navedene u izvoru. Bez odluke o distribuciji ne obećavati normalnu monetizaciju. Običan APK omotač ne daje automatski pravo na AdMob; za web oglase unutar WebView-a posebno provjeriti WebView API for Ads integraciju.
-
-## Pravila koja utiču na naš dizajn
-
-Korisnik prije svake reklame vidi šta dobija i koliko gledanja treba. Potreban je jasan izbor, mogućnost odustajanja i normalan tok bez reklame. Ne nagrađujemo klik, instalaciju ili kupovinu. Nagrada ostaje neprenosivo pravo unutar platforme, bez novca ili kripta. Ne koristiti molbe da se reklama gleda radi podrške vlasniku. Model obaveznih oglasa za svako osnovno pisanje zahtijeva provjeru s mrežom; nije proglašen dozvoljenim.
-
-Baner se odvaja od menija i dugmadi da ne izaziva slučajne klikove. Kod anonimnih ispovijesti mora postojati moderacija: seksualni, šokantni ili drugi ograničeni sadržaji mogu ostati bez oglasa ili imati manju potražnju. Ne slati tekst priče, e-mail ili administrativne podatke kao reklamni targeting. Prije pravih SDK-ova urediti obavještenje o privatnosti i odgovarajuće izbore saglasnosti; Android ima UMP za taj tok.
-
-## Izvori provjereni 24.10.2026.
-
-- [Google — pravila nagrađenih oglasa](https://support.google.com/admob/answer/7313578?hl=en)
-- [Google Ad Manager — rewarded na webu](https://support.google.com/admanager/answer/9116812?hl=en)
-- [GPT — zvanični rewarded primjer](https://developers.google.com/publisher-tag/samples/display-rewarded-ad)
-- [Android rewarded SDK](https://developers.google.com/admob/android/rewarded)
-- [AdMob — serverska SSV provjera](https://developers.google.com/admob/android/ssv)
-- [AdMob — podržane prodavnice i direktni APK](https://support.google.com/admob/answer/9989980)
-- [Pravila odvajanja oglasa i navigacije](https://support.google.com/adsense/answer/1346295?hl=en)
-- [Ograničenja sadržaja](https://support.google.com/admanager/answer/10437795?hl=en-0)
-- [Privatnost i Android UMP](https://developers.google.com/admob/android/privacy)
-- [WebView integracija](https://developers.google.com/admob/android/browser/webview)
-
-## Kasnija primjena
-
-Prvo potvrditi kvote, stvarni dodatni benefit, odobrenu mrežu i distribuciju APK-a. Zatim implementirati i testirati serverski protokol iz `server-contract.md`, s isključenom zastavicom dok ne prođe provjere. Tek nakon odobrenja vlasnika povezati pravi nalog, jedinice, saglasnosti i objavljivanje. Ovaj zadatak ništa od toga ne aktivira.
+Nijedna alternativa nije automatski izabrana ili aktivirana. Po odluci vlasnika slijede lokalni server testovi, provjera uslova i zasebno odobrenje za bazu i objavljivanje.
