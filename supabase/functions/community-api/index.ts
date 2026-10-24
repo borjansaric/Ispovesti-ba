@@ -39,11 +39,14 @@ async function activate(args:Record<string,unknown>){
 }
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin');
+ const began=Date.now(),timings:Record<string,number>={};
+ const timed=async<T>(name:string,work:()=>Promise<T>):Promise<T>=>{const at=Date.now();try{return await work();}finally{timings[name]=(timings[name]||0)+Date.now()-at;}};
+ const timedRpc=(name:string,uid:string|null,action:string,args:Record<string,unknown>={})=>timed(name==='community_test_dispatch'?'database':name==='community_test_security'?'settings':'admin_database',()=>rpc(name,uid,action,args));
  const headers:Record<string,string>={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS','X-Content-Type-Options':'nosniff'};
- if(origin&&allowed.includes(origin))headers['Access-Control-Allow-Origin']=origin;
- const send=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers});
+ if(origin&&allowed.includes(origin)){headers['Access-Control-Allow-Origin']=origin;headers['Timing-Allow-Origin']=origin;headers['Access-Control-Expose-Headers']='Server-Timing';}
+ const send=(data:unknown,status=200)=>{headers['Server-Timing']=[...Object.entries(timings).map(([name,ms])=>name+';dur='+ms),'server;dur='+(Date.now()-began)].join(', ');return new Response(JSON.stringify(data),{status,headers});};
  if(origin&&!allowed.includes(origin))return send({error:'Nedozvoljeno porijeklo.'},403);
- if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
+ if(req.method==='OPTIONS'){headers['Access-Control-Max-Age']='600';return new Response(null,{status:204,headers});}
  if(req.method!=='POST')return send({error:'Nedozvoljen zahtjev.'},405);
  try{
   const reader=req.body?.getReader();if(!reader)return send({error:'Nedostaje zahtjev.'},400);
@@ -52,12 +55,12 @@ Deno.serve(async(req:Request)=>{
   const body=JSON.parse(new TextDecoder().decode(bytes));if(!body||typeof body!=='object'||Array.isArray(body))fail('Neispravan zahtjev.');
   const action=body.action,args=body.args??{};if(typeof action!=='string'||!/^[a-z_]{1,30}$/.test(action))fail('Neispravna radnja.');
   if(!args||typeof args!=='object'||Array.isArray(args))fail('Neispravan zahtjev.');
-  if(action==='captcha_config')return send(await rpc('community_test_security',null,'public_config'));
+  if(action==='captcha_config')return send(await timedRpc('community_test_security',null,'public_config'));
   if(action==='activate_admin')return send(await activate(args));
   let uid:string|null=null;
   if(!publicActions.has(action)){
    const token=req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];if(!token)fail('Potrebna je anonimna sesija.',401);
-   const response=await fetch(url+'/auth/v1/user',{headers:{apikey:serviceKey,Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});
+   const response=await timed('auth',()=>fetch(url+'/auth/v1/user',{headers:{apikey:serviceKey,Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)}));
    if(!response.ok)fail('Sesija je istekla. Osvježi stranicu.',401);
    const user=await response.json();uid=user.id;if(!uid)fail('Neispravna sesija.',401);
    if(action.startsWith('admin_')){
@@ -71,11 +74,11 @@ Deno.serve(async(req:Request)=>{
     args._session_id=payload.session_id;args._aal=payload.aal;
    }
   }
-  if(action==='admin_email_status')return send(await rpc('community_test_admin_email',uid,'status',{_session_id:args._session_id}));
+  if(action==='admin_email_status')return send(await timedRpc('community_test_admin_email',uid,'status',{_session_id:args._session_id}));
   if(action==='admin_email_begin'){
    const challenge=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
    const proof={_session_id:args._session_id,challenge_hash:await digest(challenge)};
-   const prepared=await rpc('community_test_admin_email',uid,'begin',proof);
+   const prepared=await timedRpc('community_test_admin_email',uid,'begin',proof);
    if(prepared.limited)fail('Sačekaj najmanje jednu minutu prije novog koda.',429);
    const r=await fetch(url+'/auth/v1/otp',{method:'POST',headers:{apikey:serviceKey,'Content-Type':'application/json'},body:JSON.stringify({email:prepared.email,create_user:false}),signal:AbortSignal.timeout(15000)});
    if(!r.ok)fail('Kod trenutno nije moguće poslati. Provjeri Supabase podešavanje e-maila ili pokušaj kasnije.',503);
@@ -84,11 +87,11 @@ Deno.serve(async(req:Request)=>{
   if(action==='admin_email_verify'){
    if(typeof args.challenge!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(args.challenge)||typeof args.code!=='string'||!/^\d{6,10}$/.test(args.code))fail('Unesi ispravan kod sa e-maila.');
    const proof={_session_id:args._session_id,challenge_hash:await digest(args.challenge)};
-   const attempt=await rpc('community_test_admin_email',uid,'attempt',proof);
+   const attempt=await timedRpc('community_test_admin_email',uid,'attempt',proof);
    if(attempt.denied)fail('Kod je istekao, iskorišten ili je potrošeno pet pokušaja. Zatraži novi kod.',403);
    const r=await fetch(url+'/auth/v1/verify',{method:'POST',headers:{apikey:serviceKey,'Content-Type':'application/json'},body:JSON.stringify({email:attempt.email,token:args.code,type:'email'}),signal:AbortSignal.timeout(15000)});
    const verified=await r.json();
-   if(!r.ok||verified.user?.id!==uid||verified.user?.email?.toLowerCase()!==attempt.email||verified.user?.is_anonymous!==false||!verified.user?.email_confirmed_at){await rpc('community_test_admin_email',uid,'failed',proof);fail('Kod nije ispravan ili je istekao.',403);}
+   if(!r.ok||verified.user?.id!==uid||verified.user?.email?.toLowerCase()!==attempt.email||verified.user?.is_anonymous!==false||!verified.user?.email_confirmed_at){await timedRpc('community_test_admin_email',uid,'failed',proof);fail('Kod nije ispravan ili je istekao.',403);}
    // Only after verified e-mail ownership may the server retire this owner's old TOTP factor.
    const ownerResponse=await fetch(url+'/auth/v1/admin/users/'+uid,{headers:{apikey:serviceKey,Authorization:'Bearer '+serviceKey},signal:AbortSignal.timeout(10000)});
    if(!ownerResponse.ok)fail('Potvrda nije dovršena. Pokušaj ponovo.',503);
@@ -100,14 +103,14 @@ Deno.serve(async(req:Request)=>{
    }
    // Supabase revokes sessions when a verified factor is deleted. Require a fresh password+email login.
    if(relogin)return send({verified:false,relogin:true});
-   const result=await rpc('community_test_admin_email',uid,'finish',{...proof,verified_uid:verified.user.id,verified_email:verified.user.email.toLowerCase()});
+   const result=await timedRpc('community_test_admin_email',uid,'finish',{...proof,verified_uid:verified.user.id,verified_email:verified.user.email.toLowerCase()});
    if(!result.verified)fail('Potvrda nije dovršena. Prijavi se ponovo.',403);
    return send({verified:true});
   }
-  if(action==='admin_security_get')return send(await rpc('community_test_security',uid,action,{_session_id:args._session_id,_aal:args._aal}));
+  if(action==='admin_security_get')return send(await timedRpc('community_test_security',uid,action,{_session_id:args._session_id,_aal:args._aal}));
   if(action==='admin_security_set'){
-   const current=await rpc('community_test_security',uid,'admin_security_get',{_session_id:args._session_id,_aal:args._aal});
-   const runtime=await rpc('community_test_security',uid,'runtime_config');
+   const current=await timedRpc('community_test_security',uid,'admin_security_get',{_session_id:args._session_id,_aal:args._aal});
+   const runtime=await timedRpc('community_test_security',uid,'runtime_config');
    const sitekey=String(args.sitekey||current.sitekey||'');const secret=typeof args.secret==='string'&&args.secret.trim()?args.secret.trim():null;
    if(secret&&(secret.length<10||secret.length>256))fail('Neispravan tajni ključ.');
    if(/^[123]x0+/.test(sitekey)||(secret&&/^[123]x0+/.test(secret)))fail('Probni Cloudflare ključevi nisu dozvoljeni za stvarnu zaštitu.');
@@ -116,17 +119,17 @@ Deno.serve(async(req:Request)=>{
     await verifyCaptcha(secret||await decrypt(runtime.secret_ciphertext),args.captcha_token,runtime.hostname,'admin_check');
    }
    const clean={enabled:args.enabled===true,sitekey,secret_ciphertext:secret?await encrypt(secret):undefined,_session_id:args._session_id,_aal:args._aal};
-   return send(await rpc('community_test_security',uid,action,clean));
+   return send(await timedRpc('community_test_security',uid,action,clean));
   }
   if(action==='submit'){
-   const config=await rpc('community_test_security',uid,'runtime_config');
+   const config=await timedRpc('community_test_security',uid,'runtime_config');
    if(config.enabled===true){
     if(!['confession','comment','reply'].includes(args.kind))fail('Neispravna vrsta sadržaja.');
     if(!config.secret_ciphertext)fail('Sigurnosna provjera nije podešena.',503);
-    await verifyCaptcha(await decrypt(config.secret_ciphertext),args.captcha_token,config.hostname,'submit_'+args.kind);
+    await timed('turnstile',async()=>verifyCaptcha(await decrypt(config.secret_ciphertext),args.captcha_token,config.hostname,'submit_'+args.kind));
    }
    delete args.captcha_token;
   }
-  return send(await rpc('community_test_dispatch',uid,action,args));
+  return send(await timedRpc('community_test_dispatch',uid,action,args));
  }catch(error){if(error instanceof HttpError)return send({error:error.message},error.status);if(error instanceof SyntaxError)return send({error:'Neispravan zahtjev.'},400);return send({error:'Server trenutno nije dostupan. Pokušaj ponovo.'},503);}
 });

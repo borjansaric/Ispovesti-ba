@@ -1,7 +1,7 @@
 name: Admin email and CAPTCHA local checks
 on:
   push:
-    branches: [work/admin-email-20261024, work/comment-speed-20261024]
+    branches: [work/admin-email-20261024, work/comment-speed-20261024, work/submission-latency-20261024]
 permissions:
   contents: read
 jobs:

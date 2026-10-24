@@ -8,29 +8,60 @@ async function loadTurnstile(){
  }).catch(e=>{scriptPromise=null;throw e;});
  await scriptPromise;
 }
-export async function captchaToken({kind,host,sitekey,action}={}){
- if(!sitekey){
-  const c=window.ISPOVESTI_CONFIG;
-  const r=await fetch(c.supabaseUrl+'/functions/v1/community-test-api',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
-  if(!r.ok)throw new Error('Nije moguće provjeriti sigurnosna podešavanja. Pokušaj ponovo.');
-  const settings=await r.json();if(settings.enabled!==true)return undefined;sitekey=settings.sitekey;
+// Cache only public configuration briefly. The server always reads the authoritative settings.
+let settingsPromise, settingsAt=0;
+async function settings(){
+ if(!settingsPromise||Date.now()-settingsAt>60000){
+  settingsAt=Date.now();
+  settingsPromise=(async()=>{
+   const c=window.ISPOVESTI_CONFIG;
+   const r=await fetch(c.supabaseUrl+'/functions/v1/community-test-api',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
+   if(!r.ok)throw new Error('Nije moguće provjeriti sigurnosna podešavanja. Pokušaj ponovo.');
+   return r.json();
+  })().catch(e=>{settingsPromise=null;throw e;});
  }
- if(!sitekey)throw new Error('Sigurnosna provjera nije podešena.');
- await loadTurnstile();
- return new Promise((resolve,reject)=>{
-  const box=document.createElement('div');box.className='captcha-check';(host||document.body).append(box);
-  let id,finished=false;
-  const end=(token,error)=>{if(finished)return;finished=true;clearTimeout(timer);if(id!==undefined)window.turnstile.remove(id);box.remove();token?resolve(token):reject(new Error(error||'Sigurnosna provjera nije prošla. Pokušaj ponovo.'));};
-  const timer=setTimeout(()=>end(null,'Sigurnosna provjera je istekla. Pokušaj ponovo.'),120000);
-  try{id=window.turnstile.render(box,{sitekey,action:action||'submit_'+kind,theme:'dark',size:'flexible',appearance:'interaction-only',execution:'execute','response-field':false,callback:token=>end(token),'error-callback':()=>end(),'expired-callback':()=>end(),'timeout-callback':()=>end(),'unsupported-callback':()=>end(null,'Ovaj preglednik ne podržava sigurnosnu provjeru.')});window.turnstile.execute(id);}catch(e){end(null,'Sigurnosna provjera nije dostupna. Pokušaj ponovo.');}
- });
+ return settingsPromise;
 }
-
-let preparation;
-export function prepareCaptcha(){
- return preparation ||= (async()=>{
-  const c=window.ISPOVESTI_CONFIG;
-  const r=await fetch(c.supabaseUrl+'/functions/v1/community-test-api',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
-  if(r.ok&&(await r.json()).enabled===true)await loadTurnstile();
- })().catch(()=>{preparation=null;});
+function challenge({kind,host,sitekey,action}={}){
+ let id,box,token,at=0,pending,resolve,reject,timer,consumed=false,disposed=false;
+ const cleanup=()=>{clearTimeout(timer);if(id!==undefined)window.turnstile?.remove(id);id=undefined;box?.remove();box=null;};
+ const fail=message=>{cleanup();token=null;at=0;const no=reject;pending=null;resolve=null;reject=null;no?.(new Error(message||'Sigurnosna provjera nije prošla. Pokušaj ponovo.'));};
+ const start=()=>{
+  if(disposed)return Promise.reject(new Error('Obrazac je zatvoren.'));
+  if(token&&!consumed&&Date.now()-at<240000)return Promise.resolve(token);
+  if(pending)return pending;
+  cleanup();token=null;consumed=false;
+  pending=new Promise((yes,no)=>{resolve=yes;reject=no;});
+  // A background failure must not produce an unhandled rejection or clear the visitor's text.
+  pending.catch(()=>{});
+  const attempt=pending;
+  (async()=>{
+   const c=sitekey?{enabled:true,sitekey}:await settings();
+   if(disposed)return;
+   if(c.enabled!==true){const yes=resolve;pending=null;resolve=null;reject=null;yes(undefined);return;}
+   if(!c.sitekey)throw new Error('Sigurnosna provjera nije podešena.');
+   await loadTurnstile();if(disposed)return;
+   box=document.createElement('div');box.className='captcha-check';(host||document.body).append(box);
+   timer=setTimeout(()=>fail('Sigurnosna provjera je istekla. Pokušaj ponovo.'),120000);
+   id=window.turnstile.render(box,{sitekey:c.sitekey,action:action||'submit_'+kind,theme:'dark',size:'flexible',appearance:'interaction-only',execution:'execute','response-field':false,
+    callback:value=>{token=value;at=Date.now();clearTimeout(timer);const yes=resolve;pending=null;resolve=null;reject=null;yes?.(value);},
+    'error-callback':()=>fail(),'expired-callback':()=>fail('Sigurnosna provjera je istekla. Pokušaj ponovo.'),'timeout-callback':()=>fail(),'unsupported-callback':()=>fail('Ovaj preglednik ne podržava sigurnosnu provjeru.')});
+   window.turnstile.execute(id);
+  })().catch(e=>fail(e.message));
+  return attempt;
+ };
+ return {prepare:()=>{void start().catch(()=>{});},take:async()=>{const value=await start();if(value){if(consumed)throw new Error('Slanje je već u toku.');consumed=true;token=null;cleanup();}return value;},dispose:()=>{disposed=true;fail('Obrazac je zatvoren.');}};
 }
+const forms=new WeakMap();
+export function prepareCaptcha({kind,host}={}){
+ if(!host||!kind)return;
+ let entry=forms.get(host);
+ if(!entry||entry.kind!==kind){entry?.control.dispose();entry={kind,control:challenge({kind,host})};forms.set(host,entry);}
+ entry.control.prepare();
+}
+export async function captchaToken(options={}){
+ const entry=options.host&&forms.get(options.host);
+ if(entry&&entry.kind===options.kind&&!options.sitekey&&!options.action)return entry.control.take();
+ const control=challenge(options);try{return await control.take();}finally{control.dispose();}
+}
+export function releaseCaptcha(host){const entry=forms.get(host);entry?.control.dispose();forms.delete(host);}

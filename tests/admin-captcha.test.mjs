@@ -21,6 +21,7 @@ before(async()=>{
  await db.exec(await readFile(new URL('../supabase/admin-captcha.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../supabase/admin-email.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../supabase/comments-response.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../supabase/submission-latency.sql',import.meta.url),'utf8'));
  await db.query("insert into auth.users(id,email,is_anonymous) values($1,'bob@example.invalid',false),($2,null,true)",[bob,anon]);
  await db.query('insert into auth.sessions values($1,$2,null),($3,$4,null)',[sid,owner,bobSid,bob]);
  const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(code));
@@ -196,4 +197,37 @@ test('queued confession receipt cannot be mistaken for an immediately published 
  const result=await sql(owner,'submit',{kind:'confession',body:'Ova nova ispovijest i dalje čeka svoj red za objavljivanje.'});
  assert.equal(result.success,true);assert.equal('item' in result,false);assert.equal('context' in result,false);
  assert.ok(!(await sql(null,'feed')).items.some(i=>i.id===result.id));
+});
+
+test('retry after lost response is idempotent, even with explicitly allowed duplicate text',async()=>{
+ await db.query('delete from community_test.rate_limits where user_id=$1',[owner]);
+ const args={kind:'comment',confession_id:confession,body:'Potvrda samo jedne objave nakon mrežnog prekida.',allow_duplicate:true,request_id:crypto.randomUUID()};
+ const a=await sql(owner,'submit',args),b=await sql(owner,'submit',args);
+ assert.equal(a.id,b.id);assert.equal(b.replayed,true);assert.equal(b.item.id,a.item.id);
+ assert.equal((await db.query('select count(*)::int n from community_test.content where author_id=$1 and body=$2',[owner,args.body])).rows[0].n,1);
+ await assert.rejects(sql(owner,'submit',{...args,body:'Izmijenjen tekst sa istim ključem.'}),/promijenjen/);
+ const other=await sql(bob,'submit',args);assert.notEqual(other.id,a.id);
+});
+test('idempotency cannot expose removed content or bypass validation, rate limits, or CAPTCHA',async()=>{
+ const args={kind:'reply',confession_id:confession,parent_id:comment,body:'Ponovljeni odgovor mora ostati samo jedan.',request_id:crypto.randomUUID()};
+ const a=await sql(owner,'submit',args);await sql(owner,'admin_remove',adminArgs({id:a.id}));
+ await assert.rejects(sql(owner,'submit',args),/više nije dostupan/);
+ await assert.rejects(sql(null,'submit',args),/sesija/);
+ await db.exec('set role authenticated');await assert.rejects(db.query('select * from community_test.submission_receipts'));await db.exec('reset role');
+ const failed={...args,request_id:crypto.randomUUID(),body:'https://example.invalid'};
+ await assert.rejects(sql(owner,'submit',failed),/Linkovi/);
+ assert.equal((await db.query('select count(*)::int n from community_test.submission_receipts where request_id=$1',[failed.request_id])).rows[0].n,0);
+ // A fresh verified token is still required for a network retry; receipts do not bypass Siteverify.
+ cfResult=pass('admin_check');await send('admin_security_set',{enabled:true,captcha_token:'enable-for-retry-test'});
+ const before=dispatchCalls;assert.equal((await send('submit',args)).status,400);assert.equal(dispatchCalls,before);
+ await send('admin_security_set',{enabled:false});
+});
+test('timing headers contain numeric stage durations and no private values; preflight is reusable',async()=>{
+ const response=await handler(new Request('https://gateway.invalid',{method:'POST',headers:{Origin:'https://allowed.invalid'},body:JSON.stringify({action:'feed'})}));
+ assert.match(response.headers.get('server-timing'),/database;dur=\d+/);
+ assert.equal(response.headers.get('timing-allow-origin'),'https://allowed.invalid');
+ assert.equal(response.headers.get('access-control-expose-headers'),'Server-Timing');
+ assert.equal(response.headers.get('cache-control'),'no-store');
+ const preflight=await handler(new Request('https://gateway.invalid',{method:'OPTIONS',headers:{Origin:'https://allowed.invalid'}}));
+ assert.equal(preflight.headers.get('access-control-max-age'),'600');
 });
