@@ -1,6 +1,6 @@
 # Administratorska prijava: lozinka i e-mail kod
 
-Pripremljeno 24.10.2026. Nije primijenjeno na aktivni `/test/` niti postojeću bazu.
+Postavljeno 24.10.2026. Vlasnik je uspješno dovršio stvarnu prijavu lozinkom i kodom na e-mail. Standardni testni administratorski pristup sada koristi e-mail potvrdu, bez TOTP/QR kodova.
 
 Postojeća objavljena verzija sačuvana je u `backup/before-email-admin-20261024` na commitu `1bdc67c6bf4c69879fbfe721605da1021f14d342`. Raniji privatni backup sadržaja i strukture ostaje dostupan. Ova priprema ne mijenja podatke niti glavni sajt.
 
@@ -37,3 +37,8 @@ Probni frontend je zaseban `/test/admin-email.html` sa `/test/admin-email.js`. S
 Svih 52 automatska testa prolaze. Dodate provjere: očuvanje TOTP pristupa prije pozitivnog e-mail testa; zabrana starog AAL2-only pristupa nakon prelaska na email. Otisci postojećih podataka u 11 sadržajnih/administratorskih tabela prije i poslije migracije identični su. Novi privatni store ima RLS i nema anon/authenticated read/execute privilegije. Rezervni ZIP prošao je CRC provjeru. Root index ostaje originalni blob 9f83f627a4917953a70b4efe9c01a05a5c130372.
 
 Sigurnosni advisor prijavljuje privatne RLS tabele bez javnih policies (namjerni deny-all za direktni klijentski pristup). Ostali nalazi vezani su za ranije public.rls_auto_enable, cron policies i globalno isključenu provjeru kompromitovanih lozinki; nisu mijenjani ovom migracijom. Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable i https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .
+
+
+## Potvrđen vlasnikov test
+
+Vlasnik je poslao sliku uspješno otvorenog panela na telefonu. Serverski potvrđeno: admin_auth_method=email, jedna važeća e-mail potvrđena sesija, preostalih TOTP faktora 0. CAPTCHA je još isključena i čeka da vlasnik unese postojeće Cloudflare ključeve kroz panel. Objavljuje se isti provjereni email UI kao standardni test/admin.html i test/admin.js. Glavni index i legacy funkcije ostaju nepromijenjeni.
