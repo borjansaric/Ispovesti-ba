@@ -1,4 +1,4 @@
-import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=latency3';
+import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=freechat1';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 let currentView='oldest',offset=0, generation=0, openMenu=null,openBranch=null,busy=false;
@@ -41,7 +41,7 @@ $('#close-dialog').onclick=()=>dialog.close();
 $('#write').onclick=()=>modal('Podijeli svoju ispovijest',contentForm('confession',{},()=>{}));
 $('#privacy').onclick=()=>modal('Tvoja privatnost',node('p','', 'Ne tražimo e-mail, lozinku ni pravo ime. Anonimna sesija čuva se u tvom pregledniku. Brisanje podataka preglednika može značiti gubitak privatnih lista i istorije. Nema javnih profila. Tehnički podaci koje obrađuju hosting i sigurnosni sistemi ne znače apsolutnu anonimnost. U tekst ne upisuj podatke po kojima se ti ili drugi mogu prepoznati.'));
 $('#footer-privacy').onclick=()=>$('#privacy').click();
-$('#rules').onclick=()=>modal('Pravila zajednice',node('p','', 'Piši bez vrijeđanja, uznemiravanja, prijetnji i spama. Slike i linkovi nisu dozvoljeni. Objavljeni tekst ne možeš naknadno uređivati ili brisati. Administrator može ukloniti neprikladan sadržaj. Čitanje i glasanje su besplatni. Ispovijesti čekaju red i objavljuje se najviše jedna na sat.'));
+$('#rules').onclick=()=>modal('Pravila zajednice',node('p','', 'Piši bez vrijeđanja, uznemiravanja, prijetnji i spama. Slike i linkovi nisu dozvoljeni. Objavljeni tekst ne možeš naknadno uređivati ili brisati. Administrator može ukloniti neprikladan sadržaj. Čitanje, objavljivanje ispovijesti, komentari, odgovori i glasanje su besplatni. Ispovijesti čekaju red i objavljuje se najviše jedna na sat.'));
 if(isLocal)$('#preview').textContent='Lokalni test · bez veze sa živim sajtom';
 else if(window.ISPOVESTI_CONFIG?.mode==='live-test')$('#preview').textContent='TEST · prava baza, odvojeni probni podaci';
 else if(!isPreview)$('#preview').hidden=true;
@@ -83,7 +83,7 @@ function voteControls(item){
  watchState(item.id,'vote',row,render);
  return row;
 }
-function report(item){const form=node('form','form');const label=node('label','','Razlog prijave'),select=node('select');for(const [value,text]of [['abuse','Vrijeđanje ili uznemiravanje'],['threat','Prijetnje'],['spam','Spam'],['other','Ostalo']]){const o=node('option','',text);o.value=value;select.append(o);}label.append(select);const send=node('button','primary','Pošalji prijavu');form.append(label,send);form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;text.disabled=true;nick.disabled=true;const submittedAt=performance.now();try{await request('report',{id:item.id,reason:select.value});dialog.close();toast('Prijava je zabilježena. Hvala.');}catch(err){toast(err.message);}finally{send.disabled=false;}};modal('Prijavi sadržaj',form);}
+function report(item){const form=node('form','form');const label=node('label','','Razlog prijave'),select=node('select');for(const [value,text]of [['abuse','Vrijeđanje ili uznemiravanje'],['threat','Prijetnje'],['spam','Spam'],['other','Ostalo']]){const o=node('option','',text);o.value=value;select.append(o);}label.append(select);const send=node('button','primary','Pošalji prijavu');form.append(label,send);let sending=false;form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;try{await request('report',{id:item.id,reason:select.value});dialog.close();toast('Prijava je zabilježena. Hvala.');}catch(err){toast(err.message);}finally{sending=false;send.disabled=false;}};modal('Prijavi sadržaj',form);}
 async function commentBranch(confessionId,parentId,container,refreshContext,confirmed){
  let loaded=0;const rendered=new Set(),pending=new Map();
  const list=node('div'),sent=node('div'),more=button('Učitaj još komentara ↓',load,'load-more');container.replaceChildren(list,more,sent);

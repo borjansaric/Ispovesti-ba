@@ -1,4 +1,4 @@
-import { captchaToken, prepareCaptcha } from './captcha.js?v=latency3';
+import { captchaToken, prepareCaptcha } from './captcha.js?v=freechat1';
 const config = window.ISPOVESTI_CONFIG || {};
 export const isPreview = config.mode === 'preview';
 export const isLocal = config.mode === 'local';
