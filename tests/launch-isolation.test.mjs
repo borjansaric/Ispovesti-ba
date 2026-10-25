@@ -67,7 +67,7 @@ test('live gateway calls live RPCs only and exposes no new activation or anonymo
    return Response.json({items:[]});
   }});
  const send=(action,token)=>handler(new Request('https://gateway.invalid',{method:'POST',headers:{Origin:'https://allowed.invalid',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify({action,args:{}})}));
- assert.deepEqual(await(await send('health')).json(),{environment:'live',version:'launch1',captcha_enabled:true});
+ assert.deepEqual(await(await send('health')).json(),{environment:'live',version:'launch1',posting_policy:'free',captcha_enabled:true});
  assert.equal((await send('feed')).status,200);assert.equal((await send('activate_admin')).status,403);
  assert.equal((await send('admin_list')).status,401);assert.equal((await send('admin_list','regular-user')).status,403);assert.ok(rpcNames.includes('community_live_dispatch'));
 });

@@ -1,0 +1,22 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {createChatHandler} from '../chat/gateway.mjs';
+const token='x.'+Buffer.from(JSON.stringify({sub:'verified-user',session_id:'verified-session',aal:'aal1'})).toString('base64url')+'.x';
+function setup({trials=false,anonymous=true,valid=true,environment='test'}={}){const calls=[];const handler=createChatHandler({supabaseUrl:'https://mock.invalid',serviceKey:'server-secret',allowedOrigins:['https://allowed.invalid'],allowTrials:trials,environment,fetcher:async(url,o)=>{if(url.endsWith('/auth/v1/user'))return Response.json({id:'verified-user',is_anonymous:anonymous},{status:valid?200:401});calls.push(JSON.parse(o.body));return Response.json({success:true});}});const send=(action,args={},headers={})=>handler(new Request('https://api.invalid',{method:'POST',headers:{Origin:'https://allowed.invalid','Content-Type':'application/json',Authorization:'Bearer '+token,...headers},body:JSON.stringify({action,args})}));return {handler,send,calls};}
+test('production defaults reject all trial writes even for signed in admins',async()=>{
+ const x=setup({anonymous:false});for(const a of ['admin_test_mode','admin_grant','admin_nickname','admin_avatar'])assert.equal((await x.send(a)).status,403);assert.equal(x.calls.length,0);const wrongEnvironment=setup({trials:true,anonymous:false,environment:'production'});assert.equal((await wrongEnvironment.send('admin_grant')).status,403);
+});
+test('verified identity and session replace forged body parameters; anonymous users cannot moderate',async()=>{
+ let x=setup({trials:true});assert.equal((await x.send('admin_grant',{_session_id:'forged',_aal:'aal2'})).status,403);
+ x=setup({trials:true,anonymous:false});assert.equal((await x.send('admin_grant',{target:'target',plan:'24h',request_id:'id',p_uid:'attacker',_session_id:'forged'})).status,200);
+ assert.equal(x.calls[0].p_uid,'verified-user');assert.equal(x.calls[0].p_args._session_id,'verified-session');assert.equal(x.calls[0].p_args._aal,'aal1');assert.equal(x.calls[0].p_args.p_uid,undefined);
+});
+test('recovery stores only a digest and accepts no body-supplied hash or owner identity',async()=>{
+ const x=setup();assert.equal((await x.send('recovery_set',{code:'a'.repeat(64),recovery_hash:'forged',user_id:'other'})).status,200);
+ const args=x.calls[0].p_args;assert.match(args.recovery_hash,/^[a-f0-9]{64}$/);assert.notEqual(args.recovery_hash,'a'.repeat(64));assert.equal(args.code,undefined);assert.equal(args.user_id,undefined);
+ assert.equal((await x.send('recover',{code:'short',new_code:'b'.repeat(64)})).status,400);
+});
+test('gateway rejects invalid login, cross origin, unknown private messages and large payload',async()=>{
+ let x=setup({valid:false});assert.equal((await x.send('profile')).status,401);
+ x=setup();assert.equal((await x.send('profile',{}, {Origin:'https://evil.invalid'})).status,403);assert.equal((await x.send('private_message')).status,400);
+ assert.equal((await x.send('send',{body:'a'.repeat(9000)})).status,413);
+ assert.equal((await x.send('profile',{}, {Authorization:''})).status,401);
+});

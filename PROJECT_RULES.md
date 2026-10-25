@@ -1,33 +1,25 @@
-# Trajna specifikacija Ispovesti.ba
+# Konačna specifikacija Ispovesti.ba — 25.10.2026.
 
-Potvrdio vlasnik 24.10.2026. Ova odluka zamjenjuje sve ranije primjere, prijedloge i proturječne reklamne kvote. Ne zamjenjuje ostale prethodno potvrđene funkcionalnosti.
+Odluka vlasnika izričito zamjenjuje obavezne reklame 3/2/1 i zabranu besplatnog objavljivanja. Ranija reklamna demonstracija je povučena iz plana.
 
-## Konačna pravila objavljivanja
+Postojeći crno-zlatni izgled, Anonimus, fontovi, dugmad, animacije i raspored ostaju sačuvani. Nema redizajna. original.css i styles.css se ne mijenjaju; novi stilovi samo za nove funkcije chata.
 
-| Radnja | Potpuno odgledane reklame za jedno izvršavanje |
-| --- | ---: |
-| Slanje jedne ispovijesti | 3 |
-| Jedan odgovor na komentar | 2 |
-| Jedan komentar | 1 |
+Čitanje, objavljivanje ispovijesti, komentari i odgovori su potpuno besplatni. Nema obaveznih video reklama ni reklamnih prava. Jedan mali gornji baner ostaje neaktivan prostor dok mreža nije izabrana. CAPTCHA, spam ograničenja, zaštita duplikata, pravila moderacije, red objavljivanja, privatne liste i glasanje ostaju.
 
-Nema besplatnog objavljivanja. Nema automatskog prelaska na besplatno nakon bilo kojeg broja objava. Nema zamjene između vrsta otključavanja. Čitanje i glasanje ostaju dostupni po ranijim pravilima; gledanje se ne pokreće automatski.
+Jedna zajednička anonimna chat soba, bez privatnih poruka. Nove poruke se automatski prikazuju. Generisani nadimak i unaprijed pripremljeni avatar uključeni su u pristup. Nema korisničkih fotografija. Obavezne su prijave, lično blokiranje, moderacija i zaštita od spama. Ne obećavati apsolutnu anonimnost prema infrastrukturi i moderatorima.
 
-Završeno gledanje dodaje jedan korak samo izabranoj vrsti. Djelimični napredak ne omogućuje slanje. Puna grupa 3/2/1 daje jedno odgovarajuće otključavanje. Svako uspješno izvršavanje troši jedno takvo otključavanje. Upis ispovijesti u red je uspješno slanje; ne čeka se javna objava da bi se pravo potrošilo. Greška ili odbijanje duplikata ne troši otključavanje. Ponovljeni zahtjev/događaj ne smije dati ili potrošiti pravo dva puta. Prekid, no-fill ili nedostupna mreža ne daju pravo i ne uključuju besplatno slanje. Ne uvoditi rok isteka, nove kvote ili promjenu postojećeg salda bez odluke vlasnika.
+| Paket | Trajanje | Pomična istorija prema serverskom vremenu |
+|---|---|---|
+| 24 sata | 24 sata | posljednji 1 sat |
+| 7 dana | 7 dana | posljednjih 7 sati |
+| 30 dana | 30 dana | posljednji 31 sat |
 
-Reklame ne zamjenjuju CAPTCHA, anonimnu autentifikaciju, provjeru sadržaja, ograničenja spama, red 1 ispovijest/sat ili moderaciju. Stvarna dozvola i njeno trošenje moraju biti potvrđeni na serveru u transakciji s upisom. Browser simulacija nije sigurnosna kontrola.
+Server provjerava paket i istoriju pri svakoj radnji. Poslije isteka nema čitanja ni slanja. Cijene još nisu određene. Izabrani nadimak i promjena avatara su odvojene dodatne kupovine. Nadimak se rezerviše do isteka pristupa plus 15 dana; obnova u tom roku zadržava ga bez nove kupovine. Zatim ga može preuzeti drugi korisnik. Kupljeni avatar ostaje sačuvan nakon isteka.
 
-## Obavezna pravila upravljanja projektom
+Siguran oporavak anonimnog chat naloga koristi korisnički sačuvan nasumičan tajni ključ bez javnog stvarnog identiteta. Sirovi ključevi se ne čuvaju u bazi ni logovima. Oporavak rotira ključ i prenosi chat prava na novu anonimnu sesiju. Administratorski nalog se ne oporavlja tim putem.
 
-1. Nijednu prethodno dogovorenu funkcionalnost, poslovno pravilo ili korisničko ograničenje ne mijenjati, uklanjati, zaobilaziti ili zamjenjivati samostalno.
-2. Kod tehničke, pravne ili druge prepreke prvo obavijestiti vlasnika, objasniti problem i predložiti rješenja. Odluku donosi vlasnik.
-3. Ako dogovor nije moguće sprovesti, zaustaviti taj dio. Bez izričitog odobrenja nema kompromisa.
-4. Svaka nova funkcionalnost mora poštovati sva ranije potvrđena pravila.
-5. Prije završetka provjeriti da postojeće funkcije nisu promijenjene ili pokvarene; jasno navesti granice provjere.
-6. Koristiti specifikaciju i istoriju projekta. Ne tražiti ponavljanje već donesenih odluka.
-7. Bez odgovarajućeg odobrenja nema izmjena produkcije, baze, postojećih podataka niti /test/. Rezervne kopije čuvati.
+Premium SMS se istražuje samo za BiH, Srbiju, Hrvatsku, Crnu Goru, Sloveniju i Sjevernu Makedoniju. Bez odobrenja nema stvarne naplate, ugovora, cijena, automatskog obnavljanja niti drugih država. Probne pakete i dodatke dodjeljuje samo provjeren administrator uz serverski testni režim; produkcija odbija testne radnje.
 
-Važi za sve buduće zadatke: reklame, administraciju, web i Android. Odobrenje jednog zadatka ne prenosi se na objavljivanje novih reklamnih izmjena. Ova priprema smije mijenjati samo razvojnu granu; nema odobrenja za spajanje ili objavu.
+Prvo osvježiti privatnu rezervnu kopiju, uključujući liste, i sačuvati kod. Bez izričitog odobrenja ne primjenjivati SQL i ne objavljivati glavni sajt. Prvo prikazati kompletan SQL. Ne ponavljati izvršene migracije. Sačuvati /test/, sve podatke, administratora i ranije kopije. Novo testiranje na /test/ čeka odobrenje SQL-a. Stare probne objave arhivirati nedestruktivno i zatvoriti stare javne API puteve. Nema DELETE/TRUNCATE/DROP čišćenja.
 
-## Prepreka za stvarne reklamne mreže
-
-Googleova pravila zahtijevaju da odbijanje/preskakanje rewarded reklame ne ometa normalno korištenje platforme. Odnos 3/2/1 sam po sebi nije problem; obavezne reklame za svako osnovno objavljivanje predstavljaju nerazriješenu prepreku. Google Ad Manager/AdMob nisu odobreno rješenje za ovaj model. Ne povezivati ih niti uvoditi besplatno slanje kao zaobilaznicu. Vidi ads/README.md za izvor i prijedlog alternative koji čeka odluku vlasnika.
+Druga ranije potvrđena pravila se ne mijenjaju. Kod prepreke obavijestiti vlasnika bez samostalnog kompromisa. Ne tražiti ponavljanje odluka. Važi za web i Android APK. Identitet projekta i lični podaci ne šalju se dobavljačima bez posebnog odobrenja.

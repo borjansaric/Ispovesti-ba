@@ -21,7 +21,8 @@ const seedStories=[
  ['Nisam danas uradio ništa veliko. Izašao sam u šetnju, javio se starom prijatelju i spremio sebi večeru. Poslije mjeseci u kojima mi je sve bilo teško, meni je to sasvim dovoljno.',null],
  ['Vratio sam se ovdje jer mi je nedostajao osjećaj da negdje mogu napisati ono što mislim, bez objašnjavanja ko sam. Drago mi je da ovo mjesto ponovo postoji.',null],
 ];
-export async function createLocalPreview({dataDir,seed=true}={}){
+export async function createLocalPreview({dataDir,seed=true,staticDirectory=staticRoot}={}){
+ const servingRoot=path.resolve(staticDirectory);
  const db=new PGlite(dataDir);
  const migration=await readFile(path.join(root,'supabase/migrations/20261023212548_community_v2.sql'),'utf8');
  const securityMigration=await readFile(path.join(root,'supabase/admin-captcha.sql'),'utf8');
@@ -104,11 +105,14 @@ export async function createLocalPreview({dataDir,seed=true}={}){
     return send(res,response.status,await response.text(),{'Content-Type':'application/json; charset=utf-8'});
    }
    if(req.method!=='GET'&&req.method!=='HEAD')return send(res,405,'Method not allowed');
+   if(pathname==='/__qa/mobile'&&servingRoot!==staticRoot)return send(res,200,'<!doctype html><html><meta name=viewport content=\"width=device-width,initial-scale=1\"><title>Mobilna provjera</title><body style=\"margin:0;background:#303030\"><iframe title=\"Ispovesti.ba mobilni test\" src=\"/\" style=\"display:block;width:390px;height:844px;border:0;margin:auto\"></iframe></body></html>',{'Content-Type':'text/html; charset=utf-8'});
    if(pathname==='/config.js')return send(res,200,"window.ISPOVESTI_CONFIG={mode:'local',supabaseUrl:'',publishableKey:''};",{'Content-Type':'text/javascript; charset=utf-8'});
    let decoded;try{decoded=decodeURIComponent(pathname);}catch{return send(res,400,'Bad path');}
-   const filename=path.resolve(staticRoot,'.'+(decoded==='/'?'/index.html':decoded));
-   if(!filename.startsWith(staticRoot+path.sep))return send(res,404,'Not found');
-   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.txt':'text/plain; charset=utf-8'};
+   const filename=path.resolve(servingRoot,'.'+(decoded==='/'?'/index.html':decoded));
+   if(!filename.startsWith(servingRoot+path.sep))return send(res,404,'Not found');
+   const rel=path.relative(servingRoot,filename);
+   if(servingRoot!==staticRoot&&(!['index.html','config.js','app.js','api.js','captcha.js','original.css','styles.css','chat-admin.html'].includes(rel)&&!/^chat\/(client\.mjs|ui\.mjs|admin\.mjs|chat\.css)$/.test(rel)&&!rel.startsWith('vendor/')))return send(res,404,'Not found');
+   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.txt':'text/plain; charset=utf-8'};
    let bytes;try{bytes=await readFile(filename);}catch{return send(res,404,'Not found');}
    return send(res,200,req.method==='HEAD'?'':bytes,{'Content-Type':types[path.extname(filename)]||'application/octet-stream'});
   }catch{return json(res,500,{error:'Lokalni test trenutno nije dostupan.'});}

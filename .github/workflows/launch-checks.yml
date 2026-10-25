@@ -1,7 +1,7 @@
 name: Launch candidate checks
 on:
   push:
-    branches: [release/production-review-20261024]
+    branches: [release/production-review-20261024, work/free-site-chat-20261025]
   pull_request:
     branches: [main]
 permissions:

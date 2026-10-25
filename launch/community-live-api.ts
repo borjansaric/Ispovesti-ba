@@ -55,7 +55,7 @@ Deno.serve(async(req:Request)=>{
   const body=JSON.parse(new TextDecoder().decode(bytes));if(!body||typeof body!=='object'||Array.isArray(body))fail('Neispravan zahtjev.');
   const action=body.action,args=body.args??{};if(typeof action!=='string'||!/^[a-z_]{1,30}$/.test(action))fail('Neispravna radnja.');
   if(!args||typeof args!=='object'||Array.isArray(args))fail('Neispravan zahtjev.');
-  if(action==='health'){const c=await timedRpc('community_live_security',null,'public_config');return send({environment:'live',version:'launch1',captcha_enabled:c.enabled});}
+  if(action==='health'){const c=await timedRpc('community_live_security',null,'public_config');return send({environment:'live',version:'launch1',posting_policy:'free',captcha_enabled:c.enabled});}
   if(action==='captcha_config')return send(await timedRpc('community_live_security',null,'public_config'));
   if(action==='activate_admin')return send({error:'Koristi postojeći administratorski nalog.'},403);
   let uid:string|null=null;

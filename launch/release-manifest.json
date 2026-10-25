@@ -1,5 +1,5 @@
 {
-  "status": "BLOCKED_PENDING_SERVER_REWARDS_AND_OWNER_SQL_APPROVAL",
+  "status": "FREE_BASE_AND_CHAT_PREPARED_LOCAL_PENDING_OWNER_SQL_APPROVAL",
   "base_main_commit": "f1b51ed56a1e95f28adfddf13451d528aad46a0c",
   "code_backup_branch": "backup/before-launch-review-20261024",
   "live_schema": "community_live",
@@ -7,29 +7,43 @@
   "live_function": "community-live-api",
   "test_function": "community-test-api",
   "tests": {
-    "local_total": 76,
-    "local_passed": 76
+    "local_total": 95,
+    "local_passed": 95
   },
   "sha256": {
-    "index.html": "d58cdafa9e7d924e70ca9ae36db9b5beaf94efdc3ae51de92dce3e5f48c375e8",
-    "app.js": "60e67f6c5499824423dddd2c485201153e6b647a8ff1ed8d09089d6b98168b06",
-    "api.js": "d926b992c23decabc6eff348a2ddc6a3137ed1dac5606844c4afda83d0555418",
+    "index.html": "1b3478fcd85cedc5f72b89463ee9c53c63a95f4af94a935837c30f553dd2f637",
+    "app.js": "0e2d05707d05cbd95560edc4f69bd605003c3ff4aea5540edd32c09a2c8fcfbc",
+    "api.js": "689f86775a81c88fb7e29d9bfa70ce0a9f37dad4a93915c653402f8d9b896118",
     "captcha.js": "64c7eb6339e751de6869591061df95a8f503e51dd1e19de12eaf4e23053f9534",
-    "admin.html": "43d3b95bbc43fe5c8ed3fdfe2c64ce2860090f98942e56d195da7a3d9790f95e",
-    "admin.js": "6724fa5fe799b49ec1e22239a6de26b8470d30a6915ddc8cbbdb03700db39353",
+    "admin.html": "c8c797832369330640e24b110b50bd327f3eb1677bf4d355b9292776450ac6b2",
+    "admin.js": "6ec09235b2d5186a7f66d5c7f86343b78b180fe3afc1158e85fb27c006f8a1cf",
     "config.js": "848d2f8666ac7c6857dc507060649bc87d89a705da6ebd175bf265ab992cdd4f",
     "original.css": "7d74ea42887e23dc81c5fbde3718ca0e3a9ad3a6019419ddd9069e2d23245a4f",
     "styles.css": "ee108aa2274cfc64aebd12d139f6595d7bfea2f615f1f44411be2d232668b4b1",
     "launch/prepare-live.sql": "7ecaa88a6850c575964b0b621e837713ae5cc3ab5d5fef2ffc91c91eea4f8f17",
-    "launch/community-live-api.ts": "80849216664a219040e367595da7cfdad5361efeec26e80536fa47c8a8351d61",
+    "launch/community-live-api.ts": "1fff0fefc144b06dcb5a2309b0112e04572996a460746f0bd2feced844b8ba30",
     "launch/activate-publisher.sql": "b91d5ab265445f4ab81c0e9b6e2b615a389def4dc91627fb2edf51123ed419ba",
-    "scripts/check-live-ready.mjs": "c9e7655bb22c706585836333d88cafca4374f7301eb80d5b230e4dfcbafe2c01"
+    "scripts/check-live-ready.mjs": "e90940cabbed5929194af27b930239912430ba54764a425ca293c029356f5eef",
+    "chat/client.mjs": "59a820d6d6c465f20d48b57cbd74fdb659e16ea451c747411f91d9252ec42fea",
+    "chat/index.ts": "7ffb5ae2f49dd5cf29bc37d96a090b3080e687ba7b6634e9a888329a9bbb4ccc",
+    "chat/README.md": "ea077159dc741900698bb0a12f97ff36cf3d2c44ae22abf99f1475aced56a71d",
+    "chat/gateway.mjs": "598116c2296199b174dd468939b45d75b2da045f59e2e1df9bba1bf894806abf",
+    "chat/PREMIUM-SMS.md": "f286575a6677b03569b0441981f3c88cf4a071e9081b45c84cf276fcdeab0cc2",
+    "chat/admin.mjs": "617950ffc947d17a7e02fb25d509fc63cc7f51b34faf038cc25c1aa79cdfcfae",
+    "chat/prepare-test.sql": "2ddd8682699d47be2ae0134fb499bdbaf83ac912dd1ba7a96806e18af6f23d62",
+    "chat/ui.mjs": "145aa2e7f359d33c1a8589db01afa9d4699603208f89504573e9791b5a8e44a9",
+    "chat/chat.css": "1b8a4e0a20ebb6d7e6d6ba1fb34728055e7421a513f1dbde81034ae810ff5d79",
+    "chat/SQL-PREGLED.md": "6bfc6a27e93f080d1f02235e07d3991a58dbe82c3204fd296daf2152b529d9ed",
+    "chat/VERIFICATION.md": "a1794ea4bba13a6773b8ac687f93829cdd88c19ae4b3eaeec6bd1dd085ac18ed",
+    "launch/archive-legacy-after-cutover.sql": "c9dbbb8be6a7fa0f5175c1b2bdfa5fd12311aced3d5f5e962080a903ce3d5c13"
   },
   "existing_rows_deleted_by_migration": false,
   "readiness_date": "2026-10-25",
   "blockers": [
-    "Server-enforced 3/2/1 rewarded posting is not implemented or approved with a provider.",
-    "Owner must review and approve the exact final SQL before execution.",
-    "Refresh private application backup before any approved database cutover."
-  ]
+    "Owner approval required for chat/prepare-test.sql before Supabase writes.",
+    "Real /test/ Auth/CAPTCHA/chat end-to-end verification after approved deployment.",
+    "Prices, Premium SMS agreement and payment integration are not activated.",
+    "Separate owner approval required for main site and legacy API archive cutover."
+  ],
+  "posting_policy": "free"
 }

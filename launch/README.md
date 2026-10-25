@@ -1,9 +1,10 @@
 # Ispovesti.ba — priprema zvanične verzije
 
-Status 25.10.2026: **OBJAVLJIVANJE BLOKIRANO — čeka se serversko sprovođenje reklamnih pravila 3/2/1. NIŠTA NIJE PRIMIJENJENO.**
+Status 25.10.2026: **BESPLATNI OSNOVNI SAJT I PROBNI CHAT PRIPREMLJENI LOKALNO. SQL I OBJAVLJIVANJE ČEKAJU ODOBRENJE.**
 
-Prethodni plan ispod opisuje tehničku osnovu, ali nije važeće odobrenje za primjenu. SQL nema serverski saldo nagrađenih reklama. Ni SQL ni API ne smiju se objaviti kao završena verzija prije usklađivanja s PROJECT_RULES.md. Kontrola objavljivanja sada odbija API bez potvrđene serverske politike 3/2/1; postojeći pripremljeni API je namjerno ne prijavljuje. Vidi READINESS-20261025.md.
+Nova odluka iz PROJECT_RULES.md ukida obavezne reklame 3/2/1. Kontrola objavljivanja zahtijeva posting_policy:free i postojeću administratorsku zaštitu; ne zahtijeva reklamna prava. Pripremljeni glavni API vraća tu politiku, a slanje sadržaja ostaje iza postojeće CAPTCHA i serverskih pravila. Plaćeni paketi odnose se samo na chat. Vidi chat/README.md za probni rad i chat/PREMIUM-SMS.md za šest tržišta.
 
+Prvo se odobrava i provjerava chat/prepare-test.sql na testnom endpointu. Stari glavni plan ispod ne izvršavati automatski. launch/archive-legacy-after-cutover.sql je zasebna nedestruktivna zabrana starih API puteva i smije se primijeniti samo uz posebno odobrenje nakon prelaska glavnog sajta.
 Zvanična stranica koristi isti provjereni izgled i funkcije kao `/test/`, a dobija zasebnu bazu sadržaja unutar postojećeg Supabase projekta. Počinje prazna. `/test/` ostaje dostupan sa svojim probnim podacima; njegove buduće objave, glasovi, privatne liste i moderacija ne mijenjaju zvanične podatke.
 
 Administrator koristi postojeći e-mail i lozinku, zatim novi jednokratni kod sa e-maila. Novi nalog, aktivacioni kod i Authenticator nisu potrebni. Cloudflare podešavanja preuzimaju se na serveru; tajni ključ nije u kodu i ne treba ga ponovo slati.

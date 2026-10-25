@@ -1,3 +1,5 @@
+> ISTORIJSKA PROVJERA PRIJE NOVE ODLUKE. Naknadna izričita odluka vlasnika 25.10.2026. ukinula je 3/2/1. Aktuelna specifikacija je PROJECT_RULES.md, a završna provjera chat/VERIFICATION.md. Ovaj izvještaj se ne koristi kao plan primjene.
+
 # Provjera prije završnog objavljivanja — 25.10.2026.
 
 Status: BLOKIRANO ZA OBJAVLJIVANJE. Ova provjera nije migracija ni odobrenje primjene.
