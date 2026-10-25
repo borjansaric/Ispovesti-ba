@@ -20,3 +20,33 @@ test('gateway rejects invalid login, cross origin, unknown private messages and 
  assert.equal((await x.send('send',{body:'a'.repeat(9000)})).status,413);
  assert.equal((await x.send('profile',{}, {Authorization:''})).status,401);
 });
+test('every administrative action rejects an anonymous token before reaching SQL',async()=>{
+ const x=setup({trials:true});
+ for(const action of ['admin_status','admin_profiles','admin_test_mode','admin_grant','admin_nickname','admin_avatar','admin_messages','admin_remove','admin_restore','admin_ban','admin_unban']){
+  assert.equal((await x.send(action,{p_uid:'owner',_session_id:'owner-session',_aal:'aal2',target:'other',enabled:true})).status,403,action);
+ }
+ assert.equal(x.calls.length,0);
+});
+test('Auth rejection cannot be bypassed with forged owner claims or browser identity fields',async()=>{
+ const x=setup({trials:true,anonymous:false,valid:false});
+ for(const action of ['profile','history','admin_grant','admin_nickname','admin_avatar'])assert.equal((await x.send(action,{p_uid:'owner',user_id:'owner',_session_id:'owner-session',_aal:'aal2'})).status,401);
+ assert.equal(x.calls.length,0);
+});
+test('history and profile discard requested owner, history window, clock and privileged claims',async()=>{
+ const x=setup();
+ for(const action of ['profile','history']){
+  const r=await x.send(action,{p_uid:'victim',user_id:'victim',target:'victim',history_hours:99999,expires_at:'2099-01-01',server_now:'2000-01-01',_session_id:'forged',_aal:'aal2'});
+  assert.equal(r.status,200);assert.doesNotMatch(await r.text(),/server-secret/);
+  assert.equal(x.calls.at(-1).p_uid,'verified-user');assert.deepEqual(x.calls.at(-1).p_args,{});
+ }
+});
+test('registered ordinary accounts receive SQL authorization denial, never a browser-forged admin session',async()=>{
+ let rpc;const handler=createChatHandler({supabaseUrl:'https://mock.invalid',serviceKey:'server-secret',allowedOrigins:[],allowTrials:true,environment:'test',fetcher:async(url,options)=>{
+  if(url.endsWith('/auth/v1/user'))return Response.json({id:'ordinary-registered-user',is_anonymous:false});
+  rpc=JSON.parse(options.body);return Response.json({code:'42501',message:'Zabranjena administratorska radnja.'},{status:403});
+ }});
+ for(const action of ['admin_grant','admin_nickname','admin_avatar','admin_profiles','admin_messages']){
+  const r=await handler(new Request('https://api.invalid',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({p_uid:'owner',action,args:{p_uid:'owner',_session_id:'owner-session',_aal:'aal2'}})}));
+  assert.equal(r.status,403);assert.equal(rpc.p_uid,'ordinary-registered-user');assert.equal(rpc.p_args._session_id,'verified-session');assert.equal(rpc.p_args._aal,'aal1');assert.doesNotMatch(await r.text(),/server-secret/);
+ }
+});

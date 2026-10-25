@@ -83,3 +83,19 @@ test('RLS and grants prevent direct client table/RPC access; unverified admin em
  for(const role of['anon','authenticated']){await db.exec('set role '+role);try{await assert.rejects(db.query('select * from chat_test.messages'),/permission denied/);await assert.rejects(call(alice,'profile'),/permission denied/);}finally{await db.exec('reset role');}}
  await db.exec("update community_test.admin_email_sessions set verified_until=clock_timestamp()-interval '1 second'");await assert.rejects(call(owner,'admin_messages'),/Potvrdi/);
 });
+test('SQL rejects every ordinary-user administrative action even with genuine owner session identifiers',async()=>{
+ const before=(await db.query('select (select count(*) from chat_test.access) packages,(select count(*) from chat_test.audit) audits')).rows[0];
+ for(const action of ['admin_status','admin_profiles','admin_test_mode','admin_grant','admin_nickname','admin_avatar','admin_messages','admin_remove','admin_restore','admin_ban','admin_unban']){
+  await assert.rejects(call(bob,action,{target:cp.id,plan:'30d',nickname:'Oteti Nadimak',avatar:'fox',request_id:randomUUID(),enabled:true,id:'1',hours:24}),/Zabranjena/,action);
+ }
+ assert.deepEqual((await db.query('select (select count(*) from chat_test.access) packages,(select count(*) from chat_test.audit) audits')).rows[0],before);
+ const p=await call(bob,'profile',{user_id:carol,p_uid:carol,target:cp.id});assert.equal(p.id,bp.id);
+ const history=await call(bob,'history',{history_hours:999999,before:'999999999',server_now:'2000-01-01',user_id:carol});
+ assert.ok(history.items.every(m=>Date.parse(m.created_at)>Date.parse(history.history_cutoff)));
+ for(const value of [p,...history.items])for(const key of ['user_id','secret_hash','challenge_hash','session_id','email'])assert.equal(value[key],undefined,key);
+ for(const role of ['anon','authenticated']){
+  await db.exec('set role '+role);
+  try{for(const table of ['profiles','access','recovery','blocks','reports','audit','admin_receipts'])await assert.rejects(db.query('select * from chat_test.'+table),/permission denied/,table);}
+  finally{await db.exec('reset role');}
+ }
+});
