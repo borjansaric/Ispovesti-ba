@@ -1,6 +1,8 @@
 # Ispovesti.ba — priprema zvanične verzije
 
-Status: **PRIPREMLJENO ZA PREGLED. NIJE OBJAVLJENO. NIŠTA NIJE OBRISANO.**
+Status 25.10.2026: **OBJAVLJIVANJE BLOKIRANO — čeka se serversko sprovođenje reklamnih pravila 3/2/1. NIŠTA NIJE PRIMIJENJENO.**
+
+Prethodni plan ispod opisuje tehničku osnovu, ali nije važeće odobrenje za primjenu. SQL nema serverski saldo nagrađenih reklama. Ni SQL ni API ne smiju se objaviti kao završena verzija prije usklađivanja s PROJECT_RULES.md. Kontrola objavljivanja sada odbija API bez potvrđene serverske politike 3/2/1; postojeći pripremljeni API je namjerno ne prijavljuje. Vidi READINESS-20261025.md.
 
 Zvanična stranica koristi isti provjereni izgled i funkcije kao `/test/`, a dobija zasebnu bazu sadržaja unutar postojećeg Supabase projekta. Počinje prazna. `/test/` ostaje dostupan sa svojim probnim podacima; njegove buduće objave, glasovi, privatne liste i moderacija ne mijenjaju zvanične podatke.
 

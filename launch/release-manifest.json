@@ -1,5 +1,5 @@
 {
-  "status": "PREPARED_NOT_APPLIED",
+  "status": "BLOCKED_PENDING_SERVER_REWARDS_AND_OWNER_SQL_APPROVAL",
   "base_main_commit": "f1b51ed56a1e95f28adfddf13451d528aad46a0c",
   "code_backup_branch": "backup/before-launch-review-20261024",
   "live_schema": "community_live",
@@ -7,12 +7,12 @@
   "live_function": "community-live-api",
   "test_function": "community-test-api",
   "tests": {
-    "local_total": 72,
-    "local_passed": 72
+    "local_total": 76,
+    "local_passed": 76
   },
   "sha256": {
     "index.html": "d58cdafa9e7d924e70ca9ae36db9b5beaf94efdc3ae51de92dce3e5f48c375e8",
-    "app.js": "947f0532df1de973e97df95c0bf19ec4200646f5c9799120b13580af7eaee857",
+    "app.js": "60e67f6c5499824423dddd2c485201153e6b647a8ff1ed8d09089d6b98168b06",
     "api.js": "d926b992c23decabc6eff348a2ddc6a3137ed1dac5606844c4afda83d0555418",
     "captcha.js": "64c7eb6339e751de6869591061df95a8f503e51dd1e19de12eaf4e23053f9534",
     "admin.html": "43d3b95bbc43fe5c8ed3fdfe2c64ce2860090f98942e56d195da7a3d9790f95e",
@@ -23,7 +23,13 @@
     "launch/prepare-live.sql": "7ecaa88a6850c575964b0b621e837713ae5cc3ab5d5fef2ffc91c91eea4f8f17",
     "launch/community-live-api.ts": "80849216664a219040e367595da7cfdad5361efeec26e80536fa47c8a8351d61",
     "launch/activate-publisher.sql": "b91d5ab265445f4ab81c0e9b6e2b615a389def4dc91627fb2edf51123ed419ba",
-    "scripts/check-live-ready.mjs": "fefdf5b848e7c4081d2ac4a84444a54ad7aeb978dc28bf3a2269434bf4f4a23d"
+    "scripts/check-live-ready.mjs": "c9e7655bb22c706585836333d88cafca4374f7301eb80d5b230e4dfcbafe2c01"
   },
-  "existing_rows_deleted_by_migration": false
+  "existing_rows_deleted_by_migration": false,
+  "readiness_date": "2026-10-25",
+  "blockers": [
+    "Server-enforced 3/2/1 rewarded posting is not implemented or approved with a provider.",
+    "Owner must review and approve the exact final SQL before execution.",
+    "Refresh private application backup before any approved database cutover."
+  ]
 }
