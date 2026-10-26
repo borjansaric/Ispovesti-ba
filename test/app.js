@@ -77,10 +77,11 @@ function contentForm(kind,extra,done){
  text.addEventListener('input',()=>{allowDuplicate=false;duplicateButton?.remove();duplicateButton=null;});
  return form;
 }
+function pulseHeart(b){if(b.getAttribute('aria-pressed')==='true'&&!matchMedia('(prefers-reduced-motion: reduce)').matches)b.animate([{transform:'scale(1)'},{transform:'scale(1.14)'},{transform:'scale(1)'}],{duration:200,easing:'ease-out'});}
 function voteControls(item){
  const row=node('div','vote-controls');row.style.display='contents';const buttons=[];
- for(const [value,symbol] of [[1,'👍'],[-1,'👎']])buttons.push(button(symbol,async b=>{b.disabled=true;try{render(await request('vote',{id:item.id,value}));}finally{b.disabled=false;}}));
- function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=(i===0?'👍':'👎')+(r.likes===undefined?'':' '+(i===0?r.likes:r.dislikes));});}
+ for(const [value,symbol] of [[1,'👍'],[-1,'👎']])buttons.push(button(symbol,async b=>{if(buttons.some(x=>x.dataset.pending==='true'))return;b.dataset.pending='true';b.disabled=true;try{render(await request('vote',{id:item.id,value}));}finally{delete b.dataset.pending;b.disabled=b.dataset.locked==='true';}}));
+ function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.dataset.locked=String(r.can_change===false);b.disabled=r.can_change===false;b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=(i===0?'👍':'👎')+(r.likes===undefined?'':' '+(i===0?r.likes:r.dislikes));});}
  row.append(...buttons);render({});
  watchState(item.id,'vote',row,render);
  return row;
@@ -105,7 +106,7 @@ function comment(item,confessionId,refreshContext,focusOptions={}){
  const wrap=node('div','comment'),card=button('',()=>{menu.hidden=!menu.hidden;},'comment-card');card.append(metadata(item),node('p','body-text',item.body));card.setAttribute('aria-label','Otvori radnje za komentar');
  const menu=node('div','context-menu');menu.hidden=true;menu.append(button('Prijavi komentar',()=>report(item)));
  const row=node('div','comment-actions');row.append(voteControls(item));
- const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await chatRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
+ const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await chatRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';pulseHeart(b);}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
  const count=node('span','reply-count',''),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
  const repliesButton=button('',()=>focusOptions.close?focusOptions.close():focusOptions.reply?focusOptions.reply(item):openReplies(item,confessionId,refreshContext,repliesButton),'reply-toggle');
  repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);wrap.append(card,menu,row);
@@ -128,7 +129,7 @@ function story(item){
  const article=node('article','story');if(item.nickname)article.append(node('div','story-nickname',item.nickname));article.append(node('div','story-content body-text',item.body));const storyDate=node('div','story-date',date(item.published_at||item.created_at));article.append(storyDate);
  const row=node('div','story-actions vote-row'),commentsArea=node('section','comments-area comments');
  const comments=node('h3','comment-title','Komentari');const commentsList=node('div','comment-list');commentsArea.append(comments,commentsList);
- const favorite=button('♡',async b=>{const enabled=b.getAttribute('aria-pressed')!=='true';await request('favorite',{id:item.id,enabled});setFavorite(enabled);},'action favorite');favorite.setAttribute('aria-label','Dodaj ili ukloni iz omiljenih');
+ const favorite=button('♡',async b=>{const enabled=b.getAttribute('aria-pressed')!=='true';await request('favorite',{id:item.id,enabled});setFavorite(enabled);pulseHeart(b);},'action favorite');favorite.setAttribute('aria-label','Dodaj ili ukloni iz omiljenih');
  function setFavorite(value){favorite.textContent=value?'♥':'♡';favorite.setAttribute('aria-pressed',String(value));favorite.classList.toggle('selected',value);}
  async function refreshContext(context){context ||= await request('context',{id:item.id});comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);}
  watchState(item.id,'context',row,context=>{comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);});
