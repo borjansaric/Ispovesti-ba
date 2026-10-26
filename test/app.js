@@ -103,13 +103,13 @@ function updateCommentMeta(){clearTimeout(commentMetaTimer);commentMetaTimer=set
  for(let i=0;i<ids.length;i+=50){try{const data=await chatRequest('comment_meta',{ids:ids.slice(i,i+50)});for(const x of commentMeta){const d=data[x.item.id];if(d){x.count.textContent=replyCounterText(d.replies);x.favorite.classList.toggle('selected',d.favorite);x.favorite.setAttribute('aria-pressed',String(d.favorite));x.favorite.textContent=d.favorite?'♥':'♡';}}}catch(err){toast(err.message);}}
  },40);}
 function comment(item,confessionId,refreshContext,focusOptions={}){
- const wrap=node('div','comment'),card=button('',()=>{menu.hidden=!menu.hidden;},'comment-card');card.append(metadata(item),node('p','body-text',item.body));card.setAttribute('aria-label','Otvori radnje za komentar');
- const menu=node('div','context-menu');menu.hidden=true;menu.append(button('Prijavi komentar',()=>report(item)));
+ const wrap=node('div','comment'),card=node('div','comment-card');card.append(metadata(item),node('p','body-text',item.body));
  const row=node('div','comment-actions');row.append(voteControls(item));
  const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await chatRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';pulseHeart(b);}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
+ const reportButton=button('❗',()=>report(item),'action comment-report');reportButton.setAttribute('aria-label','Prijavi komentar');reportButton.title='Prijavi komentar';row.append(reportButton);
  const count=node('span','reply-count',''),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
  const repliesButton=button('',()=>focusOptions.close?focusOptions.close():focusOptions.reply?focusOptions.reply(item):openReplies(item,confessionId,refreshContext,repliesButton),'reply-toggle');
- repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);wrap.append(card,menu,row);
+ repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);wrap.append(card,row);
  commentMeta.add({item,wrap,count,favorite});updateCommentMeta();return wrap;
 }
 async function openReplies(item,confessionId,refreshContext,trigger){

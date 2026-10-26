@@ -19,3 +19,13 @@ body.chat-open,body.thread-open{overflow:hidden}
 .story-actions .action,.comment-actions .action,.comment-actions .comment-heart,.comment-actions .reply-toggle{position:relative;touch-action:manipulation}
 .story-actions .action::after,.comment-actions .action::after,.comment-actions .comment-heart::after,.comment-actions .reply-toggle::after{content:"";position:absolute;inset:50% auto auto 50%;width:max(100%,32px);height:max(100%,44px);transform:translate(-50%,-50%)}
 .story-actions .action:disabled,.comment-actions .action:disabled{opacity:1;cursor:default}
+
+/* Borderless feed actions; report remains available for every comment/reply. */
+.story-actions .action,.story-actions .action.selected,.story-actions .action:hover{border:0;border-radius:0;background:transparent;box-shadow:none}
+.story-actions .action.selected{text-shadow:0 0 7px #d6b15e88}
+.comment-actions .comment-report{margin-left:auto;font-size:13px}
+.comment-actions .comment-report+.reply-toggle{margin-left:0}
+
+/* Menu stays in the page header and scrolls away instead of covering stories. */
+#menu-toggle{position:absolute}
+body.menu-open #menu-toggle{position:fixed}
