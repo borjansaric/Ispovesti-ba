@@ -44,3 +44,9 @@ body{padding-left:max(32px,env(safe-area-inset-left))}
 #menu-toggle,body.menu-open #menu-toggle{position:fixed;left:0;top:max(10px,env(safe-area-inset-top));transform:none;width:30px;height:44px;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--gold);font-size:17px;font-weight:normal;line-height:1;letter-spacing:-2px;touch-action:manipulation}
 #menu-toggle::after{content:"";position:absolute;inset:0;width:32px;height:44px}
 body.menu-open #menu-toggle{letter-spacing:normal;font-size:23px}
+
+/* Replies expand under their own root comment without a modal or backdrop. */
+.inline-thread{margin-top:12px;padding:0;min-width:0}
+.inline-thread .thread-replies>.comment{margin:0;padding:12px 0;border-left:0;border-radius:0}
+.inline-thread .discussion-form textarea{font-size:16px;min-height:65px}
+.comment-actions .reply-toggle[aria-expanded=true] .reply-triangle{transform:rotate(180deg)}
