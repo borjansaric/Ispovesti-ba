@@ -1,4 +1,4 @@
-import {authClient,isLocal} from '../api.js?v=freechat1';
+import {authClient,isLocal} from '../api.js?v=room2';
 let localPending;
 async function localSession(){
  if(!localPending)localPending=fetch('/api/chat-session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',credentials:'same-origin'}).then(async r=>{if(!r.ok)throw Error('Anonimna prijava nije dostupna.');}).catch(e=>{localPending=null;throw e;});
@@ -18,3 +18,5 @@ export async function chatRequest(action,args={},admin=false){
  if(!r.ok){const e=Error(d.error||'Chat trenutno nije dostupan.');e.status=r.status;throw e;}return d;
 }
 export const recoveryKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
+
+export const trialCode=()=>'TEST-'+Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,'0')).join('').toUpperCase().match(/.{6}/g).join('-');

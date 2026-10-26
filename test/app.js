@@ -1,4 +1,6 @@
-import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=freechat1';
+import {chatRequest} from './chat/client.mjs?v=room2';
+import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=room2';
+import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=room2';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 let currentView='oldest',offset=0, generation=0, openMenu=null,openBranch=null,busy=false;
@@ -93,21 +95,34 @@ async function commentBranch(confessionId,parentId,container,refreshContext,conf
  await load();
  if(!parentId)container.append(contentForm('comment',{confession_id:confessionId},(item,context)=>{add(item);refreshContext(context).catch(err=>toast(err.message));}));
 }
-function comment(item,confessionId,refreshContext){
- const wrap=node('div','comment'),card=button('',()=>toggleMenu(),'comment-card');card.append(metadata(item),node('p','body-text',item.body));card.setAttribute('aria-label','Otvori radnje za komentar');const menu=node('div','context-menu');menu.hidden=true;wrap.append(card,menu);
- function toggleMenu(){if(openMenu&&openMenu!==menu)openMenu.hidden=true;menu.hidden=!menu.hidden;openMenu=menu.hidden?null:menu;}
- const replyForm=node('div');replyForm.hidden=true;
- menu.append(voteControls(item),button('Odgovori',()=>{replyForm.hidden=!replyForm.hidden;if(!replyForm.hidden){replyForm.replaceChildren(contentForm('reply',{confession_id:confessionId,parent_id:item.id},(created,context)=>{replyForm.hidden=true;repliesButton.hidden=false;showReplies();const add=branchViews.get(branch);if(add)add(created);else commentBranch(confessionId,item.id,branch,refreshContext,created).catch(err=>toast(err.message));refreshContext(context).catch(err=>toast(err.message));}));replyForm.querySelector('textarea').focus();}}),button('❗',()=>report(item)));
- const branch=node('div','replies');branch.hidden=true;
- function showReplies(){
-  document.querySelectorAll('.replies').forEach(other=>{if(other!==branch&&!other.contains(branch)){other.hidden=true;const prev=other.previousElementSibling;if(prev?.tagName==='BUTTON')prev.textContent='Otvori odgovore';}});
-  branch.hidden=false;openBranch=branch;repliesButton.textContent='Sakrij odgovore';
- }
- const repliesButton=button('Otvori odgovore',async b=>{
-   if(!branch.hidden){branch.hidden=true;b.textContent='Otvori odgovore';return;}
-   showReplies();await commentBranch(confessionId,item.id,branch,refreshContext);
- });repliesButton.hidden=!item.has_replies;
- wrap.append(replyForm,repliesButton,branch);return wrap;
+const commentMeta=new Set();let commentMetaTimer;
+function updateCommentMeta(){clearTimeout(commentMetaTimer);commentMetaTimer=setTimeout(async()=>{
+ for(const x of commentMeta)if(!x.wrap.isConnected)commentMeta.delete(x);
+ const ids=[...new Set([...commentMeta].map(x=>String(x.item.id)))];
+ for(let i=0;i<ids.length;i+=50){try{const data=await chatRequest('comment_meta',{ids:ids.slice(i,i+50)});for(const x of commentMeta){const d=data[x.item.id];if(d){x.count.textContent=replyCounterText(d.replies);x.favorite.classList.toggle('selected',d.favorite);x.favorite.setAttribute('aria-pressed',String(d.favorite));x.favorite.textContent=d.favorite?'♥':'♡';}}}catch(err){toast(err.message);}}
+ },40);}
+function comment(item,confessionId,refreshContext,focusOptions={}){
+ const wrap=node('div','comment'),card=button('',()=>{menu.hidden=!menu.hidden;},'comment-card');card.append(metadata(item),node('p','body-text',item.body));card.setAttribute('aria-label','Otvori radnje za komentar');
+ const menu=node('div','context-menu');menu.hidden=true;menu.append(button('Prijavi komentar',()=>report(item)));
+ const row=node('div','comment-actions');row.append(voteControls(item));
+ const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await chatRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
+ const count=node('span','reply-count',item.has_replies?'…':'0'),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
+ const repliesButton=button('',()=>focusOptions.close?focusOptions.close():focusOptions.reply?focusOptions.reply(item):openReplies(item,confessionId,refreshContext,repliesButton),'reply-toggle');
+ repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);row.append(repliesButton);wrap.append(card,menu,row);
+ commentMeta.add({item,wrap,count,favorite});updateCommentMeta();return wrap;
+}
+async function openReplies(item,confessionId,refreshContext,trigger){
+ const old=document.querySelector('#thread-dialog');if(old?.open)return;
+ const top=window.scrollY,thread=node('dialog','thread-dialog');thread.id='thread-dialog';thread.setAttribute('aria-label','Komentar i odgovori');
+ const original=node('div','thread-original'),replies=node('div','thread-replies'),formBox=node('div'),notice=node('p','hint','Učitavam odgovore…');
+ const close=()=>thread.close();original.append(comment(item,confessionId,refreshContext,{close}));thread.append(original,replies,notice,formBox);document.body.append(thread);
+ let sent=new Set(),closed=false;thread.addEventListener('close',()=>{closed=true;thread.remove();document.body.classList.remove('thread-open');window.scrollTo(0,top);trigger?.focus({preventScroll:true});updateCommentMeta();},{once:true});
+ document.body.classList.add('thread-open');thread.showModal();
+ function replyTo(parent){formBox.replaceChildren(contentForm('reply',{confession_id:confessionId,parent_id:parent.id},(created,context)=>{
+  if(!sent.has(String(created.id))){sent.add(String(created.id));replies.append(comment(created,confessionId,refreshContext,{reply:replyTo}));}updateCommentMeta();refreshContext(context).catch(e=>toast(e.message));
+ }));}
+ replyTo(item);
+ try{const items=await collectReplies(request,confessionId,item.id);if(closed)return;for(const r of items){if(!sent.has(String(r.id))){sent.add(String(r.id));replies.append(comment(r,confessionId,refreshContext,{reply:replyTo}));}}notice.remove();updateCommentMeta();}catch(e){notice.textContent=e.message;}
 }
 function story(item){
  const article=node('article','story');if(item.nickname)article.append(node('div','story-nickname',item.nickname));article.append(node('div','story-content body-text',item.body));const storyDate=node('div','story-date',date(item.published_at||item.created_at));article.append(storyDate);
