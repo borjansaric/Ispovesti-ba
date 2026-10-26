@@ -29,3 +29,5 @@ Samo /test/: fullscreen chat sa X gore lijevo, avatar bez obruba i tekst bez nad
 Komentari i odgovori: sitni glasovi i privatno srce, broj iznad punog žutog trougla. Fokusirani original i ravno poravnati svi potomci u modalu, uz blur ostatka i povratak na istu poziciju; nula odgovora omogućava prvi odgovor.
 Korisnički tajni recovery ključ povlači se samo iz interfejsa. Novi pravac je jedan SMS pristupni kod po kupovini, ponovljiv do istog isteka, bez produžavanja. Jedna aktivna chat sesija; prelazak opoziva prethodnu i ne daje Auth/admin prava. Samo administratorski testni kodovi dok nema provjerenog SMS provajdera. Postojeći recovery i podaci se ne brišu. Ovim zadatkom vlasnik odobrava usklađene testne izmjene bez pojedinačnih potvrda; nema odobrenja za glavni sajt ili stvarnu naplatu.
 Ne koristiti bratov hosting/mail server niti dijeliti pristup s njim bez novog izričitog odobrenja vlasnika.
+
+Dorada komentara 26.10.2026: srce uvijek zlatno, sitniji broj odgovora; nula je prazna oznaka uz aktivnu strelicu. Novi odgovori dozvoljeni su isključivo na glavne komentare, nikada na postojeće odgovore. Stari potomci ostaju čitljivi i sačuvani. Chat se ne mijenja.

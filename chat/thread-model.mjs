@@ -6,4 +6,4 @@ export async function collectReplies(request,confessionId,parentId){
  }
  return items.sort((a,b)=>Date.parse(a.created_at)-Date.parse(b.created_at)||Number(a.id)-Number(b.id));
 }
-export const replyCounterText=n=>String(Math.max(0,Number(n)||0));
+export const replyCounterText=n=>Number(n)>0?String(Math.floor(Number(n))):'';

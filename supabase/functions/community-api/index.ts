@@ -122,6 +122,19 @@ Deno.serve(async(req:Request)=>{
    return send(await timedRpc('community_test_security',uid,action,clean));
   }
   if(action==='submit'){
+   // Only top-level comments can receive new replies. Existing descendants remain readable.
+   if(args.kind==='reply'){
+    if(!/^[1-9][0-9]*$/.test(String(args.parent_id||'')))fail('Odgovarati možeš samo na glavni komentar.');
+    let offset=0,found=false;
+    while(!found){
+     const page=await timedRpc('community_test_dispatch',uid,'comments',{confession_id:args.confession_id,parent_id:null,offset});
+     if(!Array.isArray(page.items))fail('Provjera komentara trenutno nije dostupna.',503);
+     found=page.items.some((item:{id:string})=>String(item.id)===String(args.parent_id));
+     if(found)break;
+     if(page.items.length<20||offset>=1000000)fail('Odgovarati možeš samo na glavni komentar.');
+     offset+=page.items.length;
+    }
+   }
    const config=await timedRpc('community_test_security',uid,'runtime_config');
    if(config.enabled===true){
     if(!['confession','comment','reply'].includes(args.kind))fail('Neispravna vrsta sadržaja.');

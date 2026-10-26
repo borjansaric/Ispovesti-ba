@@ -1,5 +1,5 @@
 import {chatRequest} from './chat/client.mjs?v=room2';
-import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=room2';
+import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=comments3';
 import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=room2';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
@@ -106,9 +106,9 @@ function comment(item,confessionId,refreshContext,focusOptions={}){
  const menu=node('div','context-menu');menu.hidden=true;menu.append(button('Prijavi komentar',()=>report(item)));
  const row=node('div','comment-actions');row.append(voteControls(item));
  const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await chatRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
- const count=node('span','reply-count',item.has_replies?'…':'0'),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
+ const count=node('span','reply-count',''),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
  const repliesButton=button('',()=>focusOptions.close?focusOptions.close():focusOptions.reply?focusOptions.reply(item):openReplies(item,confessionId,refreshContext,repliesButton),'reply-toggle');
- repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);row.append(repliesButton);wrap.append(card,menu,row);
+ repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);wrap.append(card,menu,row);
  commentMeta.add({item,wrap,count,favorite});updateCommentMeta();return wrap;
 }
 async function openReplies(item,confessionId,refreshContext,trigger){
@@ -118,11 +118,11 @@ async function openReplies(item,confessionId,refreshContext,trigger){
  const close=()=>thread.close();original.append(comment(item,confessionId,refreshContext,{close}));thread.append(original,replies,notice,formBox);document.body.append(thread);
  let sent=new Set(),closed=false;thread.addEventListener('close',()=>{closed=true;thread.remove();document.body.classList.remove('thread-open');window.scrollTo(0,top);trigger?.focus({preventScroll:true});updateCommentMeta();},{once:true});
  document.body.classList.add('thread-open');thread.showModal();
- function replyTo(parent){formBox.replaceChildren(contentForm('reply',{confession_id:confessionId,parent_id:parent.id},(created,context)=>{
-  if(!sent.has(String(created.id))){sent.add(String(created.id));replies.append(comment(created,confessionId,refreshContext,{reply:replyTo}));}updateCommentMeta();refreshContext(context).catch(e=>toast(e.message));
+ function replyTo(){formBox.replaceChildren(contentForm('reply',{confession_id:confessionId,parent_id:item.id},(created,context)=>{
+  if(!sent.has(String(created.id))){sent.add(String(created.id));replies.append(comment(created,confessionId,refreshContext,{readOnly:true}));}updateCommentMeta();refreshContext(context).catch(e=>toast(e.message));
  }));}
- replyTo(item);
- try{const items=await collectReplies(request,confessionId,item.id);if(closed)return;for(const r of items){if(!sent.has(String(r.id))){sent.add(String(r.id));replies.append(comment(r,confessionId,refreshContext,{reply:replyTo}));}}notice.remove();updateCommentMeta();}catch(e){notice.textContent=e.message;}
+ replyTo();
+ try{const items=await collectReplies(request,confessionId,item.id);if(closed)return;for(const r of items){if(!sent.has(String(r.id))){sent.add(String(r.id));replies.append(comment(r,confessionId,refreshContext,{readOnly:true}));}}notice.remove();updateCommentMeta();}catch(e){notice.textContent=e.message;}
 }
 function story(item){
  const article=node('article','story');if(item.nickname)article.append(node('div','story-nickname',item.nickname));article.append(node('div','story-content body-text',item.body));const storyDate=node('div','story-date',date(item.published_at||item.created_at));article.append(storyDate);
