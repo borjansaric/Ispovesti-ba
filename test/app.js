@@ -23,7 +23,7 @@ const menuToggle=$('#menu-toggle'),sideMenu=$('#side-menu'),menuOverlay=$('#menu
 function closeMenu(){setMenu(false);}
 function setMenu(open){
  document.body.classList.toggle('menu-open',open);sideMenu.hidden=!open;menuOverlay.hidden=!open;
- menuToggle.setAttribute('aria-expanded',String(open));menuToggle.setAttribute('aria-label',open?'Zatvori meni':'Otvori meni');menuToggle.textContent=open?'×':'›';
+ menuToggle.setAttribute('aria-expanded',String(open));menuToggle.setAttribute('aria-label',open?'Zatvori meni':'Otvori meni');menuToggle.textContent=open?'×':'›››';
  for(const el of document.querySelectorAll('.site-header,main,footer'))el.inert=open;
  if(open)sideMenu.querySelector('button')?.focus();
 }
