@@ -33,3 +33,7 @@ test('concurrent opposite requests cannot flip back twice',async()=>{
 test('direct client table privileges remain denied and saved votes remain private',async()=>{
  for(const role of ['anon','authenticated','service_role']){await db.exec('set role '+role);try{await assert.rejects(db.query('select * from community_test.votes_before_one_change_20261026'),/permission denied/);}finally{await db.exec('reset role');}}
 });
+
+test('service role sees locked vote state through the existing private dispatcher',async()=>{
+ await db.exec('set role service_role');try{const r=await call(alice,'vote_status',{id:confession});assert.equal(r.can_change,false);assert.equal(r.my_vote,-1);}finally{await db.exec('reset role');}
+});
