@@ -55,7 +55,7 @@ Deno.serve(async(req:Request)=>{
   const body=JSON.parse(new TextDecoder().decode(bytes));if(!body||typeof body!=='object'||Array.isArray(body))fail('Neispravan zahtjev.');
   const action=body.action,args=body.args??{};if(typeof action!=='string'||!/^[a-z_]{1,30}$/.test(action))fail('Neispravna radnja.');
   if(!args||typeof args!=='object'||Array.isArray(args))fail('Neispravan zahtjev.');
-  if(action==='health'){const c=await timedRpc('community_live_security',null,'public_config');return send({environment:'live',version:'launch1',posting_policy:'free',captcha_enabled:c.enabled});}
+  if(action==='health'){const c=await timedRpc('community_live_security',null,'public_config');const capabilities=await timedRpc('community_live_dispatch',null,'release_status',{});if(capabilities.vote_changes!==1||capabilities.reply_parent!=='root-comment'||capabilities.comment_meta!=='live-isolated'||capabilities.posting_policy!=='free')fail('Glavni SQL nije usklađen sa release12.',503);return send({environment:'live',version:'launch1',posting_policy:'free',captcha_enabled:c.enabled,capabilities});}
   if(action==='captcha_config')return send(await timedRpc('community_live_security',null,'public_config'));
   if(action==='activate_admin')return send({error:'Koristi postojeći administratorski nalog.'},403);
   let uid:string|null=null;

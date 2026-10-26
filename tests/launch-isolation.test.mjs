@@ -64,10 +64,10 @@ test('live gateway calls live RPCs only and exposes no new activation or anonymo
    if(url.endsWith('/auth/v1/user'))return Response.json({id:visitor,is_anonymous:true});
    const name=url.split('/').at(-1);rpcNames.push(name);assert.ok(name.startsWith('community_live_'));
    if(name==='community_live_security')return Response.json({enabled:true,sitekey:'configured-widget'});
-   return Response.json({items:[]});
+   if(JSON.parse(options.body).p_action==='release_status')return Response.json({vote_changes:1,reply_parent:'root-comment',comment_meta:'live-isolated',posting_policy:'free'});return Response.json({items:[]});
   }});
  const send=(action,token)=>handler(new Request('https://gateway.invalid',{method:'POST',headers:{Origin:'https://allowed.invalid',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify({action,args:{}})}));
- assert.deepEqual(await(await send('health')).json(),{environment:'live',version:'launch1',posting_policy:'free',captcha_enabled:true});
+ assert.deepEqual(await(await send('health')).json(),{environment:'live',version:'launch1',posting_policy:'free',captcha_enabled:true,capabilities:{vote_changes:1,reply_parent:'root-comment',comment_meta:'live-isolated',posting_policy:'free'}});
  assert.equal((await send('feed')).status,200);assert.equal((await send('activate_admin')).status,403);
  assert.equal((await send('admin_list')).status,401);assert.equal((await send('admin_list','regular-user')).status,403);assert.ok(rpcNames.includes('community_live_dispatch'));
 });
@@ -75,4 +75,22 @@ test('initial setup cannot be rerun over an existing live environment',async()=>
  const before=(await db.query('select jsonb_agg(to_jsonb(c) order by id) r from community_live.content c')).rows[0].r;
  await assert.rejects(db.exec(migration),/već postoji/);await db.exec('rollback');
  assert.deepEqual((await db.query('select jsonb_agg(to_jsonb(c) order by id) r from community_live.content c')).rows[0].r,before);
+});
+
+test('live vote permits one switch only; totals remain private until ten minutes',async()=>{
+ const story=(await db.query("insert into community_live.content(kind,author_id,body,state,published_at) values('confession',$1,'Nova provjera glasanja bez promjene testnih podataka.','published',clock_timestamp()) returning id",[visitor])).rows[0].id;
+ for(const first of [1,-1]){const uid=first===1?visitor:owner;let r=await call('live',uid,'vote',{id:String(story),value:first});assert.equal(r.can_change,true);assert.equal(r.likes,undefined);r=await call('live',uid,'vote',{id:String(story),value:first});assert.equal(r.can_change,true);r=await call('live',uid,'vote',{id:String(story),value:-first});assert.equal(r.can_change,false);r=await call('live',uid,'vote',{id:String(story),value:first});assert.equal(r.my_vote,-first);assert.equal(r.likes,undefined);}
+ const older=(await db.query("insert into community_live.content(kind,author_id,body,state,published_at) values('confession',$1,'Provjera isteka vremenskog perioda glasanja.','published',clock_timestamp()) returning id",[visitor])).rows[0].id;
+ await db.query("insert into community_live.votes(content_id,user_id,value,first_voted_at) values($1,$2,1,clock_timestamp()-interval '11 minutes')",[older,visitor]);
+ assert.equal((await call('live',visitor,'vote',{id:String(older),value:-1})).my_vote,1);assert.equal((await call('live',visitor,'vote_status',{id:String(older)})).likes,1);assert.equal((await call('live',owner,'vote_status',{id:String(older)})).likes,undefined);
+});
+test('live comments/replies keep unicode limits, prohibit links and nested replies; hearts are private without chat',async()=>{
+ const story=(await db.query("insert into community_live.content(kind,author_id,body,state,published_at) values('confession',$1,'Nova provjera komentara i privatnih srca.','published',clock_timestamp()) returning id",[visitor])).rows[0].id;
+ const root=(await call('live',visitor,'submit',{kind:'comment',confession_id:String(story),body:'🙂'.repeat(1000)})).id;
+ await assert.rejects(call('live',visitor,'submit',{kind:'comment',confession_id:String(story),body:'🙂'.repeat(1001)}));
+ await assert.rejects(call('live',visitor,'submit',{kind:'comment',confession_id:String(story),body:'https://example.invalid'}));
+ const reply=(await call('live',owner,'submit',{kind:'reply',confession_id:String(story),parent_id:root,body:'Odgovor glavnom komentaru 🙂'})).id;
+ await assert.rejects(call('live',owner,'submit',{kind:'reply',confession_id:String(story),parent_id:reply,body:'Nedozvoljen odgovor na odgovor.'}));
+ await call('live',visitor,'comment_favorite',{id:reply,enabled:true});assert.equal((await call('live',visitor,'comment_meta',{ids:[root,reply]}))[reply].favorite,true);assert.equal((await call('live',owner,'comment_meta',{ids:[root,reply]}))[reply].favorite,false);assert.equal((await call('live',visitor,'comment_meta',{ids:[root]}))[root].replies,1);
+ await assert.rejects(call('live',null,'comment_meta',{ids:[root]}));for(const role of ['anon','authenticated']){await db.exec('set role '+role);try{await assert.rejects(db.query('select * from community_live.comment_favorites'),/permission denied/);}finally{await db.exec('reset role');}}
 });

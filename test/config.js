@@ -1,1 +1,1 @@
-window.ISPOVESTI_CONFIG = {"mode":"live-test","supabaseUrl":"https://roxajqagksffbsbzdrap.supabase.co","publishableKey":"sb_publishable_OZ1dhjzKkN82uRpqjzbfbA_trakwga6"};
+window.ISPOVESTI_CONFIG = {"mode":"live-test","supabaseUrl":"https://roxajqagksffbsbzdrap.supabase.co","publishableKey":"sb_publishable_OZ1dhjzKkN82uRpqjzbfbA_trakwga6","chatEnvironment":"test"};

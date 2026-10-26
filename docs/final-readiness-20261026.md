@@ -1,40 +1,48 @@
-# Završna provjera Ispovesti.ba — 26.10.2026.
+# Objedinjeni izvještaj — završna priprema 26.10.2026.
 
-Status: /test/ provjeren; prelazak glavnog sajta još nije spreman za odobrenje.
+**Status: pripremljeno za pregled; nije odobreno za glavno objavljivanje.** Release12 je lokalna priprema na razvojnoj grani. Posljednji javni /test/ ostaje progressive11: https://borjansaric.github.io/Ispovesti-ba/test/?v=progressive11 . Novi sticky baner, pravni nacrti i dijagnostika još nisu javno postavljeni.
 
-## Obim i očuvanje
+## Šta je završeno
 
-Ova provjera nije izvršavala SQL migracije, upise u bazu, arhiviranje, Edge deployment ili objavljivanje sajta. Jedina popravka je lokalni regresioni test. GitHub main commit: 31bd32baf090b9abeb93621efbffeb6fab9b825e. Glavni index.html ostaje blob 9f83f627a4917953a70b4efe9c01a05a5c130372. Objavljeni test/app.js, test/index.html, test/chat/chat.css i test/chat/thread-model.mjs identični su provjerenom lokalnom paketu. Chat UI i aktivne Edge verzije nisu mijenjani.
+- Usklađena konačna specifikacija svih odluka u CURRENT-SPEC-20261026.md. Sačuvani postojeći stilovi original.css/styles.css, Anonimus, fontovi, radnje, inline grane i testni chat. Nema obaveznih reklamnih prava 3/2/1.
+- Pripremljeni community_live SQL i community-live-api: odvojen prazan glavni sadržaj, jedan glas po korisniku/sadržaju, najviše jedna promjena u prvih 10 minuta, ista odložena vidljivost rezultata; odgovori samo na glavne komentare; 1.000 Unicode znakova za komentare/odgovore, emodžiji dozvoljeni, linkovi zabranjeni.
+- Privatne liste i srca imaju serverski provjerenog vlasnika. Glavna srca komentara i broj odgovora više ne zavise od chat_test. Pripremljeni javni paket ne koristi testne chat kodove ni testne sesije.
+- Pripremljeno jedno neutralno sticky mjesto za reklamu u toku stranice. CSS predviđa prostor, scroll-margin i skrivanje u chatu; nema mrežnih reklamnih zahtjeva. Konačna vizuelna provjera je otvorena, nije označena kao uspješna.
+- Pripremljeni naslov/opis, favicon, Open Graph slika, canonical/robots/sitemap kroz allowlist builder. SITE_ORIGIN je sada postojeći GitHub Pages URL; vlasništvo nad Ispovesti.ba nije potvrđeno niti je DNS mijenjan.
+- Pripremljeni jasno označeni nacrti privatnosti, uslova i kolačića, bez tvrdnje o apsolutnoj anonimnosti ili end-to-end šifrovanju. Pravna revizija i podaci operatera/rokovi čuvanja nedostaju.
+- Dijagnostika pamti samo do 30 fiksnih šifri grešaka, minut i oznaku verzije, u memoriji preglednika. Ne šalje sadržaj, identifikatore, URL, stack ili podatke na server. To nije udaljeni monitoring niti upozoravanje administratora.
+- Pripremljen allowlist produkcijski build: bez SQL-a, server koda, zavisnosti, privatnih kopija i testnog chat entrypointa na glavnoj adresi; /test/ se kopira odvojeno i ne prepravlja u live klijent.
+- Pripremljen nedestruktivni plan arhive: stari redovi ostaju u postojećim tabelama, ukidaju se dozvole nad šest legacy tabela tek uz zasebno odobrenje nakon novog HTTP/admin pregleda. Skripta nije izvršena.
 
-## Rezultati
+## Provjere i dokazi
 
-- npm test: 121/121 prolazi, 0 grešaka. Prvi prolaz 120/121 otkrio je zastarjelu provjeru broja RPC poziva. Novi gateway smije čitati roditeljski komentar prije CAPTCHA, ali ne smije poslati submit u SQL. Test sada eksplicitno provjerava zabranu tog upisa; sigurnosna zaštita nije mijenjana.
-- To su lokalni PGlite/gateway/client testovi; dio starijih klijentskih testova koristi dist. Nisu zamjena za ponovnu stvarnu administratorsku prijavu pri produkcionom prelasku.
-- Supabase ACTIVE_HEALTHY; 9 postojećih migracija. Nijedna nije ponavljana.
-- community_test i chat_test postoje. community_live/chat_live ne postoje; community-live-api nije postavljen.
-- CAPTCHA u testnom okruženju uključena. Jedan testni administrator sačuvan.
-- Sve postojeće aplikacijske tabele imaju RLS. Testni community/chat dispatch RPC-ovi nedostupni su anon/authenticated; dostupni su service_role serveru.
-- Primarni ključ glasova (content_id,user_id) i enforce_one_vote_change trigger postoje.
-- 28 ranijih privatnih snapshot tabela i kopija glasova postoje, imaju RLS i nisu čitljivi anon/authenticated ulogama. Raniji privatni ZIP takođe postoji.
-- Nisu pronađene stvarne service_role JWT ili sb_secret_ vrijednosti u javnom testnom paketu. Pojava teksta sb_secret_ u Supabase biblioteci je samo prepoznavanje prefiksa ključa.
-- Ranija provjera stvarnog /test/ učitavanja odgovora: prvi odgovor 599 ms, svih pet 2322 ms; prikaz je progresivan, inline uz zamagljivanje okoline. To je jedno mjerenje, ne garancija svake veze.
+| Provjera | Rezultat i granica |
+|---|---|
+| Cijeli lokalni testni skup | 127/127 prolazi, 0 grešaka; Node/PGlite/gateway/client testovi, dio vanjskih servisa je simuliran |
+| Završne ciljane provjere servera/izdavanja | 18/18 prolazi; poslije poboljšanja samostalne izgradnje još 4/4 release12 testa prolazi |
+| Supabase read-only stanje | ACTIVE_HEALTHY; devet migracija; nijedna ponovljena; community_live/chat_live još ne postoje |
+| Aplikacijska kopija | 2026-10-26T22:56:24.343113Z; 32 tabele, 251 red, uključene naknadne privatne liste i testni chat; privatno sačuvana, starije kopije ostaju |
+| Vraćanje kopije | Svih 32/251 vraćeno u odvojene tipizirane lokalne tabele, digesti redova identični; nije puna proba Auth, ACL, infrastrukture ili PITR-a |
+| Serverski identitet/dozvole | Lokalne provjere stvarne granice: gateway koristi Supabase Auth provjeru, ne browser p_uid/_session_id/_aal; anon/authenticated nemaju direktni testni RPC pristup; live SQL ima izolaciju/serverske dozvole |
+| Privatnost liste i metapodataka | Lokalno provjereno da drugi UID ne dobija tuđa privatna srca/liste; live metapodaci odvojeni od chat_test |
+| UI/performanse | Ranije javni progressive11: prvi odgovor oko 599 ms, svih pet oko 2322 ms; jedno mjerenje, nije obećanje svake veze. Test sporih/preuređenih serija potvrđuje progresivni prikaz bez duplikata |
+| Novi release12 mobilni/desktop prikaz | Nije dovršen: browser nije mogao dosegnuti lokalni preview, a javno testno postavljanje blokirano. Ne tvrditi da su novi baner i prelom provjereni stvarnim preglednikom |
+| Tajni ključevi | U pregledanom javnom paketu nema stvarnih service_role JWT/sb_secret vrijednosti; prepoznavanje prefiksa unutar Supabase biblioteke nije ključ |
+| Glavni sajt | Main ostaje 31bd32baf090b9abeb93621efbffeb6fab9b825e; root index blob 9f83f627a4917953a70b4efe9c01a05a5c130372; bez produkcijskog deploya ili promjene podataka |
 
-## Prepreke glavnom objavljivanju
+Novi community-live-api nije postavljen, zato stvarna prijava JWT/CAPTCHA/email i funkcionalni upisi na tom budućem endpointu tek slijede poslije posebnog odobrenja. Lokalni testovi nisu takva potvrda. Postojeći administratorski pristup, testni chat i devet migracija nisu mijenjani.
 
-1. launch/prepare-live.sql i launch/community-live-api.ts su starija priprema. Nemaju aktuelno ograničenje jedne promjene glasa (change_used/can_change), a provjera roditelja odgovora u toj pripremi ne ograničava roditelja isključivo na glavni komentar. Ne primijeniti postojeće skripte kao konačne.
-2. Potrebno pripremiti usklađen glavni API/SQL i pregled cijelog SQL-a; primjena tek poslije posebnog odobrenja vlasnika. Novi prazni glavni sadržaj mora ostati odvojen od /test/.
-3. Stare public.confessions/comments su još javno čitljive SELECT politikom true. Trenutni sadržaj 17 ispovijesti i 24 komentara ne smatra se privatnom arhivom. Postojeći plan archive-legacy-after-cutover.sql čuva redove i zatvara pristup, ali nije primijenjen i ne smije se izvršiti dok stari glavni sajt radi.
-4. Kopije nisu potpuno ažurne: testni sadržaj 21 prema 20 u snapshotu; privatne liste 23 prema 12; chat poruke 10 prema 6. Prije prelaska napraviti novu privatnu kopiju i provjeru vraćanja bez prepisivanja starih kopija. Ova provjera nije pravila novu kopiju niti izvozila privatne podatke.
-5. Produkcijski chat nije odvojen/pripremljen: klijent namjerno prihvata samo chatEnvironment=test. Ne povezivati glavni sajt s testnim paketima i probnim kodovima. Stvarni SMS provajder, cijene i naplata nisu uključeni.
-6. release-manifest.json i dio launch dokumentacije su zastarjeli i moraju biti obnovljeni prema posljednjoj specifikaciji. Istorijske bilješke o 3/2/1 nisu aktuelne: osnovni sajt je besplatan.
-7. Jedan nenametljivi baner predviđen je kao sticky, bez prekrivanja sadržaja; stvarna mreža nije aktivirana.
+## Šta nedostaje i zahtijeva odluku
 
-## Postojeće sigurnosne napomene
+1. **Probni deployment release12 i vizuelna provjera.** Automatska provjera odobrenja odbila je ažuriranje main ref-a za devet /test/ fajlova zato što postojeći Pages postupak objavljuje zajednički sajt. Odbijanje nije zaobiđeno; glavni ref nije pomjeren. Potreban je konkretno odobren način zajedničkog testnog deploya uz nepromijenjene glavne datoteke ili odvojeno probno okruženje. Ne ponavljati odbijenu radnju bez rješenja te granice.
+2. **Potpuna mogućnost oporavka.** Svježa kopija je aplikacijska; Auth nalozi, provajderske tajne/sesije i puna infrastruktura nisu izvezeni. Prije glavnog prelaska potvrditi dostupnost potpune kopije i vraćanja u postojećem Supabase planu, bez samostalne kupovine.
+3. **SQL i server.** Vlasnik pregleda tri potpune skripte u ../launch/SQL-REVIEW-20261026.md i manifest. Zasebno odobrava prepare-live.sql, API deployment, activate-publisher.sql, frontend i kasnije archive-legacy-after-cutover.sql. Nema destruktivnog čišćenja.
+4. **Pravna spremnost i domena.** Završiti operator/kontakt, uzrast, pravni osnov/rokove i postupke zaštite podataka; pravna revizija nacrta. Potvrditi vlasništvo/DNS/HTTPS/Turnstile/Supabase origins prije povezivanja domene.
+5. **Produkcijski chat kasnije.** Zasebna chat_live arhitektura i plan postoje, izvršni produkcijski chat SQL nije pripremljen/odobren. Premium SMS provider, cijene, callback, ugovori, tržišna/pravna revizija nisu povezani. Glavni chat ostaje jasno nedostupan, bez stvarne naplate. Postojeći testni chat ostaje za probu.
+6. **Kasnije, odvojeno:** pojedinačni nadimak uz dodatnu dobrovoljnu reklamu po sadržaju; samo nakon mrežne potvrde i odluke vlasnika. Ne vraća stari 3/2/1. Udaljeno praćenje grešaka i dijeljenje pojedinačne ispovijesti sa njenim server-renderovanim metapodacima ostaju dodatni rad.
 
-Supabase advisor: javni EXECUTE na rls_auto_enable (event_trigger, nije obična RPC funkcija); cron politike imaju široke uloge, ali anon nema USAGE nad cron šemom; zaštita od kompromitovanih lozinki nije uključena. Informativni nalazi o RLS bez politika za privatne testne/back-up tabele odgovaraju serverskom pristupu uz zabranjen direktni klijentski pristup. Nisu automatski mijenjane dozvole.
+Postojeći advisor nalazi su zabilježeni, nisu automatski mijenjani: public execute rls_auto_enable je event_trigger, cron anon nema USAGE, zaštita od kompromitovanih lozinki nije uključena. INFO RLS bez politika odgovara privatnim serverskim/back-up tabelama. Posebno procijeniti prije glavnog prelaska, bez širenja dozvola ili uklanjanja zaštita.
 
-Zvanična objašnjenja: https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable i https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .
+## Bezbjedan redoslijed
 
-## Sljedeći bezbjedan korak
-
-Pripremiti usklađen produkcijski paket, nove testove prenesenih pravila, ažurnu specifikaciju i potpuni SQL za pregled. Zatim odvojeno odobriti migracije, nedestruktivno zatvaranje starog javnog API-ja i konačno glavno objavljivanje. Trenutno nema odobrenja za te radnje.
+Pregled paketa → odobren testni deploy i mobilni/desktop pregled → potvrda svježe i potpune mogućnosti vraćanja → posebno odobren SQL setup → posebno odobren novi API → stvarni JWT/admin/CAPTCHA i spremnost praznog live feeda → odobren publisher/glavni frontend → provjera glavne adrese → tek onda odobrena privatna legacy arhiva i provjera starih REST/Edge puteva. Domena i produkcijski chat imaju odvojene korake. Detalji i postupak bez destruktivnih popravki: SAFE-CUTOVER-20261026.md.

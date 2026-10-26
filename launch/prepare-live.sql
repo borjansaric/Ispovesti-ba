@@ -39,8 +39,42 @@ create table community_live.votes (
  user_id uuid references auth.users(id) not null,
  value smallint not null check(value in (-1,1)),
  first_voted_at timestamptz not null default clock_timestamp(),
+ change_used boolean not null default false,
  primary key(content_id,user_id)
 );
+
+-- Fresh live-only comment favorites; these do not depend on the test chat.
+create table community_live.comment_favorites(user_id uuid references auth.users(id) not null,content_id bigint references community_live.content(id) not null,primary key(user_id,content_id));
+alter table community_live.comment_favorites enable row level security;
+revoke all on community_live.comment_favorites from public,anon,authenticated;
+grant all on community_live.comment_favorites to service_role;
+create index comment_favorites_content on community_live.comment_favorites(content_id);
+
+create function community_live.limit_vote_change() returns trigger
+language plpgsql security invoker set search_path='' as $$
+begin
+ if TG_OP='INSERT' then
+  new.change_used=false;
+ else
+  if new.content_id is distinct from old.content_id or new.user_id is distinct from old.user_id
+   or new.first_voted_at is distinct from old.first_voted_at then
+   raise exception 'Identitet i vrijeme prvog glasa se ne mijenjaju.';
+  end if;
+  new.change_used=old.change_used;
+  if new.value is distinct from old.value then
+   if old.change_used or clock_timestamp()>=old.first_voted_at+interval '10 minutes' then
+    new.value=old.value;
+   else
+    new.change_used=true;
+   end if;
+  end if;
+ end if;
+ return new;
+end $$;
+revoke all on function community_live.limit_vote_change() from public,anon,authenticated;
+create trigger enforce_one_vote_change before insert or update on community_live.votes
+for each row execute function community_live.limit_vote_change();
+
 create table community_live.lists (
  user_id uuid references auth.users(id) not null,
  kind text not null check(kind in ('favorites','recently_read')),
@@ -146,6 +180,7 @@ declare
 begin
  -- Caller must be service_role. Identity is verified by gateway, never accepted from body.
  if current_user not in ('service_role','postgres') then raise exception 'Zabranjeno.' using errcode='42501'; end if;
+ if p_action='release_status' then return jsonb_build_object('vote_changes',1,'reply_parent','root-comment','comment_meta','live-isolated','posting_policy','free');end if;
  if p_action='feed' then
   select coalesce(jsonb_agg(to_jsonb(x)-'rank'), '[]') into v_result from (
    select c.id::text id,c.body,c.nickname,c.published_at,
@@ -177,6 +212,23 @@ begin
   return jsonb_build_object('items',v_result);
  end if;
  if p_uid is null then raise exception 'Potrebna je anonimna sesija.' using errcode='28000'; end if;
+ if p_action in ('comment_meta','comment_favorite') then
+  if p_action='comment_favorite' then
+   v_id=(p_args->>'id')::bigint;
+   if not coalesce(community_live.visible(v_id),false) or not exists(select 1 from community_live.content where id=v_id and kind in ('comment','reply')) then raise exception 'Komentar nije dostupan.';end if;
+   perform community_live.rate(p_uid,'lists',240);
+   if coalesce((p_args->>'enabled')::boolean,false) then insert into community_live.comment_favorites values(p_uid,v_id) on conflict do nothing;
+   else delete from community_live.comment_favorites where user_id=p_uid and content_id=v_id;end if;
+   return '{"success":true}';
+  end if;
+  if coalesce(jsonb_typeof(p_args->'ids'),'null')<>'array' then raise exception 'Najviše 50 komentara.';end if;
+  if jsonb_array_length(p_args->'ids')>50 then raise exception 'Najviše 50 komentara.';end if;
+  select coalesce(jsonb_object_agg(x.id::text,jsonb_build_object('replies',x.n,'favorite',exists(select 1 from community_live.comment_favorites f where f.user_id=p_uid and f.content_id=x.id))),'{}'::jsonb) into v_result from (
+   select c0.id,(with recursive descendants as (select id from community_live.content where parent_id=c0.id and community_live.visible(id) union all select c1.id from community_live.content c1 join descendants d on c1.parent_id=d.id where community_live.visible(c1.id)) select count(*) from descendants) n
+   from community_live.content c0 where c0.id in (select value::bigint from jsonb_array_elements_text(p_args->'ids')) and c0.kind in ('comment','reply') and community_live.visible(c0.id)
+  ) x;return v_result;
+ end if;
+
  if p_action in ('submit','vote','admin_remove') then perform pg_advisory_xact_lock(73142011); end if;
  if p_action like 'admin_%' then
   if not exists(select 1 from auth.sessions where id=(p_args->>'_session_id')::uuid and user_id=p_uid and (not_after is null or not_after>clock_timestamp())) then raise exception 'Administratorska sesija je istekla.' using errcode='42501'; end if;
@@ -222,7 +274,7 @@ begin
    if v_kind='reply' then
     v_parent=(p_args->>'parent_id')::bigint;
     select * into v_row from community_live.content where id=v_parent;
-    if v_row.confession_id is distinct from v_conf or not community_live.visible(v_parent) then raise exception 'Komentar nije dostupan.'; end if;
+    if v_row.kind is distinct from 'comment' or v_row.parent_id is not null or v_row.confession_id is distinct from v_conf or not community_live.visible(v_parent) then raise exception 'Komentar nije dostupan.'; end if;
    end if;
   end if;
   insert into community_live.content(kind,author_id,body,nickname,confession_id,parent_id,state,published_at)
@@ -270,7 +322,7 @@ begin
    where clock_timestamp() < community_live.votes.first_voted_at + interval '10 minutes';
   end if;
   select * into v_vote from community_live.votes where content_id=v_id and user_id=p_uid;
-  v_result=jsonb_build_object('my_vote',v_vote.value);
+  v_result=jsonb_build_object('my_vote',v_vote.value,'can_change',case when v_vote.user_id is null then true else not v_vote.change_used and clock_timestamp()<v_vote.first_voted_at+interval '10 minutes' end);
   if v_vote.first_voted_at + interval '10 minutes' <= clock_timestamp() then
    select v_result||jsonb_build_object('likes',count(*) filter(where value=1),'dislikes',count(*) filter(where value=-1)) into v_result from community_live.votes where content_id=v_id;
   end if;

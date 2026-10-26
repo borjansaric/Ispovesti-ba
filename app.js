@@ -1,6 +1,7 @@
 import {chatRequest} from './chat/client.mjs?v=room2';
 import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
 import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=room2';
+const discussionRequest=(action,args)=>window.ISPOVESTI_CONFIG?.mode==='live'?request(action,args):chatRequest(action,args);
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 let currentView='oldest',offset=0, generation=0, openMenu=null,openBranch=null,busy=false;
@@ -100,12 +101,12 @@ const commentMeta=new Set();let commentMetaTimer;
 function updateCommentMeta(){clearTimeout(commentMetaTimer);commentMetaTimer=setTimeout(async()=>{
  for(const x of commentMeta)if(!x.wrap.isConnected)commentMeta.delete(x);
  const ids=[...new Set([...commentMeta].map(x=>String(x.item.id)))];
- for(let i=0;i<ids.length;i+=50){try{const data=await chatRequest('comment_meta',{ids:ids.slice(i,i+50)});for(const x of commentMeta){const d=data[x.item.id];if(d){x.count.textContent=replyCounterText(d.replies);x.favorite.classList.toggle('selected',d.favorite);x.favorite.setAttribute('aria-pressed',String(d.favorite));x.favorite.textContent=d.favorite?'♥':'♡';}}}catch(err){toast(err.message);}}
+ for(let i=0;i<ids.length;i+=50){try{const data=await discussionRequest('comment_meta',{ids:ids.slice(i,i+50)});for(const x of commentMeta){const d=data[x.item.id];if(d){x.count.textContent=replyCounterText(d.replies);x.favorite.classList.toggle('selected',d.favorite);x.favorite.setAttribute('aria-pressed',String(d.favorite));x.favorite.textContent=d.favorite?'♥':'♡';}}}catch(err){toast(err.message);}}
  },40);}
 function comment(item,confessionId,refreshContext,focusOptions={}){
  const wrap=node('div','comment'),card=node('div','comment-card');card.append(metadata(item),node('p','body-text',item.body));
  const row=node('div','comment-actions');row.append(voteControls(item));
- const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await chatRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';pulseHeart(b);}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
+ const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await discussionRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';pulseHeart(b);}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
  const reportButton=button('!',()=>report(item),'action comment-report');reportButton.setAttribute('aria-label','Prijavi komentar');reportButton.title='Prijavi komentar';
  const count=node('span','reply-count',''),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
  const repliesButton=button('',()=>focusOptions.close?focusOptions.close():focusOptions.reply?focusOptions.reply(item):openReplies(item,confessionId,refreshContext,repliesButton),'reply-toggle');

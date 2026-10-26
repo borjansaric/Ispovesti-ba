@@ -1,7 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {checkLiveReady} from '../scripts/check-live-ready.mjs';
 const config={mode:'live',supabaseUrl:'https://isolated.invalid',publishableKey:'sb_publishable_example'};
 
-function mock({environment='live',enabled=true,adminStatus=401,items=[],posting_policy='free'}={}){return async(url,options)=>{assert.ok(url.includes('/community-live-api?'));const action=JSON.parse(options.body).action;return action==='health'?Response.json({environment,version:'launch1',posting_policy}):action==='captcha_config'?Response.json({enabled}):action==='feed'?Response.json({items}):Response.json({error:'denied'},{status:adminStatus});};}
+function mock({environment='live',enabled=true,adminStatus=401,items=[],posting_policy='free'}={}){return async(url,options)=>{assert.ok(url.includes('/community-live-api?'));const action=JSON.parse(options.body).action;return action==='health'?Response.json({environment,version:'launch1',posting_policy,capabilities:{vote_changes:1,reply_parent:'root-comment',comment_meta:'live-isolated'}}):action==='captcha_config'?Response.json({enabled}):action==='feed'?Response.json({items}):Response.json({error:'denied'},{status:adminStatus});};}
 test('deployment guard accepts ready live API and refuses test API or missing admin protection',async()=>{
  assert.equal((await checkLiveReady(config,{fetcher:mock(),initial:true})).ready,true);
  await assert.rejects(checkLiveReady(config,{fetcher:mock({environment:'test'})}),/nije spreman/);

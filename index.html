@@ -4,12 +4,13 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index,follow"><meta name="description" content="Reci šta ti je na duši. Mjesto za anonimne ispovijesti, priče i komentare.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; base-uri 'none'; form-action 'self'; object-src 'none'">
+<meta property="og:image" content="share-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:type" content="website"><meta property="og:title" content="Ispovesti.ba — Reci šta ti je na duši."><meta property="og:description" content="Neke priče nikad nisu zaboravljene. Neke nikad nisu ni ispričane."><meta name="twitter:card" content="summary"><link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="referrer" content="no-referrer"><meta name="theme-color" content="#111111"><title>Ispovesti.ba — Reci šta ti je na duši.</title>
-<link rel="stylesheet" href="original.css"><link rel="stylesheet" href="styles.css?v=admin1"><script src="config.js" defer></script><script src="vendor/supabase.js" defer></script><script type="module" src="app.js?v=progressive11"></script>
-<link rel="stylesheet" href="chat/chat.css?v=progressive11"><script type="module" src="chat/ui.mjs?v=room2"></script>
+<link rel="stylesheet" href="original.css"><link rel="stylesheet" href="styles.css?v=admin1"><script src="config.js" defer></script><script src="vendor/supabase.js" defer></script><script type="module" src="diagnostics.mjs?v=release12"></script><script type="module" src="app.js?v=release12"></script>
+<link rel="stylesheet" href="chat/chat.css?v=release12"><script type="module" src="chat/ui.mjs?v=room2"></script>
 </head>
 <body>
-<aside id="banner-slot" aria-label="Mjesto za budući reklamni baner" hidden></aside>
+<aside id="banner-slot" role="complementary" aria-label="Probno mjesto za reklamu"><span>Prostor za reklamu · probni prikaz</span></aside>
 <header class="site-header"><h1>Ispovesti.ba</h1><p>Neke priče nikad nisu zaboravljene. Neke nikad nisu ni ispričane.</p></header>
 <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Otvori meni" aria-expanded="false" aria-controls="side-menu">›››</button>
 <div class="menu-overlay" id="menu-overlay" hidden></div>
@@ -33,7 +34,7 @@
 </section>
 </aside>
 <main id="main"><section><h2 id="feed-title">Ispovijesti</h2><p id="feed-subtitle" hidden></p><div id="feed" aria-live="polite"></div><button type="button" id="more" class="load-more">Učitaj još ispovijesti</button></section></main>
-<footer>Ispovesti.ba — neke stvari jednostavno zaslužuju drugu šansu.</footer>
+<footer>Ispovesti.ba — neke stvari jednostavno zaslužuju drugu šansu.<br><a href="privacy.html">Privatnost</a> · <a href="terms.html">Uslovi korišćenja</a> · <a href="cookies.html">Kolačići i lokalni podaci</a></footer>
 <button type="button" id="write" hidden>Napiši ispovijest</button><button type="button" id="footer-privacy" hidden>O anonimnosti</button>
 <div id="preview" class="preview" hidden>TEST · prava baza, odvojeni probni podaci</div>
 <dialog id="dialog"><div class="dialog-heading"><h2 id="dialog-title"></h2><button type="button" id="close-dialog" class="icon-button" aria-label="Zatvori">×</button></div><div id="dialog-body"></div></dialog>

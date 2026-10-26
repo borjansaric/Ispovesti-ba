@@ -1,3 +1,5 @@
+> Istorijski izvještaj. Za sadašnje stanje i granice provjere pogledaj CURRENT-SPEC-20261026.md i final-readiness-20261026.md.
+
 # Test room review — 26 October 2026
 
 Scope: only the existing /test/ frontend and chat-test-api. Main public files are preserved byte for byte. No paid SMS provider, billing, subscriptions or payment webhooks are enabled.
