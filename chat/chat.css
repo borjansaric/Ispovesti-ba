@@ -13,3 +13,9 @@ body.chat-open,body.thread-open{overflow:hidden}
 @media(max-width:480px){.chat-messages{padding:8px 9px;gap:13px}.chat-panel .chat-message{max-width:90%}.chat-panel .chat-body{font-size:14px}.chat-compose{padding-left:8px;padding-right:8px}.thread-dialog{padding:13px}.comment-actions{gap:10px}}
 
 .reply-count:empty{display:none}
+
+/* Story/comment actions only; shared chat styles above remain unchanged. */
+.story-actions .favorite,.comment-actions .comment-heart,.story-actions .action,.comment-actions .action,.reply-count,.comment-title{color:var(--gold)}
+.story-actions .action,.comment-actions .action,.comment-actions .comment-heart,.comment-actions .reply-toggle{position:relative;touch-action:manipulation}
+.story-actions .action::after,.comment-actions .action::after,.comment-actions .comment-heart::after,.comment-actions .reply-toggle::after{content:"";position:absolute;inset:50% auto auto 50%;width:max(100%,32px);height:max(100%,44px);transform:translate(-50%,-50%)}
+.story-actions .action:disabled,.comment-actions .action:disabled{opacity:1;cursor:default}

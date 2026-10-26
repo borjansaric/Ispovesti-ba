@@ -31,3 +31,5 @@ Korisnički tajni recovery ključ povlači se samo iz interfejsa. Novi pravac je
 Ne koristiti bratov hosting/mail server niti dijeliti pristup s njim bez novog izričitog odobrenja vlasnika.
 
 Dorada komentara 26.10.2026: srce uvijek zlatno, sitniji broj odgovora; nula je prazna oznaka uz aktivnu strelicu. Novi odgovori dozvoljeni su isključivo na glavne komentare, nikada na postojeće odgovore. Stari potomci ostaju čitljivi i sačuvani. Chat se ne mijenja.
+
+Dogovor sljedeće dorade: žuta srca na ispovijestima i komentarima, žuti brojevi komentara/odgovora/glasova, veća nevidljiva dodirna površina i blaga animacija pri čuvanju (poštuje reduced-motion). Prvi glas smije se promijeniti najviše jednom tokom prvih 10 minuta, poslije promjene ostaje zaključan; zbir tek nakon 10 minuta. Bez čuvanja draftova komentara/odgovora. Nova SQL dopuna čeka pregled i izričito odobrenje.
