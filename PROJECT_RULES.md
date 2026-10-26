@@ -23,3 +23,9 @@ Premium SMS se istražuje samo za BiH, Srbiju, Hrvatsku, Crnu Goru, Sloveniju i 
 Prvo osvježiti privatnu rezervnu kopiju, uključujući liste, i sačuvati kod. Bez izričitog odobrenja ne primjenjivati SQL i ne objavljivati glavni sajt. Prvo prikazati kompletan SQL. Ne ponavljati izvršene migracije. Sačuvati /test/, sve podatke, administratora i ranije kopije. Novo testiranje na /test/ čeka odobrenje SQL-a. Stare probne objave arhivirati nedestruktivno i zatvoriti stare javne API puteve. Nema DELETE/TRUNCATE/DROP čišćenja.
 
 Druga ranije potvrđena pravila se ne mijenjaju. Kod prepreke obavijestiti vlasnika bez samostalnog kompromisa. Ne tražiti ponavljanje odluka. Važi za web i Android APK. Identitet projekta i lični podaci ne šalju se dobavljačima bez posebnog odobrenja.
+
+## Izričita dopuna vlasnika 26.10.2026.
+Samo /test/: fullscreen chat sa X gore lijevo, avatar bez obruba i tekst bez nadimka; slučajna strana vlastitih poruka po paketu čuva se serverski. Istorija ide skrolovanjem, bez dugmadi za starije/nove poruke. Pravila i privatnost i lično odblokiranje su u diskretnom meniju. Moderatorske ovlasti ostaju.
+Komentari i odgovori: sitni glasovi i privatno srce, broj iznad punog žutog trougla. Fokusirani original i ravno poravnati svi potomci u modalu, uz blur ostatka i povratak na istu poziciju; nula odgovora omogućava prvi odgovor.
+Korisnički tajni recovery ključ povlači se samo iz interfejsa. Novi pravac je jedan SMS pristupni kod po kupovini, ponovljiv do istog isteka, bez produžavanja. Jedna aktivna chat sesija; prelazak opoziva prethodnu i ne daje Auth/admin prava. Samo administratorski testni kodovi dok nema provjerenog SMS provajdera. Postojeći recovery i podaci se ne brišu. Ovim zadatkom vlasnik odobrava usklađene testne izmjene bez pojedinačnih potvrda; nema odobrenja za glavni sajt ili stvarnu naplatu.
+Ne koristiti bratov hosting/mail server niti dijeliti pristup s njim bez novog izričitog odobrenja vlasnika.

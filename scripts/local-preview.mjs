@@ -106,12 +106,12 @@ export async function createLocalPreview({dataDir,seed=true,staticDirectory=stat
    }
    if(req.method!=='GET'&&req.method!=='HEAD')return send(res,405,'Method not allowed');
    if(pathname==='/__qa/mobile'&&servingRoot!==staticRoot)return send(res,200,'<!doctype html><html><meta name=viewport content=\"width=device-width,initial-scale=1\"><title>Mobilna provjera</title><body style=\"margin:0;background:#303030\"><iframe title=\"Ispovesti.ba mobilni test\" src=\"/\" style=\"display:block;width:390px;height:844px;border:0;margin:auto\"></iframe></body></html>',{'Content-Type':'text/html; charset=utf-8'});
-   if(pathname==='/config.js')return send(res,200,"window.ISPOVESTI_CONFIG={mode:'local',supabaseUrl:'',publishableKey:''};",{'Content-Type':'text/javascript; charset=utf-8'});
+   if(pathname==='/config.js')return send(res,200,"window.ISPOVESTI_CONFIG={mode:'local',supabaseUrl:'',publishableKey:''};if(!crypto.randomUUID)crypto.randomUUID=()=>{const b=crypto.getRandomValues(new Uint8Array(16));b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);};",{'Content-Type':'text/javascript; charset=utf-8'});
    let decoded;try{decoded=decodeURIComponent(pathname);}catch{return send(res,400,'Bad path');}
    const filename=path.resolve(servingRoot,'.'+(decoded==='/'?'/index.html':decoded));
    if(!filename.startsWith(servingRoot+path.sep))return send(res,404,'Not found');
    const rel=path.relative(servingRoot,filename);
-   if(servingRoot!==staticRoot&&(!['index.html','config.js','app.js','api.js','captcha.js','original.css','styles.css','chat-admin.html'].includes(rel)&&!/^chat\/(client\.mjs|ui\.mjs|admin\.mjs|chat\.css)$/.test(rel)&&!rel.startsWith('vendor/')))return send(res,404,'Not found');
+   if(servingRoot!==staticRoot&&(!['index.html','config.js','app.js','api.js','captcha.js','original.css','styles.css','chat-admin.html'].includes(rel)&&!/^chat\/(client\.mjs|ui\.mjs|admin\.mjs|thread-model\.mjs|chat\.css)$/.test(rel)&&!rel.startsWith('vendor/')))return send(res,404,'Not found');
    const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.txt':'text/plain; charset=utf-8'};
    let bytes;try{bytes=await readFile(filename);}catch{return send(res,404,'Not found');}
    return send(res,200,req.method==='HEAD'?'':bytes,{'Content-Type':types[path.extname(filename)]||'application/octet-stream'});

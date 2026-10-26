@@ -4,6 +4,14 @@ function setup({trials=false,anonymous=true,valid=true,environment='test'}={}){c
 test('production defaults reject all trial writes even for signed in admins',async()=>{
  const x=setup({anonymous:false});for(const a of ['admin_test_mode','admin_grant','admin_nickname','admin_avatar'])assert.equal((await x.send(a)).status,403);assert.equal(x.calls.length,0);const wrongEnvironment=setup({trials:true,anonymous:false,environment:'production'});assert.equal((await wrongEnvironment.send('admin_grant')).status,403);
 });
+test('SMS trial codes are hashed, use verified session and are disabled outside test',async()=>{
+ const code='TEST-ABCDEF-123456-ABCDEF-123456',x=setup({trials:true});
+ assert.equal((await x.send('redeem_code',{code,p_session:'forged',code_hash:'forged',p_uid:'victim'})).status,200);
+ assert.equal(x.calls[0].p_session,'verified-session');assert.match(x.calls[0].p_args.code_hash,/^[a-f0-9]{64}$/);assert.equal(x.calls[0].p_args.code,undefined);assert.equal(x.calls[0].p_args.p_uid,undefined);
+ for(const action of ['admin_issue_code','redeem_code'])assert.equal((await setup({trials:true,environment:'production',anonymous:false}).send(action,{code})).status,403);
+ assert.equal((await setup({trials:true,anonymous:false}).send('redeem_code',{code})).status,403);
+ assert.equal((await x.send('redeem_code',{code:'bad'})).status,400);
+});
 test('verified identity and session replace forged body parameters; anonymous users cannot moderate',async()=>{
  let x=setup({trials:true});assert.equal((await x.send('admin_grant',{_session_id:'forged',_aal:'aal2'})).status,403);
  x=setup({trials:true,anonymous:false});assert.equal((await x.send('admin_grant',{target:'target',plan:'24h',request_id:'id',p_uid:'attacker',_session_id:'forged'})).status,200);

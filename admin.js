@@ -1,5 +1,5 @@
-import {authClient,request,isPreview,isLocal} from './api.js?v=freechat1';
-import {captchaToken} from './captcha.js?v=freechat1';
+import {authClient,request,isPreview,isLocal} from './api.js?v=room2';
+import {captchaToken} from './captcha.js?v=room2';
 const $=s=>document.querySelector(s);let sb,session,challenge,view='reports',offset=0,security;
 const status=t=>$('#admin-status').textContent=t;
 const reasons={abuse:'Vrijeđanje ili uznemiravanje',threat:'Prijetnje',spam:'Spam',other:'Ostalo'};

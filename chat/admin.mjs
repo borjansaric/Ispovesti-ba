@@ -1,4 +1,4 @@
-import {chatRequest} from './client.mjs';import {isLocal} from '../api.js?v=freechat1';
+import {chatRequest,trialCode} from './client.mjs?v=room2';import {isLocal} from '../api.js?v=room2';
 const $=s=>document.querySelector(s),status=t=>$('#chat-admin-status').textContent=t;
 const run=async fn=>{try{await fn();}catch(e){status(e.message);}};
 async function gate(){await chatRequest('admin_status',{},true);$('#chat-admin-tools').hidden=false;$('#chat-owner-login').hidden=true;status('Zaštićena administracija chata.');}
@@ -12,3 +12,5 @@ let cursor;async function messages(more=false){const r=await chatRequest('admin_
 $('#chat-refresh').onclick=()=>run(()=>messages());$('#chat-admin-more').onclick=()=>run(()=>messages(true));
 
 $('#chat-profiles-refresh').onclick=()=>run(async()=>{const r=await chatRequest('admin_profiles',{},true);$('#chat-target').replaceChildren();for(const p of r.items){const option=document.createElement('option');option.value=p.id;option.textContent=p.nickname+' · '+p.id;$('#chat-target').append(option);}});
+
+let issueBusy=false,issuePending;$('#chat-code-issue').onsubmit=event=>{event.preventDefault();if(issueBusy)return;issueBusy=true;const b=event.submitter;b.disabled=true;run(async()=>{try{const plan=$('#chat-code-plan').value;if(!issuePending||issuePending.plan!==plan)issuePending={plan,code:trialCode(),request_id:crypto.randomUUID()};const r=await chatRequest('admin_issue_code',issuePending,true);$('#chat-code-out').textContent=issuePending.code+' · važi do '+new Date(r.expires_at).toLocaleString('sr-Latn');issuePending=null;status('Probni pristupni kod je napravljen. SMS nije poslan i nema naplate.');}finally{issueBusy=false;b.disabled=false;}});};

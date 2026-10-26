@@ -9,23 +9,24 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  await db.exec(await readFile(path.join(root,'supabase/submission-latency.sql'),'utf8'));
  const owner=randomUUID();await db.query("insert into auth.users(id,email,is_anonymous) values($1,'preview-owner@local.invalid',false)",[owner]);await db.query('insert into community_test.admins values($1)',[owner]);
  await db.exec("update community_test.security_settings set admin_auth_method='email'");
- await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec('set role service_role');
+ await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-access.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-auth-check.sql'),'utf8'));await db.exec('set role service_role');
  const cookies=new Map(),tokens=new Map();
  const session=(req,admin=false)=>{const name=admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=';const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name))?.split('=')[1];const s=cookies.get(token);return s&&s.expires>Date.now()?s:null;};
  const mint=async(isOwner=false)=>{
   const uid=isOwner?owner:randomUUID(),sid=randomUUID();if(!isOwner)await db.query('insert into auth.users(id,is_anonymous) values($1,true)',[uid]);
   const cookie=randomBytes(32).toString('hex'),token='local.'+Buffer.from(JSON.stringify({sub:uid,session_id:sid,aal:'aal1'})).toString('base64url')+'.'+randomBytes(24).toString('hex');
   const s={uid,token,expires:Date.now()+8*3600000,isOwner};cookies.set(cookie,s);tokens.set(token,s);
+  await db.exec('reset role');await db.query("insert into auth.sessions values($1,$2,clock_timestamp()+interval '8 hours')",[sid,uid]);await db.exec('set role service_role');
   if(isOwner){
-   await db.exec('reset role');await db.query("insert into auth.sessions values($1,$2,clock_timestamp()+interval '8 hours')",[sid,uid]);
+   await db.exec('reset role');
    await db.query("insert into community_test.admin_email_sessions(user_id,session_id,challenge_hash,expires_at,verified_until) values($1,$2,$3,clock_timestamp()+interval '8 hours',clock_timestamp()+interval '8 hours') on conflict(user_id) do update set session_id=excluded.session_id,verified_until=excluded.verified_until",[uid,sid,'a'.repeat(64)]);await db.exec('set role service_role');
   }
   return {cookie,s};
  };
  const handler=createChatHandler({supabaseUrl:'https://chat-preview.invalid',serviceKey:'local-only',allowedOrigins:['http://local.invalid'],environment:'test',allowTrials:true,fetcher:async(url,options)=>{
   if(url.endsWith('/auth/v1/user')){const s=tokens.get(options.headers.Authorization?.slice(7));return s&&s.expires>Date.now()?Response.json({id:s.uid,is_anonymous:!s.isOwner}):Response.json({error:'expired'},{status:401});}
-  if(url!=='https://chat-preview.invalid/rest/v1/rpc/chat_test_dispatch')throw Error('External request blocked.');
-  const p=JSON.parse(options.body);try{const r=await db.query('select public.chat_test_dispatch($1,$2,$3::jsonb) r',[p.p_uid,p.p_action,JSON.stringify(p.p_args)]);return Response.json(r.rows[0].r);}catch(e){return Response.json({code:e.code,message:e.message},{status:400});}
+  if(url!=='https://chat-preview.invalid/rest/v1/rpc/chat_test_dispatch_v2')throw Error('External request blocked.');
+  const p=JSON.parse(options.body);try{const r=await db.query('select public.chat_test_dispatch_v2($1,$2,$3::jsonb,$4) r',[p.p_uid,p.p_action,JSON.stringify(p.p_args),p.p_session]);return Response.json(r.rows[0].r);}catch(e){return Response.json({code:e.code,message:e.message},{status:400});}
  }});
  const old=server.listeners('request')[0];server.removeAllListeners('request');
  server.on('request',async(req,res)=>{
