@@ -19,3 +19,37 @@ body.chat-open,body.thread-open{overflow:hidden}
 .story-actions .action,.comment-actions .action,.comment-actions .comment-heart,.comment-actions .reply-toggle{position:relative;touch-action:manipulation}
 .story-actions .action::after,.comment-actions .action::after,.comment-actions .comment-heart::after,.comment-actions .reply-toggle::after{content:"";position:absolute;inset:50% auto auto 50%;width:max(100%,32px);height:max(100%,44px);transform:translate(-50%,-50%)}
 .story-actions .action:disabled,.comment-actions .action:disabled{opacity:1;cursor:default}
+
+/* Borderless feed actions; report remains available for every comment/reply. */
+.story-actions .action,.story-actions .action.selected,.story-actions .action:hover{border:0;border-radius:0;background:transparent;box-shadow:none}
+.story-actions .action.selected{text-shadow:0 0 7px #d6b15e88}
+.comment-actions .comment-report{margin-left:auto;font-size:13px}
+.comment-actions .comment-report+.reply-toggle{margin-left:0}
+
+/* Menu stays in the page header and scrolls away instead of covering stories. */
+#menu-toggle{position:absolute}
+body.menu-open #menu-toggle{position:fixed}
+
+/* Approved subtle reporting and compact discussion navigation; chat unchanged. */
+.story-actions .action.report,.comment-actions .action.comment-report{font-family:Arial,sans-serif;font-size:12px;font-weight:normal;color:#ad7777;text-shadow:none}
+.comment-actions .action.comment-report{margin-left:0;min-width:22px;padding:3px}
+.comment-actions .comment-heart+.comment-report{margin-left:auto}
+.comment-actions .reply-toggle{margin-left:auto}
+.discussion-form .row{gap:16px}
+.discussion-form .row>.hint{margin-right:auto}
+.discussion-form .row>.primary,.discussion-form .discussion-back{border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--gold);font-size:13px;font-weight:normal;min-height:44px;padding:8px 2px;margin:0;white-space:nowrap}
+
+/* Borderless small arrows at upper left; gutter protects the text while scrolling. */
+body{padding-left:max(32px,env(safe-area-inset-left))}
+#menu-toggle,body.menu-open #menu-toggle{position:fixed;left:0;top:max(10px,env(safe-area-inset-top));transform:none;width:30px;height:44px;padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--gold);font-size:17px;font-weight:normal;line-height:1;letter-spacing:-2px;touch-action:manipulation}
+#menu-toggle::after{content:"";position:absolute;inset:0;width:32px;height:44px}
+body.menu-open #menu-toggle{letter-spacing:normal;font-size:23px}
+
+/* Replies expand under their own root comment without a modal or backdrop. */
+.inline-thread{margin-top:12px;padding:0;min-width:0}
+.inline-thread .thread-replies>.comment{margin:0;padding:12px 0;border-left:0;border-radius:0}
+.inline-thread .discussion-form textarea{font-size:16px;min-height:65px}
+.comment-actions .reply-toggle[aria-expanded=true] .reply-triangle{transform:rotate(180deg)}
+
+/* Keep the active inline discussion clear while dimming the surrounding feed. */
+body.inline-thread-open .site-header,body.inline-thread-open #feed-title,body.inline-thread-open footer,body.inline-thread-open .story:not(.thread-active-story),.thread-active-story>.story-content,.thread-active-story>.story-date,.thread-active-story>.story-nickname,.thread-active-story>.story-actions,.thread-active-story .comment-title,.thread-active-story .comment:not(.thread-active-comment):not(.inline-thread .comment),.thread-active-story .comment-list>.form{filter:blur(3px) brightness(.65)}

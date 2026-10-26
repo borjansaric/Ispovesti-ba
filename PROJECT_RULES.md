@@ -33,3 +33,17 @@ Ne koristiti bratov hosting/mail server niti dijeliti pristup s njim bez novog i
 Dorada komentara 26.10.2026: srce uvijek zlatno, sitniji broj odgovora; nula je prazna oznaka uz aktivnu strelicu. Novi odgovori dozvoljeni su isključivo na glavne komentare, nikada na postojeće odgovore. Stari potomci ostaju čitljivi i sačuvani. Chat se ne mijenja.
 
 Dogovor sljedeće dorade: žuta srca na ispovijestima i komentarima, žuti brojevi komentara/odgovora/glasova, veća nevidljiva dodirna površina i blaga animacija pri čuvanju (poštuje reduced-motion). Prvi glas smije se promijeniti najviše jednom tokom prvih 10 minuta, poslije promjene ostaje zaključan; zbir tek nakon 10 minuta. Bez čuvanja draftova komentara/odgovora. Nova SQL dopuna čeka pregled i izričito odobrenje.
+
+Primjena odobrena i završena 26.10.2026: one-vote-change-test.sql (SHA-256 f8e140945f60dd524f6336fcbe9bad932f449ead0bb872d188b4c9b4f81ca2d8) primijenjen isključivo na community_test. change_used i trigger sprovode najviše jednu promjenu tokom 10 minuta na ispovijestima, komentarima i odgovorima. Privatna kopija votes_before_one_change_20261026 sačuvana. Prethodna napomena da ovaj SQL čeka odobrenje više ne važi. Pravila vidljivosti rezultata nepromijenjena. Glavni public podaci, administratorske ovlasti i chat nisu mijenjani.
+
+Dorada 26.10.2026: samo /test/, uklonjeni okviri oko radnji ispovijesti; prijava svakog komentara/odgovora dostupna uzvicnikom u redu radnji. Meni u zaglavlju skroluje sa stranicom i ne prekriva tekst; fiksiran samo dok je navigacija otvorena. Glavni sajt, chat i baza nisu mijenjani.
+
+Odobrena skica primijenjena 26.10.2026 samo na /test/: strelica/broj na glavnom komentaru prethode uzvicniku; odgovori nemaju strelicu. Prijave su mali obicni znak ! priguseno crvenkaste boje #ad7777 (12px), ukljucujuci ispovijesti. U obrascu odgovora postoje ← Nazad i Posalji kao sitna tekstualna dugmad bez okvira/pozadine; Nazad zatvara fokusirani prikaz i vraca prethodnu poziciju. Obje kontrole zakljucane tokom slanja. Chat i glavni sajt nepromijenjeni.
+
+26.10.2026: vlasnik odobrio stalnu usku ruckicu za lijevi meni na sredini ekrana, umjesto trake pri skrolovanju. /test/ handle8: 20x54px, dodirni prostor 32px, lijevi prostor stranice najmanje32px, tekst od47px. Otvaranje menija i zatvaranje ostaju isto. Glavni sajt i chat nepromijenjeni. Izricito odobren zajednicki Pages postupak uz nepromijenjene glavne datoteke.
+
+26.10.2026 nova odluka vlasnika zamjenjuje ruckicu: samo tri male strelice ››› gore skroz lijevo, bez okvira, obruba ili pozadine. Stalno dostupne; lijevi prostor stiti tekst. Ne dodavati okvire kontrolama bez zahtjeva. Samo /test/; chat/glavni sajt netaknuti.
+
+Nova odluka 26.10.2026 zamjenjuje fokusirani prozor: odgovori se sire direktno ispod glavnog komentara, bez modala i bez zamagljivanja ostatka. Ponovni klik na istu strelicu ili Nazad zatvara odgovore. Odgovori ravno poravnati, bez odgovaranja na odgovor. Samo /test/.
+
+26.10.2026 dopuna: odgovori ostaju inline, ali se vraca zamagljivanje ostatka stranice oko aktivnog glavnog komentara. Samo jedna aktivna grana. Ucitavanje progresivno, odmah po pristizanju stranice; nezavisne stare podgrane najvise3 istovremeno; bez kesiranja javnog sadrzaja radi moderacije; zatvaranje zaustavlja naredne zahtjeve. Bez promjena baze/serverskih pravila/chata.

@@ -1,9 +1,15 @@
-// Flatten reply trees without recursive DOM indentation. All pages use the existing visible-content API.
-export async function collectReplies(request,confessionId,parentId){
+// Stream sorted public replies while fetching independent legacy branches in bounded parallel batches.
+export async function collectReplies(request,confessionId,parentId,onBatch=()=>{},cancelled=()=>false){
  const queue=[String(parentId)],seenParents=new Set(),seenItems=new Set(),items=[];
- while(queue.length){const parent=queue.shift();if(seenParents.has(parent))continue;seenParents.add(parent);let offset=0;
-  for(;;){const r=await request('comments',{confession_id:confessionId,parent_id:parent,offset});for(const item of r.items){if(seenItems.has(String(item.id)))continue;seenItems.add(String(item.id));items.push(item);if(item.has_replies)queue.push(String(item.id));}offset+=r.items.length;if(r.items.length<20)break;}
+ const sorted=()=>[...items].sort((a,b)=>Date.parse(a.created_at)-Date.parse(b.created_at)||Number(a.id)-Number(b.id));
+ async function load(parent){
+  if(seenParents.has(parent)||cancelled())return;seenParents.add(parent);let offset=0;
+  for(;;){if(cancelled())return;const r=await request('comments',{confession_id:confessionId,parent_id:parent,offset});if(cancelled())return;
+   for(const item of r.items){if(seenItems.has(String(item.id)))continue;seenItems.add(String(item.id));items.push(item);if(item.has_replies)queue.push(String(item.id));}
+   if(r.items.length)onBatch(sorted());offset+=r.items.length;if(r.items.length<20)break;
+  }
  }
- return items.sort((a,b)=>Date.parse(a.created_at)-Date.parse(b.created_at)||Number(a.id)-Number(b.id));
+ while(queue.length&&!cancelled())await Promise.all(queue.splice(0,3).map(load));
+ return sorted();
 }
 export const replyCounterText=n=>Number(n)>0?String(Math.floor(Number(n))):'';

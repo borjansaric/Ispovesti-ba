@@ -219,7 +219,9 @@ test('idempotency cannot expose removed content or bypass validation, rate limit
  assert.equal((await db.query('select count(*)::int n from community_test.submission_receipts where request_id=$1',[failed.request_id])).rows[0].n,0);
  // A fresh verified token is still required for a network retry; receipts do not bypass Siteverify.
  cfResult=pass('admin_check');await send('admin_security_set',{enabled:true,captcha_token:'enable-for-retry-test'});
- const before=dispatchCalls;assert.equal((await send('submit',args)).status,400);assert.equal(dispatchCalls,before);
+ const before=sqlPayloads.length;assert.equal((await send('submit',args)).status,400);
+ // Parent validation may read comments before CAPTCHA, but no submit/upsert may reach SQL.
+ assert.equal(sqlPayloads.slice(before).filter(p=>p.p_action==='submit').length,0);
  await send('admin_security_set',{enabled:false});
 });
 test('timing headers contain numeric stage durations and no private values; preflight is reusable',async()=>{
