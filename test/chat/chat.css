@@ -29,3 +29,12 @@ body.chat-open,body.thread-open{overflow:hidden}
 /* Menu stays in the page header and scrolls away instead of covering stories. */
 #menu-toggle{position:absolute}
 body.menu-open #menu-toggle{position:fixed}
+
+/* Approved subtle reporting and compact discussion navigation; chat unchanged. */
+.story-actions .action.report,.comment-actions .action.comment-report{font-family:Arial,sans-serif;font-size:12px;font-weight:normal;color:#ad7777;text-shadow:none}
+.comment-actions .action.comment-report{margin-left:0;min-width:22px;padding:3px}
+.comment-actions .comment-heart+.comment-report{margin-left:auto}
+.comment-actions .reply-toggle{margin-left:auto}
+.discussion-form .row{gap:16px}
+.discussion-form .row>.hint{margin-right:auto}
+.discussion-form .row>.primary,.discussion-form .discussion-back{border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--gold);font-size:13px;font-weight:normal;min-height:44px;padding:8px 2px;margin:0;white-space:nowrap}

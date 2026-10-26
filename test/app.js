@@ -48,14 +48,14 @@ if(isLocal)$('#preview').textContent='Lokalni test · bez veze sa živim sajtom'
 else if(window.ISPOVESTI_CONFIG?.mode==='live-test')$('#preview').textContent='TEST · prava baza, odvojeni probni podaci';
 else if(!isPreview)$('#preview').hidden=true;
 function metadata(item){const div=node('div','story-meta');div.append(node('span','avatar','“'),node('span','author',item.nickname||'Anonimno'));const t=node('time','',date(item.published_at||item.created_at));t.dateTime=item.published_at||item.created_at||'';div.append(t);return div;}
-function contentForm(kind,extra,done){
- const form=node('form','form'),label=node('label','',kind==='confession'?'Tvoja priča':'Tvoje riječi'),text=node('textarea');text.addEventListener('focus',()=>prepareSubmission(kind,form));text.addEventListener('input',()=>prepareSubmission(kind,form));text.required=true;text.maxLength=kind==='confession'?10000:2000;text.placeholder=kind==='confession'?'Napiši ono što želiš da podijeliš...':kind==='comment'?'Napiši komentar...':'Napiši odgovor...';label.append(text);
+function contentForm(kind,extra,done,onBack){
+ const form=node('form',kind==='confession'?'form':'form discussion-form'),label=node('label','',kind==='confession'?'Tvoja priča':'Tvoje riječi'),text=node('textarea');text.addEventListener('focus',()=>prepareSubmission(kind,form));text.addEventListener('input',()=>prepareSubmission(kind,form));text.required=true;text.maxLength=kind==='confession'?10000:2000;text.placeholder=kind==='confession'?'Napiši ono što želiš da podijeliš...':kind==='comment'?'Napiši komentar...':'Napiši odgovor...';label.append(text);
  const nickLabel=node('label','','Nadimak'),nick=node('input');nick.maxLength=40;nick.autocomplete='off';nickLabel.append(nick);
  const status=node('p','hint'),counter=node('span','hint','0 znakova'),send=node('button','primary',kind==='confession'?'Pošalji ispovijest':'Pošalji');send.type='submit';
- const row=node('div','row');row.append(counter,send);text.oninput=()=>counter.textContent=[...text.value.trim()].length+' znakova';
+ const row=node('div','row'),back=onBack?button('← Nazad',()=>onBack(),'discussion-back'):null;row.append(counter);if(back)row.append(back);row.append(send);text.oninput=()=>counter.textContent=[...text.value.trim()].length+' znakova';
  form.append(label,nickLabel,row,status);
  let allowDuplicate=false,duplicateButton,sending=false,requestId=null,lastPayload=null;
- form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;text.disabled=true;nick.disabled=true;const submittedAt=performance.now();status.className='hint';status.textContent='Šaljem…';
+ form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;if(back)back.disabled=true;text.disabled=true;nick.disabled=true;const submittedAt=performance.now();status.className='hint';status.textContent='Šaljem…';
   try{
    const count=[...text.value.trim()].length,min=kind==='confession'?15:1,max=kind==='confession'?5000:1000;
    if(count<min||count>max)throw new Error(`Tekst mora imati od ${min} do ${max} znakova.`);
@@ -72,7 +72,7 @@ function contentForm(kind,extra,done){
     const timings={};for(const name of ['session','captcha','network','render','total']){const measure=performance.getEntriesByName('ispovesti-submit-'+name).at(-1);if(measure)timings[name]=Math.round(measure.duration);}
     form.dataset.submissionTiming=JSON.stringify(timings);
     for(const name of ['session','captcha','network','render','total'])performance.clearMeasures('ispovesti-submit-'+name);});
-  }catch(err){status.textContent=err.message;status.className='hint error';}finally{sending=false;send.disabled=false;text.disabled=false;nick.disabled=false;}
+  }catch(err){status.textContent=err.message;status.className='hint error';}finally{sending=false;send.disabled=false;if(back)back.disabled=false;text.disabled=false;nick.disabled=false;}
  };
  text.addEventListener('input',()=>{allowDuplicate=false;duplicateButton?.remove();duplicateButton=null;});
  return form;
@@ -106,10 +106,10 @@ function comment(item,confessionId,refreshContext,focusOptions={}){
  const wrap=node('div','comment'),card=node('div','comment-card');card.append(metadata(item),node('p','body-text',item.body));
  const row=node('div','comment-actions');row.append(voteControls(item));
  const favorite=button('♡',async b=>{b.disabled=true;try{const enabled=b.getAttribute('aria-pressed')!=='true';await chatRequest('comment_favorite',{id:item.id,enabled});b.setAttribute('aria-pressed',String(enabled));b.classList.toggle('selected',enabled);b.textContent=enabled?'♥':'♡';pulseHeart(b);}finally{b.disabled=false;}},'comment-heart');favorite.setAttribute('aria-label','Sačuvaj komentar');row.append(favorite);
- const reportButton=button('❗',()=>report(item),'action comment-report');reportButton.setAttribute('aria-label','Prijavi komentar');reportButton.title='Prijavi komentar';row.append(reportButton);
+ const reportButton=button('!',()=>report(item),'action comment-report');reportButton.setAttribute('aria-label','Prijavi komentar');reportButton.title='Prijavi komentar';
  const count=node('span','reply-count',''),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
  const repliesButton=button('',()=>focusOptions.close?focusOptions.close():focusOptions.reply?focusOptions.reply(item):openReplies(item,confessionId,refreshContext,repliesButton),'reply-toggle');
- repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);wrap.append(card,row);
+ repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);row.append(reportButton);wrap.append(card,row);
  commentMeta.add({item,wrap,count,favorite});updateCommentMeta();return wrap;
 }
 async function openReplies(item,confessionId,refreshContext,trigger){
@@ -121,7 +121,7 @@ async function openReplies(item,confessionId,refreshContext,trigger){
  document.body.classList.add('thread-open');thread.showModal();
  function replyTo(){formBox.replaceChildren(contentForm('reply',{confession_id:confessionId,parent_id:item.id},(created,context)=>{
   if(!sent.has(String(created.id))){sent.add(String(created.id));replies.append(comment(created,confessionId,refreshContext,{readOnly:true}));}updateCommentMeta();refreshContext(context).catch(e=>toast(e.message));
- }));}
+ },close));}
  replyTo();
  try{const items=await collectReplies(request,confessionId,item.id);if(closed)return;for(const r of items){if(!sent.has(String(r.id))){sent.add(String(r.id));replies.append(comment(r,confessionId,refreshContext,{readOnly:true}));}}notice.remove();updateCommentMeta();}catch(e){notice.textContent=e.message;}
 }
@@ -133,7 +133,7 @@ function story(item){
  function setFavorite(value){favorite.textContent=value?'♥':'♡';favorite.setAttribute('aria-pressed',String(value));favorite.classList.toggle('selected',value);}
  async function refreshContext(context){context ||= await request('context',{id:item.id});comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);}
  watchState(item.id,'context',row,context=>{comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);});
- row.append(voteControls(item),favorite,button('❗',()=>report(item),'action report'));article.append(row,commentsArea);commentBranch(item.id,null,commentsList,refreshContext).catch(err=>{commentsList.textContent=err.message;});
+ row.append(voteControls(item),favorite,button('!',()=>report(item),'action report'));article.append(row,commentsArea);commentBranch(item.id,null,commentsList,refreshContext).catch(err=>{commentsList.textContent=err.message;});
  // A story is marked read after a visible part has remained visible for 1.5 seconds.
  let readTimer,recorded=false;
  const observer=new IntersectionObserver(entries=>{if(entries[0].isIntersecting&&!recorded){readTimer=setTimeout(()=>{recorded=true;request('read',{id:item.id}).catch(()=>{});observer.disconnect();},1500);}else clearTimeout(readTimer);},{threshold:.1});observer.observe(article);
