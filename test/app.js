@@ -1,5 +1,5 @@
 import {chatRequest} from './chat/client.mjs?v=room2';
-import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=comments3';
+import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
 import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=room2';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
@@ -112,18 +112,22 @@ function comment(item,confessionId,refreshContext,focusOptions={}){
  repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);row.append(reportButton);wrap.append(card,row);
  commentMeta.add({item,wrap,count,favorite});updateCommentMeta();return wrap;
 }
-const inlineThreads=new WeakMap();
+const inlineThreads=new WeakMap();let activeInlineThread=null;
 async function openReplies(item,confessionId,refreshContext,trigger){
  const existing=inlineThreads.get(trigger);if(existing){existing.close();return;}
- const top=window.scrollY,thread=node('section','inline-thread');thread.setAttribute('aria-label','Odgovori na komentar');
+ activeInlineThread?.close(false);
+ const startedAt=performance.now(),top=window.scrollY,thread=node('section','inline-thread'),root=trigger.closest('.comment'),activeStory=trigger.closest('.story');thread.setAttribute('aria-label','Odgovori na komentar');
  const replies=node('div','thread-replies'),formBox=node('div'),notice=node('p','hint','Učitavam odgovore…');
- let sent=new Set(),closed=false;
- const close=()=>{if(closed)return;closed=true;thread.remove();inlineThreads.delete(trigger);trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-label','Otvori ili napiši odgovore');window.scrollTo(0,top);trigger.focus({preventScroll:true});updateCommentMeta();};
- inlineThreads.set(trigger,{close});trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-label','Zatvori odgovore');thread.append(replies,notice,formBox);trigger.closest('.comment').append(thread);
+ let sent=new Set(),closed=false;const replyNodes=new Map();
+ const close=(restore=true)=>{if(closed)return;closed=true;thread.remove();inlineThreads.delete(trigger);activeInlineThread=null;root.classList.remove('thread-active-comment');activeStory?.classList.remove('thread-active-story');document.body.classList.remove('inline-thread-open');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-label','Otvori ili napiši odgovore');if(restore){window.scrollTo(0,top);trigger.focus({preventScroll:true});}updateCommentMeta();};
+ activeInlineThread={close};root.classList.add('thread-active-comment');activeStory?.classList.add('thread-active-story');document.body.classList.add('inline-thread-open');inlineThreads.set(trigger,{close});trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-label','Zatvori odgovore');thread.append(replies,notice,formBox);trigger.closest('.comment').append(thread);
  formBox.append(contentForm('reply',{confession_id:confessionId,parent_id:item.id},(created,context)=>{
-  if(!sent.has(String(created.id))){sent.add(String(created.id));replies.append(comment(created,confessionId,refreshContext,{readOnly:true}));}updateCommentMeta();refreshContext(context).catch(e=>toast(e.message));
+  if(!sent.has(String(created.id))){sent.add(String(created.id));const entry=comment(created,confessionId,refreshContext,{readOnly:true});entry.dataset.replyTime=created.created_at;entry.dataset.replyId=String(created.id);replyNodes.set(String(created.id),entry);replies.append(entry);}updateCommentMeta();refreshContext(context).catch(e=>toast(e.message));
  },close));
- try{const items=await collectReplies(request,confessionId,item.id);if(closed||!thread.isConnected)return;for(const r of items){if(!sent.has(String(r.id))){sent.add(String(r.id));replies.append(comment(r,confessionId,refreshContext,{readOnly:true}));}}notice.remove();updateCommentMeta();}catch(e){if(!closed)notice.textContent=e.message;}
+ function renderBatch(items){if(closed||!thread.isConnected)return;if(items.length&&!thread.dataset.firstReplyMs)thread.dataset.firstReplyMs=String(Math.round(performance.now()-startedAt));
+  for(const r of items){const id=String(r.id);if(!replyNodes.has(id)){sent.add(id);const entry=comment(r,confessionId,refreshContext,{readOnly:true});entry.dataset.replyTime=r.created_at;entry.dataset.replyId=id;replyNodes.set(id,entry);}}for(const entry of [...replyNodes.values()].sort((a,b)=>Date.parse(a.dataset.replyTime)-Date.parse(b.dataset.replyTime)||Number(a.dataset.replyId)-Number(b.dataset.replyId)))replies.append(entry);notice.textContent='Učitavam preostale odgovore…';updateCommentMeta();
+ }
+ try{await collectReplies(request,confessionId,item.id,renderBatch,()=>closed||!thread.isConnected);if(closed)return;thread.dataset.loadedMs=String(Math.round(performance.now()-startedAt));notice.remove();}catch(e){if(!closed)notice.textContent=e.message;}
 }
 function story(item){
  const article=node('article','story');if(item.nickname)article.append(node('div','story-nickname',item.nickname));article.append(node('div','story-content body-text',item.body));const storyDate=node('div','story-date',date(item.published_at||item.created_at));article.append(storyDate);

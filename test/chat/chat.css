@@ -50,3 +50,6 @@ body.menu-open #menu-toggle{letter-spacing:normal;font-size:23px}
 .inline-thread .thread-replies>.comment{margin:0;padding:12px 0;border-left:0;border-radius:0}
 .inline-thread .discussion-form textarea{font-size:16px;min-height:65px}
 .comment-actions .reply-toggle[aria-expanded=true] .reply-triangle{transform:rotate(180deg)}
+
+/* Keep the active inline discussion clear while dimming the surrounding feed. */
+body.inline-thread-open .site-header,body.inline-thread-open #feed-title,body.inline-thread-open footer,body.inline-thread-open .story:not(.thread-active-story),.thread-active-story>.story-content,.thread-active-story>.story-date,.thread-active-story>.story-nickname,.thread-active-story>.story-actions,.thread-active-story .comment-title,.thread-active-story .comment:not(.thread-active-comment):not(.inline-thread .comment),.thread-active-story .comment-list>.form{filter:blur(3px) brightness(.65)}
