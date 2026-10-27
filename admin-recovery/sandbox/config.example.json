@@ -1,0 +1,8 @@
+{
+  "mode": "recovery-sandbox",
+  "projectRef": "REPLACE_WITH_NEW_APPROVED_PROJECT_REF",
+  "supabaseUrl": "https://REPLACE_WITH_NEW_APPROVED_PROJECT_REF.supabase.co",
+  "publishableKey": "REPLACE_WITH_NEW_PUBLIC_KEY",
+  "siteOrigin": "https://ispovesti-admin-recovery-sandbox.jovialfrog11.chatgpt.site",
+  "recoverySitekey": "REPLACE_WITH_PUBLIC_SANDBOX_TURNSTILE_SITEKEY"
+}

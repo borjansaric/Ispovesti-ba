@@ -6,7 +6,7 @@ import zipfile
 import sys
 
 root = Path(__file__).resolve().parents[1]
-excluded = {'node_modules', '.temp', '.local-stage', '.test-review', '.git', '__pycache__', '.production-review'}
+excluded = {'node_modules', '.temp', '.local-stage', '.test-review', '.git', '__pycache__', '.production-review', '.recovery-sandbox-review'}
 files = [p for p in root.rglob('*')
          if p.is_file() and not any(part in excluded for part in p.relative_to(root).parts)
          and p.name != 'FILE-HASHES.json' and p.suffix not in {'.log', '.zip'}

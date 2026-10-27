@@ -1,0 +1,12 @@
+{
+  "provider": "Sites",
+  "project_id": "appgprj_6ae0790b1fc88191b233d3dddf2b8ccf",
+  "expected_url": null,
+  "audience": "owner-private",
+  "current_live_url": null,
+  "saved_versions": 0,
+  "publish_approved": false,
+  "github_pages_changes": false,
+  "source_directory": "ispovesti-admin-recovery-sandbox",
+  "static_directory": "dist"
+}

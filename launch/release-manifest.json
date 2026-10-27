@@ -73,8 +73,9 @@
   "admin_recovery_supplement": "docs/admin-recovery-manifest.json",
   "latest_local_tests": {
     "date": "2026-10-27",
-    "all": 135,
-    "passed": 135,
+    "all": 142,
+    "passed": 142,
     "failed": 0
-  }
+  },
+  "isolated_recovery_supplement": "docs/recovery-sandbox-manifest.json"
 }
