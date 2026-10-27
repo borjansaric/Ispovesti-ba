@@ -69,5 +69,12 @@
     "docs/SAFE-CUTOVER-20261026.md": "9587904fe4b7295b91abb0f384bc2258c97ef9a03c25fc007e5abcd29077c810",
     "docs/final-readiness-20261026.md": "1aab5e034d6fd13a5947d25ffcca7ce0962ea0234f442fd469b0cc15f64bc848",
     "launch/SQL-REVIEW-20261026.md": "f21b3a6f62ffb7eadcc54e5aea758208521522ecbed8c50eb762b8b61fd69b23"
+  },
+  "admin_recovery_supplement": "docs/admin-recovery-manifest.json",
+  "latest_local_tests": {
+    "date": "2026-10-27",
+    "all": 135,
+    "passed": 135,
+    "failed": 0
   }
 }

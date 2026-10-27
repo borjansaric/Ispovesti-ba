@@ -11,3 +11,10 @@ const text=await readFile(path.join(root,'dist/config.js'),'utf8');const config=
 console.log('Test review bundle prepared in .test-review; /test/ and dist remain unchanged.');
 
 let index=await readFile(path.join(out,'index.html'),'utf8');await writeFile(path.join(out,'index.html'),index.replace('index,follow','noindex,nofollow'));
+
+// Test-only recovery. The root/production administrator remains unchanged.
+await mkdir(path.join(out,'admin-recovery'),{recursive:true});
+for(const f of ['client.mjs','forgot.mjs','reset.mjs'])await copyFile(path.join(root,'admin-recovery',f),path.join(out,'admin-recovery',f));
+await copyFile(path.join(root,'admin-recovery/reset-template.html'),path.join(out,'admin-recovery.html'));
+let recoveryAdmin=await readFile(path.join(out,'admin.html'),'utf8');
+await writeFile(path.join(out,'admin.html'),recoveryAdmin.replace('</head>','<script type="module" src="admin-recovery/forgot.mjs"></script></head>'));

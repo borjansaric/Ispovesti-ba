@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import zipfile
+import sys
 
 root = Path(__file__).resolve().parents[1]
 excluded = {'node_modules', '.temp', '.local-stage', '.test-review', '.git', '__pycache__', '.production-review'}
@@ -15,7 +16,9 @@ manifest = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
 manifest_path = root / 'docs/FILE-HASHES.json'
 manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
 files.append(manifest_path)
-archive = root.parent / 'Ispovesti-ba-release12-pregled.zip'
+name = sys.argv[1] if len(sys.argv)>1 else 'Ispovesti-ba-release12-pregled.zip'
+assert Path(name).name == name and name.endswith('.zip')
+archive = root.parent / name
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as output:
     for path in sorted(files):
         output.write(path, str(Path(root.name) / path.relative_to(root)))
