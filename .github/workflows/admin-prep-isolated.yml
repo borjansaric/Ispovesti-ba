@@ -1,0 +1,16 @@
+name: Isolated banner schedule checks
+on:
+  push:
+    branches: [work/admin-panel-prep-20261028]
+permissions:
+  contents: read
+jobs:
+  schedule:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/banner-schedule-isolated.test.mjs
