@@ -1,51 +1,35 @@
-name: Isolated recovery infrastructure check
+name: Isolated recovery integration
 on:
   push:
     branches: [work/recovery-local-ci-20261028]
 permissions:
   contents: read
 jobs:
-  local-auth:
+  recovery:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - uses: supabase/setup-cli@v1
         with:
           version: 2.122.0
-      - name: Start a new local-only Supabase instance
+      - name: Start isolated local-only Supabase
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/recovery-local"
           supabase init --workdir "$RUNNER_TEMP/recovery-local"
+          mkdir -p "$RUNNER_TEMP/recovery-local/supabase/templates"
+          printf '%s\n' '{{ .Token }}' > "$RUNNER_TEMP/recovery-local/supabase/templates/otp.html"
+          printf '\n[auth.email.template.magic_link]\nsubject = "Local OTP"\ncontent_path = "./supabase/templates/otp.html"\n' >> "$RUNNER_TEMP/recovery-local/supabase/config.toml"
           supabase start --workdir "$RUNNER_TEMP/recovery-local"
-      - name: Check isolated Auth and email capture
+      - name: Verify recovery against local Auth and local database
         shell: bash
         run: |
           set -euo pipefail
           eval "$(supabase status --workdir "$RUNNER_TEMP/recovery-local" -o env)"
-          export API_URL ANON_KEY SERVICE_ROLE_KEY
-          node --input-type=module <<'NODE'
-          import assert from 'node:assert/strict';
-          const base=process.env.API_URL;
-          const service=process.env.SERVICE_ROLE_KEY;
-          const anon=process.env.ANON_KEY;
-          assert.match(base,/^http:\/\/(127\.0\.0\.1|localhost):/);
-          assert.ok(service && anon);
-          const email='admin-probe@example.test';
-          const password='Example-Probe-Password-2026!';
-          async function call(path,body,key) {
-            const r=await fetch(base+path,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body)});
-            assert.ok(r.ok, path+' returned '+r.status);
-            return r.json();
-          }
-          const user=await call('/auth/v1/admin/users',{email,password,email_confirm:true},service);
-          assert.ok(user.id);
-          const session=await call('/auth/v1/token?grant_type=password',{email,password},anon);
-          assert.equal(session.user.id,user.id);
-          await call('/auth/v1/recover',{email},anon);
-          const r=await fetch('http://127.0.0.1:54324/api/v1/messages');
-          assert.ok(r.ok,'Mailpit unavailable');
-          const messages=await r.json();
-          assert.ok(messages.total>0,'No test email captured');
-          console.log('Local Auth user, password login, recovery request and Mailpit capture: passed.');
-          NODE
+          export API_URL ANON_KEY SERVICE_ROLE_KEY DB_URL
+          node .github/scripts/recovery-integration.mjs
