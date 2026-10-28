@@ -93,6 +93,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/recovery-combined"
           supabase init --workdir "$RUNNER_TEMP/recovery-combined"
+          sed -i 's/^# smtp_port = 54325$/smtp_port = 54325/' "$RUNNER_TEMP/recovery-combined/supabase/config.toml"
           mkdir -p "$RUNNER_TEMP/recovery-combined/supabase/templates"
           printf '%s\n' '{{ .Token }}' > "$RUNNER_TEMP/recovery-combined/supabase/templates/otp.html"
           printf '\n[auth.email.template.magic_link]\nsubject = "Local OTP"\ncontent_path = "./supabase/templates/otp.html"\n' >> "$RUNNER_TEMP/recovery-combined/supabase/config.toml"
