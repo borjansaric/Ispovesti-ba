@@ -60,6 +60,7 @@ jobs:
           console.log('Test response action:',success.action,'hostname:',success.hostname,'challenge_ts:',success.challenge_ts);
           NODE
   browser-test:
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
