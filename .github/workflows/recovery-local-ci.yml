@@ -59,3 +59,17 @@ jobs:
           console.log('PASS Cloudflare test keys: accepted, rejected and duplicate token.');
           console.log('Test response action:',success.action,'hostname:',success.hostname,'challenge_ts:',success.challenge_ts);
           NODE
+  browser-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browser test tools
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify recovery form on mobile and desktop
+        run: node .github/scripts/recovery-browser.mjs
