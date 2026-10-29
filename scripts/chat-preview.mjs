@@ -33,7 +33,7 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  }});
  const old=server.listeners('request')[0];server.removeAllListeners('request');
  server.on('request',async(req,res)=>{
-  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive','/api/admin-advertising','/api/owner-anonymous-chat','/api/local-metrics','/api/admin-metrics','/api/local-banner'].includes(pathname))return old(req,res);
+  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive','/api/admin-advertising','/api/owner-anonymous-chat','/api/local-metrics','/api/admin-metrics','/api/local-banner','/api/admin-community'].includes(pathname))return old(req,res);
   const reply=(status,data,cookie,admin=false)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(cookie?{'Set-Cookie':(admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=')+cookie+'; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800'}:{})});res.end(JSON.stringify(data));};
   if(req.method!=='POST')return reply(405,{error:'Nedozvoljen zahtjev.'});
   const allowed=new Set(['http://'+req.headers.host,process.env.LOCAL_PREVIEW_ORIGIN||'http://terminal.local:4173']);
@@ -82,6 +82,12 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
     }
     if(body.action==='context'){const r=await db.query("select public.admin_archive_probe_context($1,$2,'aal1',$3) data",[s.uid,s.sid,body.id]);return reply(200,r.rows[0].data);}
     return reply(400,{error:'Nepoznata radnja.'});
+   }
+   if(pathname==='/api/admin-community'){
+    const admin=session(req,true);if(!admin?.isOwner)return reply(403,{error:'Potreban je provjeren administrator.'});
+    if(!['admin_list','admin_remove','admin_restore','admin_publisher'].includes(body.action))return reply(400,{error:'Nepoznata radnja.'});
+    const args=body.args&&typeof body.args==='object'&&!Array.isArray(body.args)?body.args:{};
+    const r=await db.query('select public.community_test_dispatch($1,$2,$3::jsonb) data',[admin.uid,body.action,JSON.stringify({...args,_session_id:admin.sid,_aal:'aal1'})]);return reply(200,r.rows[0].data);
    }
    if(pathname==='/api/admin-advertising'){
     const s=session(req,true);if(!s?.isOwner)return reply(403,{error:'Potreban je provjeren administrator.'});

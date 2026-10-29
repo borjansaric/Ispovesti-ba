@@ -3,6 +3,7 @@ if(isLocal)import('../admin-prep/archive-ui.mjs').then(m=>m.mountArchive(documen
 if(isLocal)import('../admin-prep/advertising-ui.mjs').then(m=>m.mountAdvertising(document.querySelector('#chat-admin-tools')));
 if(isLocal)import('../admin-prep/owner-chat-ui.mjs').then(m=>m.mountOwnerChat(document.querySelector('#chat-admin-tools')));
 if(isLocal)import('../admin-prep/metrics-ui.mjs').then(m=>m.mountMetrics(document.querySelector('#chat-admin-tools')));
+if(isLocal)import('../admin-prep/community-moderation-ui.mjs').then(m=>m.mountCommunityModeration(document.querySelector('#chat-admin-tools')));
 const $=s=>document.querySelector(s),status=t=>$('#chat-admin-status').textContent=t;
 const run=async fn=>{try{await fn();}catch(e){status(e.message);}};
 async function gate(){await chatRequest('admin_status',{},true);$('#chat-admin-tools').hidden=false;$('#chat-owner-login').hidden=true;status('Zaštićena administracija chata.');}
