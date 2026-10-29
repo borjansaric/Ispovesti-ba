@@ -17,9 +17,14 @@ create table admin_ad_probe.impressions_daily (
  booking_id uuid not null references admin_ad_probe.bookings(id), day date not null,
  impressions bigint not null default 0 check(impressions>=0), primary key(booking_id,day)
 );
+create table admin_ad_probe.impression_receipts (
+ booking_id uuid not null references admin_ad_probe.bookings(id),day date not null,view_id uuid not null,
+ primary key(booking_id,day,view_id)
+);
 alter table admin_ad_probe.advertisers enable row level security;
 alter table admin_ad_probe.bookings enable row level security;
 alter table admin_ad_probe.impressions_daily enable row level security;
+alter table admin_ad_probe.impression_receipts enable row level security;
 revoke all on all tables in schema admin_ad_probe from public,anon,authenticated;
 grant all on all tables in schema admin_ad_probe to service_role;
 commit;

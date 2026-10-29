@@ -1,6 +1,8 @@
 import {chatRequest} from './chat/client.mjs?v=room2';
 import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
 import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=room2';
+if(isLocal)import('./admin-prep/telemetry-local.mjs').then(m=>m.begin('site'));
+if(isLocal)import('./admin-prep/banner-local.mjs').then(m=>m.startLocalBanner());
 const discussionRequest=(action,args)=>window.ISPOVESTI_CONFIG?.mode==='live'?request(action,args):chatRequest(action,args);
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');

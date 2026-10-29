@@ -1,0 +1,13 @@
+function week(day){const d=new Date(day+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
+function grouped(history,period){const map=new Map();for(const row of history){const k=period==='day'?row.date:period==='week'?week(row.date):period==='month'?row.date.slice(0,7):row.date.slice(0,4);map.set(k,(map.get(k)||0)+row.visits)}return [...map].sort(([a],[b])=>a.localeCompare(b))}
+export function mountMetrics(container){
+ const section=document.createElement('section'),title=document.createElement('h2'),status=document.createElement('p'),out=document.createElement('div'),button=document.createElement('button');title.textContent='Probna statistika';button.type='button';button.className='action';button.textContent='Osvježi statistiku';status.setAttribute('role','status');section.append(title,button,status,out);container.append(section);
+ button.onclick=async()=>{button.disabled=true;try{
+  const r=await fetch('/api/admin-metrics',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',credentials:'same-origin'});const data=await r.json();if(!r.ok)throw Error(data.error||'Statistika nije dostupna.');out.replaceChildren();
+  for(const area of ['site','chat']){const v=data[area],h=document.createElement('h3'),p=document.createElement('p');h.textContent=area==='site'?'Ispovijesti':'Anonimni chat';p.textContent=`Posjete ${v.visits} · Pregledi ${v.views} · Poruke ${v.messages} · Procjena jedinstvenih danas ${v.estimatedUnique.day}, sedmica ${v.estimatedUnique.week}, mjesec ${v.estimatedUnique.month} · Aktivni približno ${v.activeEstimate}`;out.append(h,p);
+   for(const [period,label] of [['day','Dani'],['week','Sedmice od ponedjeljka'],['month','Mjeseci'],['year','Godine']]){const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent=label;details.append(summary);for(const [date,count] of grouped(v.history,period)){const line=document.createElement('p');line.textContent=`${date}: ${'▮'.repeat(Math.min(count,40))} ${count}`;details.append(line)}out.append(details)}
+   if(area==='chat'){const peaks=document.createElement('p');const max=Math.max(...v.activityByHour);peaks.textContent=max?'Najaktivniji početak posjeta: '+v.activityByHour.map((n,i)=>n===max?String(i).padStart(2,'0')+':00':null).filter(Boolean).join(', '):'Još nema posjeta chatu.';out.append(peaks)}
+  }
+  status.textContent=data.limitReached?'Probni limit događaja dostignut; podaci su nepotpuni.':'Probni podaci važe samo dok je lokalni test pokrenut. Jedinstveni posjetioci su procjena po kartici.';
+ }catch(e){status.textContent=e.message}finally{button.disabled=false}};
+}

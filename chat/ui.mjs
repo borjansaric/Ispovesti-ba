@@ -3,6 +3,7 @@ export const avatars={ghost:'👻',moon:'🌙',star:'⭐',owl:'🦉',fox:'🦊',
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const button=(label,run,cls='chat-small')=>{const b=el('button',cls,label);b.type='button';b.onclick=()=>Promise.resolve(run()).catch(e=>alert(e.message));return b;};
 export async function openChat(){
+ let stopMetrics=()=>{},metricsActive=false;
  const dialog=document.querySelector('#dialog'),root=el('section','chat-panel');let stopped=false,polling=false,timer,profile,sending=false,requestId,lastBody,initial=true,noOlder=false;
  const pages=[null];let messages=[];
  if(document.body.classList.contains('menu-open'))document.querySelector('#menu-toggle').click();
@@ -17,7 +18,7 @@ export async function openChat(){
  const list=el('div','chat-messages');list.setAttribute('aria-label','Poruke u zajedničkoj sobi');list.setAttribute('role','log');list.setAttribute('aria-live','polite');
  const form=el('form','chat-compose'),text=el('textarea');text.maxLength=2000;text.required=true;text.rows=1;text.placeholder='Napiši poruku…';text.setAttribute('aria-label','Poruka u zajedničkom chatu');
  const send=el('button','chat-send','➤');send.type='submit';send.setAttribute('aria-label','Pošalji poruku');form.append(text,send);form.hidden=true;root.append(top,status,gate,list,form);
- function resetAccess(message){profile=null;messages=[];pages.splice(1);list.replaceChildren();form.hidden=true;gate.hidden=false;status.textContent=message;clearInterval(timer);}
+ function resetAccess(message){stopMetrics();metricsActive=false;profile=null;messages=[];pages.splice(1);list.replaceChildren();form.hidden=true;gate.hidden=false;status.textContent=message;clearInterval(timer);}
  function render(items,older=false){const atBottom=initial||list.scrollHeight-list.scrollTop-list.clientHeight<80,oldHeight=list.scrollHeight,oldTop=list.scrollTop;
   const openId=list.querySelector('details[open]')?.closest('[data-id]')?.dataset.id;
   const frag=document.createDocumentFragment();for(const m of items){const own=m.sender===profile.id,row=el('article','chat-message '+(own?'own':'other'));row.dataset.id=m.id;
@@ -38,13 +39,13 @@ export async function openChat(){
  async function loadProfile(){try{profile=await chatRequest('profile');if(stopped)return;root.dataset.ownSide=profile.side||'left';
    account.replaceChildren(el('p','hint','Tvoj testni chat ID: '+profile.id),el('p','hint',profile.active?'Paket '+profile.plan+' · ističe '+new Date(profile.expires_at).toLocaleString('sr-Latn'):'Nema aktivnog paketa.'));
    blocked.replaceChildren();for(const [i,b]of (profile.blocked||[]).entries())blocked.append(button('Odblokiraj korisnika '+(i+1),async()=>{await chatRequest('unblock',{target:b.id});await loadProfile();}));
-   gate.hidden=!!profile.active;form.hidden=!profile.active;if(profile.active){status.textContent='';await refresh();clearInterval(timer);timer=setInterval(()=>refresh(),1500);}else resetAccess('');
+   gate.hidden=!!profile.active;form.hidden=!profile.active;if(profile.active){if(window.ISPOVESTI_CONFIG?.mode==='local'&&!metricsActive){metricsActive=true;import('../admin-prep/telemetry-local.mjs').then(m=>{if(!stopped&&profile?.active)stopMetrics=m.begin('chat')})}status.textContent='';await refresh();clearInterval(timer);timer=setInterval(()=>refresh(),1500);}else resetAccess('');
   }catch(e){resetAccess(e.message);}}
  list.addEventListener('scroll',async()=>{if(list.scrollTop>36||polling||noOlder||!messages.length)return;const cursor=messages[0].id;if(pages.includes(cursor))return;pages.push(cursor);await refresh(true);});
  let redeemBusy=false;codeForm.onsubmit=async event=>{event.preventDefault();if(redeemBusy)return;redeemBusy=true;enter.disabled=true;status.textContent='Provjeravam kod…';try{await chatRequest('redeem_code',{code:code.value});code.value='';pages.splice(1);initial=true;noOlder=false;await loadProfile();}catch(e){status.textContent=e.message;}finally{code.value='';enter.disabled=false;redeemBusy=false;}};
  form.onsubmit=async event=>{event.preventDefault();if(sending)return;if([...text.value.trim()].length>1000){status.textContent='Poruka može imati najviše 1.000 znakova.';return;}sending=true;send.disabled=true;text.disabled=true;
   try{if(text.value!==lastBody){requestId=crypto.randomUUID();lastBody=text.value;}await chatRequest('send',{body:text.value,request_id:requestId});text.value='';requestId=null;lastBody=null;status.textContent='';await refresh();list.scrollTop=list.scrollHeight;}catch(e){status.textContent=e.message;if([401,403].includes(e.status))resetAccess(e.message);}finally{sending=false;send.disabled=false;text.disabled=false;}};
- dialog.addEventListener('close',()=>{stopped=true;clearInterval(timer);messages=[];list.replaceChildren();code.value='';text.value='';dialog.classList.remove('chat-room');document.body.classList.remove('chat-open');close.setAttribute('aria-label','Zatvori');document.querySelector('#open-chat')?.focus({preventScroll:true});},{once:true});
+ dialog.addEventListener('close',()=>{stopMetrics();stopped=true;clearInterval(timer);messages=[];list.replaceChildren();code.value='';text.value='';dialog.classList.remove('chat-room');document.body.classList.remove('chat-open');close.setAttribute('aria-label','Zatvori');document.querySelector('#open-chat')?.focus({preventScroll:true});},{once:true});
  await loadProfile();
 }
 document.querySelector('#open-chat')?.addEventListener('click',()=>openChat().catch(e=>alert(e.message)));
