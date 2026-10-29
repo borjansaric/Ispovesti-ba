@@ -11,9 +11,9 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  await db.exec(await readFile(path.join(root,'supabase/submission-latency.sql'),'utf8'));
  const owner=randomUUID();await db.query("insert into auth.users(id,email,is_anonymous) values($1,'preview-owner@local.invalid',false)",[owner]);await db.query('insert into community_test.admins values($1)',[owner]);
  await db.exec("update community_test.security_settings set admin_auth_method='email'");
- await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-access.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-auth-check.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/chat-archive-isolated.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/advertising-isolated.sql'),'utf8'));await db.exec('set role service_role');
- const cookies=new Map(),tokens=new Map(),events=[];
- const record=(section,type,visitor)=>{if(events.length>=50000)return;events.push({section,type,visitor,at:new Date().toISOString()})};
+ await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-access.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-auth-check.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/chat-archive-isolated.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/advertising-isolated.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/analytics-isolated.sql'),'utf8'));await db.exec('set role service_role');
+ const cookies=new Map(),tokens=new Map();let eventCount=0;
+ const record=async(section,type,visitor)=>{if(eventCount>=50000)return;await db.query('insert into admin_metrics_probe.events(section,event_type,visitor) values($1,$2,$3)',[section,type,visitor]);eventCount++};
  const session=(req,admin=false)=>{const name=admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=';const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name))?.split('=')[1];const s=cookies.get(token);return s&&s.expires>Date.now()?s:null;};
  const mint=async(isOwner=false)=>{
   const uid=isOwner?owner:randomUUID(),sid=randomUUID();if(!isOwner)await db.query('insert into auth.users(id,is_anonymous) values($1,true)',[uid]);
@@ -48,12 +48,13 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
    if(pathname==='/api/chat-session'){if(session(req))return reply(200,{success:true});const {cookie}=await mint();return reply(200,{success:true},cookie);}
    if(pathname==='/api/local-metrics'){
     if(!['site','chat'].includes(body.section)||!['visit','view','heartbeat'].includes(body.type)||typeof body.visitor!=='string'||!/^[0-9a-f-]{36}$/i.test(body.visitor))return reply(400,{error:'Neispravni probni podaci.'});
-    record(body.section,body.type,body.visitor);return reply(200,{success:true});
+    await record(body.section,body.type,body.visitor);return reply(200,{success:true});
    }
    if(pathname==='/api/admin-metrics'){
     const admin=session(req,true);if(!admin?.isOwner)return reply(403,{error:'Potreban je provjeren administrator.'});
     await db.query('select community_test.assert_admin_access($1,$2,$3)',[admin.uid,admin.sid,'aal1']);
-    return reply(200,{site:summarize(events,{section:'site'}),chat:summarize(events,{section:'chat'}),temporary:true,limitReached:events.length>=50000});
+    const events=(await db.query("select section,event_type as type,visitor,occurred_at as at from admin_metrics_probe.events order by id limit 50000")).rows.map(e=>({...e,at:new Date(e.at).toISOString()}));
+    return reply(200,{site:summarize(events,{section:'site'}),chat:summarize(events,{section:'chat'}),temporary:true,limitReached:eventCount>=50000});
    }
    if(pathname==='/api/local-banner'){
     const now=clock(),slot=currentSlot(now);let item=null;
@@ -101,7 +102,7 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
    }
    const s=body.action?.startsWith('admin_')?(session(req,true)||session(req)):session(req);if(!s)return reply(401,{error:'Potrebna je anonimna prijava.'});
    const response=await handler(new Request('http://local.invalid/chat',{method:'POST',headers:{Origin:'http://local.invalid','Content-Type':'application/json',Authorization:'Bearer '+s.token},body:raw}));
-   const result=await response.json();if(body.action==='send'&&response.ok&&!result.replayed)record('chat','message','local-message');return reply(response.status,result);
+   const result=await response.json();if(body.action==='send'&&response.ok&&!result.replayed)await record('chat','message','local-message').catch(()=>{});return reply(response.status,result);
   }catch{return reply(400,{error:'Neispravan zahtjev.'});}
  });
  return {...stage,ownerKey};
