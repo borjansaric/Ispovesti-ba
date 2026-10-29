@@ -9,13 +9,13 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  await db.exec(await readFile(path.join(root,'supabase/submission-latency.sql'),'utf8'));
  const owner=randomUUID();await db.query("insert into auth.users(id,email,is_anonymous) values($1,'preview-owner@local.invalid',false)",[owner]);await db.query('insert into community_test.admins values($1)',[owner]);
  await db.exec("update community_test.security_settings set admin_auth_method='email'");
- await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-access.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-auth-check.sql'),'utf8'));await db.exec('set role service_role');
+ await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-access.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-auth-check.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/chat-archive-isolated.sql'),'utf8'));await db.exec('set role service_role');
  const cookies=new Map(),tokens=new Map();
  const session=(req,admin=false)=>{const name=admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=';const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name))?.split('=')[1];const s=cookies.get(token);return s&&s.expires>Date.now()?s:null;};
  const mint=async(isOwner=false)=>{
   const uid=isOwner?owner:randomUUID(),sid=randomUUID();if(!isOwner)await db.query('insert into auth.users(id,is_anonymous) values($1,true)',[uid]);
   const cookie=randomBytes(32).toString('hex'),token='local.'+Buffer.from(JSON.stringify({sub:uid,session_id:sid,aal:'aal1'})).toString('base64url')+'.'+randomBytes(24).toString('hex');
-  const s={uid,token,expires:Date.now()+8*3600000,isOwner};cookies.set(cookie,s);tokens.set(token,s);
+  const s={uid,sid,token,expires:Date.now()+8*3600000,isOwner};cookies.set(cookie,s);tokens.set(token,s);
   await db.exec('reset role');await db.query("insert into auth.sessions values($1,$2,clock_timestamp()+interval '8 hours')",[sid,uid]);await db.exec('set role service_role');
   if(isOwner){
    await db.exec('reset role');
@@ -30,7 +30,7 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  }});
  const old=server.listeners('request')[0];server.removeAllListeners('request');
  server.on('request',async(req,res)=>{
-  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat'].includes(pathname))return old(req,res);
+  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive'].includes(pathname))return old(req,res);
   const reply=(status,data,cookie,admin=false)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(cookie?{'Set-Cookie':(admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=')+cookie+'; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800'}:{})});res.end(JSON.stringify(data));};
   if(req.method!=='POST')return reply(405,{error:'Nedozvoljen zahtjev.'});
   const allowed=new Set(['http://'+req.headers.host,process.env.LOCAL_PREVIEW_ORIGIN||'http://terminal.local:4173']);
@@ -43,6 +43,14 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
     const {cookie}=await mint(true);return reply(200,{success:true,local:true},cookie,true);
    }
    if(pathname==='/api/chat-session'){if(session(req))return reply(200,{success:true});const {cookie}=await mint();return reply(200,{success:true},cookie);}
+   if(pathname==='/api/admin-archive'){
+    const s=session(req,true);if(!s?.isOwner)return reply(403,{error:'Potreban je provjeren administrator.'});
+    if(body.action==='list'){
+     const args=body.filters||{};const r=await db.query("select public.admin_archive_probe_list($1,$2,'aal1',$3,$4,$5,$6,($7::date::timestamp at time zone 'Europe/Sarajevo'),(($8::date+1)::timestamp at time zone 'Europe/Sarajevo')-interval '1 microsecond') data",[s.uid,s.sid,args.before||null,args.text||'',args.status||'all',args.author||null,args.from||null,args.to||null]);return reply(200,r.rows[0].data);
+    }
+    if(body.action==='context'){const r=await db.query("select public.admin_archive_probe_context($1,$2,'aal1',$3) data",[s.uid,s.sid,body.id]);return reply(200,r.rows[0].data);}
+    return reply(400,{error:'Nepoznata radnja.'});
+   }
    const s=body.action?.startsWith('admin_')?(session(req,true)||session(req)):session(req);if(!s)return reply(401,{error:'Potrebna je anonimna prijava.'});
    const response=await handler(new Request('http://local.invalid/chat',{method:'POST',headers:{Origin:'http://local.invalid','Content-Type':'application/json',Authorization:'Bearer '+s.token},body:raw}));
    return reply(response.status,await response.json());
