@@ -38,6 +38,24 @@ begin
  ) q;
  return jsonb_build_object('items',result);
 end $$;
+create function public.admin_archive_probe_context(p_uid uuid,p_session text,p_aal text,p_message bigint) returns jsonb
+language plpgsql security invoker set search_path='' as $$
+declare result jsonb;
+begin
+ if current_user not in ('service_role','postgres') then raise exception 'Zabranjeno' using errcode='42501';end if;
+ perform community_test.assert_admin_access(p_uid,p_session,p_aal);
+ if not exists(select 1 from chat_test.messages where id=p_message) then raise exception 'Poruka ne postoji';end if;
+ select coalesce(jsonb_agg(q order by q.created_at,q.id),'[]'::jsonb) into result from (
+  (select m.id,m.body,m.created_at,m.removed,s.author_public_id,s.nickname,s.avatar from chat_test.messages m left join admin_archive_probe.snapshots s on s.message_id=m.id where (m.created_at,m.id)<(select created_at,id from chat_test.messages where id=p_message) order by m.created_at desc,m.id desc limit 5)
+  union all
+  (select m.id,m.body,m.created_at,m.removed,s.author_public_id,s.nickname,s.avatar from chat_test.messages m left join admin_archive_probe.snapshots s on s.message_id=m.id where m.id=p_message)
+  union all
+  (select m.id,m.body,m.created_at,m.removed,s.author_public_id,s.nickname,s.avatar from chat_test.messages m left join admin_archive_probe.snapshots s on s.message_id=m.id where (m.created_at,m.id)>(select created_at,id from chat_test.messages where id=p_message) order by m.created_at,m.id limit 5)
+ ) q;
+ return jsonb_build_object('items',result);
+end $$;
 revoke all on function admin_archive_probe.snapshot_new_message(),public.admin_archive_probe_list(uuid,text,text,bigint,text,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
 grant execute on function admin_archive_probe.snapshot_new_message(),public.admin_archive_probe_list(uuid,text,text,bigint,text,text,uuid,timestamptz,timestamptz) to service_role;
+revoke all on function public.admin_archive_probe_context(uuid,text,text,bigint) from public,anon,authenticated;
+grant execute on function public.admin_archive_probe_context(uuid,text,text,bigint) to service_role;
 commit;
