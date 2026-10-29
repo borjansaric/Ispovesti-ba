@@ -13,4 +13,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test tests/banner-schedule-isolated.test.mjs
+      - run: node --test tests/admin-read-gateway-isolated.test.mjs tests/chat-archive-core-isolated.test.mjs tests/metrics-core-isolated.test.mjs
