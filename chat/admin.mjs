@@ -1,5 +1,6 @@
 import {chatRequest,trialCode} from './client.mjs?v=room2';import {isLocal} from '../api.js?v=room2';
 if(isLocal)import('../admin-prep/archive-ui.mjs').then(m=>m.mountArchive(document.querySelector('#chat-admin-tools')));
+if(isLocal)import('../admin-prep/advertising-ui.mjs').then(m=>m.mountAdvertising(document.querySelector('#chat-admin-tools')));
 const $=s=>document.querySelector(s),status=t=>$('#chat-admin-status').textContent=t;
 const run=async fn=>{try{await fn();}catch(e){status(e.message);}};
 async function gate(){await chatRequest('admin_status',{},true);$('#chat-admin-tools').hidden=false;$('#chat-owner-login').hidden=true;status('Zaštićena administracija chata.');}

@@ -9,5 +9,8 @@ test('archive snapshots preserve original identity and enforce administrator acc
  await db.query("update chat_test.profiles set generated_nickname='Anonim-Prije',avatar='moon' where user_id=$1",[user]);
  await db.query("insert into chat_test.messages(user_id,body,request_id) values($1,'Probna poruka',$2)",[user,randomUUID()]);await db.query("update chat_test.profiles set generated_nickname='Anonim-Poslije',avatar='fox' where user_id=$1",[user]);
  const list=async(uid)=>db.query("select public.admin_archive_probe_list($1,$2,'aal1',null,'probna','all') result",[uid,sid]);const m=(await list(owner)).rows[0].result.items[0];assert.equal(m.nickname,'Anonim-Prije');assert.equal(m.avatar,'moon');await assert.rejects(list(user));
+ await db.query("insert into chat_test.messages(user_id,body,request_id) values($1,'Sljedeća poruka',$2)",[user,randomUUID()]);
+ const context=async uid=>db.query("select public.admin_archive_probe_context($1,$2,'aal1',$3) result",[uid,sid,m.id]);
+ assert.deepEqual((await context(owner)).rows[0].result.items.map(x=>x.body),['Probna poruka','Sljedeća poruka']);await assert.rejects(context(user));
  for(const role of ['anon','authenticated']){await db.exec('set role '+role);try{await assert.rejects(db.query('select * from admin_archive_probe.snapshots'));await assert.rejects(list(owner))}finally{await db.exec('reset role')}}
  }finally{await db.close()}});

@@ -9,7 +9,7 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  await db.exec(await readFile(path.join(root,'supabase/submission-latency.sql'),'utf8'));
  const owner=randomUUID();await db.query("insert into auth.users(id,email,is_anonymous) values($1,'preview-owner@local.invalid',false)",[owner]);await db.query('insert into community_test.admins values($1)',[owner]);
  await db.exec("update community_test.security_settings set admin_auth_method='email'");
- await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-access.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-auth-check.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/chat-archive-isolated.sql'),'utf8'));await db.exec('set role service_role');
+ await db.exec(await readFile(path.join(root,'chat/prepare-test.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-access.sql'),'utf8'));await db.exec(await readFile(path.join(root,'chat/room-auth-check.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/chat-archive-isolated.sql'),'utf8'));await db.exec(await readFile(path.join(root,'admin-prep/advertising-isolated.sql'),'utf8'));await db.exec('set role service_role');
  const cookies=new Map(),tokens=new Map();
  const session=(req,admin=false)=>{const name=admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=';const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name))?.split('=')[1];const s=cookies.get(token);return s&&s.expires>Date.now()?s:null;};
  const mint=async(isOwner=false)=>{
@@ -30,7 +30,7 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  }});
  const old=server.listeners('request')[0];server.removeAllListeners('request');
  server.on('request',async(req,res)=>{
-  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive'].includes(pathname))return old(req,res);
+  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive','/api/admin-advertising'].includes(pathname))return old(req,res);
   const reply=(status,data,cookie,admin=false)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(cookie?{'Set-Cookie':(admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=')+cookie+'; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800'}:{})});res.end(JSON.stringify(data));};
   if(req.method!=='POST')return reply(405,{error:'Nedozvoljen zahtjev.'});
   const allowed=new Set(['http://'+req.headers.host,process.env.LOCAL_PREVIEW_ORIGIN||'http://terminal.local:4173']);
@@ -49,6 +49,23 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
      const args=body.filters||{};const r=await db.query("select public.admin_archive_probe_list($1,$2,'aal1',$3,$4,$5,$6,($7::date::timestamp at time zone 'Europe/Sarajevo'),(($8::date+1)::timestamp at time zone 'Europe/Sarajevo')-interval '1 microsecond') data",[s.uid,s.sid,args.before||null,args.text||'',args.status||'all',args.author||null,args.from||null,args.to||null]);return reply(200,r.rows[0].data);
     }
     if(body.action==='context'){const r=await db.query("select public.admin_archive_probe_context($1,$2,'aal1',$3) data",[s.uid,s.sid,body.id]);return reply(200,r.rows[0].data);}
+    return reply(400,{error:'Nepoznata radnja.'});
+   }
+   if(pathname==='/api/admin-advertising'){
+    const s=session(req,true);if(!s?.isOwner)return reply(403,{error:'Potreban je provjeren administrator.'});
+    await db.query('select community_test.assert_admin_access($1,$2,$3)',[s.uid,s.sid,'aal1']);
+    if(body.action==='list'){
+     if(typeof body.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(body.month))return reply(400,{error:'Neispravan mjesec.'});
+     const r=await db.query("select b.id,b.month,b.slot,b.price_fening,b.payment_status,a.name,coalesce((select sum(impressions) from admin_ad_probe.impressions_daily i where i.booking_id=b.id),0) impressions from admin_ad_probe.bookings b join admin_ad_probe.advertisers a on a.id=b.advertiser_id where b.month=$1 order by b.slot",[body.month+'-01']);return reply(200,{items:r.rows});
+    }
+    if(body.action==='create'){
+     if(typeof body.name!=='string'||body.name.trim().length<1||body.name.length>120||typeof body.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(body.month)||!Number.isInteger(body.slot)||body.slot<0||body.slot>33||!Number.isSafeInteger(body.price_fening)||body.price_fening<0)return reply(400,{error:'Neispravan zakup.'});
+     const id=randomUUID(),advertiser=randomUUID();try{await db.query('with a as (insert into admin_ad_probe.advertisers(id,name) values ($1,$2) returning id) insert into admin_ad_probe.bookings(id,advertiser_id,month,slot,price_fening) select $3,id,$4,$5,$6 from a',[advertiser,body.name.trim(),id,body.month+'-01',body.slot,body.price_fening]);return reply(200,{success:true})}catch(e){if(e.code==='23505')return reply(409,{error:'Termin je već zauzet.'});throw e}
+    }
+    if(body.action==='payment'){
+     if(!['paid','unpaid'].includes(body.status)||typeof body.id!=='string'||!/^[0-9a-f-]{36}$/i.test(body.id))return reply(400,{error:'Neispravna uplata.'});
+     const r=await db.query('update admin_ad_probe.bookings set payment_status=$1 where id=$2 returning id',[body.status,body.id]);return r.rows.length?reply(200,{success:true}):reply(404,{error:'Zakup nije pronađen.'});
+    }
     return reply(400,{error:'Nepoznata radnja.'});
    }
    const s=body.action?.startsWith('admin_')?(session(req,true)||session(req)):session(req);if(!s)return reply(401,{error:'Potrebna je anonimna prijava.'});
