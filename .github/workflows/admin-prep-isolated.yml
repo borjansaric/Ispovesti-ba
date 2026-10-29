@@ -14,4 +14,4 @@ jobs:
         with:
           node-version: '24'
       - run: npm ci --no-audit --no-fund
-      - run: node --test tests/advertising-isolated.test.mjs tests/chat-archive-sql-isolated.test.mjs
+      - run: node --test tests/advertising-http-isolated.test.mjs tests/chat-archive-http-isolated.test.mjs
