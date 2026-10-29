@@ -111,7 +111,7 @@ export async function createLocalPreview({dataDir,seed=true,staticDirectory=stat
    const filename=path.resolve(servingRoot,'.'+(decoded==='/'?'/index.html':decoded));
    if(!filename.startsWith(servingRoot+path.sep))return send(res,404,'Not found');
    const rel=path.relative(servingRoot,filename);
-   if(servingRoot!==staticRoot&&(!['index.html','config.js','app.js','api.js','captcha.js','original.css','styles.css','chat-admin.html','diagnostics.mjs','favicon.svg','share-card.png','privacy.html','terms.html','cookies.html'].includes(rel)&&!/^chat\/(client\.mjs|ui\.mjs|admin\.mjs|thread-model\.mjs|chat\.css)$/.test(rel)&&!rel.startsWith('vendor/')))return send(res,404,'Not found');
+   if(servingRoot!==staticRoot&&(!['index.html','config.js','app.js','api.js','captcha.js','original.css','styles.css','chat-admin.html','diagnostics.mjs','favicon.svg','share-card.png','privacy.html','terms.html','cookies.html','admin-prep/archive-ui.mjs'].includes(rel)&&!/^chat\/(client\.mjs|ui\.mjs|admin\.mjs|thread-model\.mjs|chat\.css)$/.test(rel)&&!rel.startsWith('vendor/')))return send(res,404,'Not found');
    const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.txt':'text/plain; charset=utf-8'};
    let bytes;try{bytes=await readFile(filename);}catch{return send(res,404,'Not found');}
    return send(res,200,req.method==='HEAD'?'':bytes,{'Content-Type':types[path.extname(filename)]||'application/octet-stream'});
