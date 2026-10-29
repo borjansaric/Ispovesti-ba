@@ -8,6 +8,6 @@ try{let slot=0;for(const viewport of [{width:390,height:844},{width:1366,height:
  const entry=page.getByRole('button',{name:'Uđi anonimno u probni chat'});await entry.click();await page.getByText(/Probni anonimni pristup je spreman/).waitFor();
  assert.ok(await page.locator('#chat-admin-tools').isVisible());await page.goto(base+'/');await page.getByText('Probni oglas: Probni oglašivač 0').waitFor();await page.waitForTimeout(1500);
  const counts=await page.request.post(base+'/api/admin-advertising',{headers:{Origin:base,'Content-Type':'application/json'},data:{action:'list',month:'2026-11'}});assert.equal(counts.status(),200);assert.ok(Number((await counts.json()).items[0].impressions)>=1);
- await page.locator('#open-chat').click();await page.locator('body.chat-open').waitFor();assert.equal(await page.locator('#banner-slot').isVisible(),false);await page.close();
+ await page.locator('#menu-toggle').click();await page.locator('#open-chat').click();await page.locator('body.chat-open').waitFor();assert.equal(await page.locator('#banner-slot').isVisible(),false);await page.close();
  }console.log('PASS isolated admin panel browser flow on mobile and desktop (local owner-key authentication, simulated data).')
 }finally{await browser.close();await stage.close()}
