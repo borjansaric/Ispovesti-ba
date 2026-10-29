@@ -30,7 +30,7 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  }});
  const old=server.listeners('request')[0];server.removeAllListeners('request');
  server.on('request',async(req,res)=>{
-  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive','/api/admin-advertising'].includes(pathname))return old(req,res);
+  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive','/api/admin-advertising','/api/owner-anonymous-chat'].includes(pathname))return old(req,res);
   const reply=(status,data,cookie,admin=false)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(cookie?{'Set-Cookie':(admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=')+cookie+'; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800'}:{})});res.end(JSON.stringify(data));};
   if(req.method!=='POST')return reply(405,{error:'Nedozvoljen zahtjev.'});
   const allowed=new Set(['http://'+req.headers.host,process.env.LOCAL_PREVIEW_ORIGIN||'http://terminal.local:4173']);
@@ -43,6 +43,14 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
     const {cookie}=await mint(true);return reply(200,{success:true,local:true},cookie,true);
    }
    if(pathname==='/api/chat-session'){if(session(req))return reply(200,{success:true});const {cookie}=await mint();return reply(200,{success:true},cookie);}
+   if(pathname==='/api/owner-anonymous-chat'){
+    const admin=session(req,true);if(!admin?.isOwner)return reply(403,{error:'Potreban je provjeren administrator.'});
+    await db.query('select community_test.assert_admin_access($1,$2,$3)',[admin.uid,admin.sid,'aal1']);
+    const {cookie,s}=await mint(false);
+    await db.query("select public.chat_test_dispatch_v2($1,'profile','{}'::jsonb,$2)",[s.uid,s.sid]);
+    await db.query("insert into chat_test.access(user_id,plan,expires_at,history_hours,source,granted_by) values($1,'30d',clock_timestamp()+interval '30 days',31,'admin_trial',$2)",[s.uid,admin.uid]);
+    return reply(200,{success:true},cookie);
+   }
    if(pathname==='/api/admin-archive'){
     const s=session(req,true);if(!s?.isOwner)return reply(403,{error:'Potreban je provjeren administrator.'});
     if(body.action==='list'){
