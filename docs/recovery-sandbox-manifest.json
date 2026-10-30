@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-27",
+  "status": "PREPARED_NOT_DEPLOYED",
+  "site_project_id": "appgprj_6ae0790b1fc88191b233d3dddf2b8ccf",
+  "expected_site_url": "https://ispovesti-admin-recovery-sandbox.jovialfrog11.chatgpt.site",
+  "site_owner_only": true,
+  "site_versions": 0,
+  "new_supabase_project_created": false,
+  "probe_auth_user_created": false,
+  "remote_sql_executed": false,
+  "github_pages_changed": false,
+  "existing_password_or_sessions_changed": false,
+  "tests": {
+    "all": 142,
+    "passed": 142,
+    "failed": 0,
+    "new": 7,
+    "real_e2e": "PENDING",
+    "visual": "PENDING"
+  },
+  "sha256": {
+    "admin-recovery/sandbox/admin.html": "b710d0ce293c98a90cc83aaf6419c7bd7d8e6075de0234630d3c3369a63260d2",
+    "admin-recovery/sandbox/admin.mjs": "5dc7f04dc627db30d24100c08d5aa0d306b71985b96f9563961ac48b65d952ec",
+    "admin-recovery/sandbox/config.example.json": "ea177c258a1539912bcb0e12f0d376d4fbd5d55dd8871e71a400747b543953fb",
+    "admin-recovery/sandbox/config.mjs": "fb05bdb6cf190935239809dd4019c6aeccbe88e29d292e4a9a3c67eadc118f1e",
+    "admin-recovery/sandbox/email-otp-template.html": "812fe3ebca0217aee5bdc31d7d7e613a1deabe50d6b056e16f68a6ac14a78da5",
+    "admin-recovery/sandbox/hosting-plan.json": "1c2327a67bf4d767b49beb437dc5b13a7ebad4be1714457cca54543f37047692",
+    "admin-recovery/sandbox/invite-account.mjs": "4d3e9e4e6e5257f64069f938937464a19371182f074dd971296425d0cb213643",
+    "admin-recovery/sandbox/login-handler.mjs": "928345baa39e902464fc62087b431c7496cb9c886ff7b12f2e7ed211b62c9266",
+    "admin-recovery/sandbox/prepare-isolated.sql": "7ab7ab490562b6507933a693c2adbf4194a83d978dd26b3adb4061dcba34bb03",
+    "admin-recovery/sandbox/server-settings.example.json": "4f5706fbc934e721304aabcbc5491f61155c938e5d5a9db7e082815d229c139c",
+    "docs/RECOVERY-SANDBOX-20261027.md": "f44a2de7636283fc2d2b4feb2fd60eda3ea674d9ee434fe631a7e8069f36a02d",
+    "scripts/build-recovery-sandbox.mjs": "07299ef4b8aa61b8f059354f5da3c66c80449f5ed0798539ec5b49ca30a1a68a",
+    "supabase/functions/admin-recovery-isolated-api/index.ts": "28cd1f9d372fb254ced1ac236042d6119431c7efb99193ecd9ba304090c57c92",
+    "supabase/functions/admin-recovery-sandbox-login/index.ts": "4ddc738625dbcc6bca6cdccc41baa07192452c35afecfeec1448da2c620f68bf",
+    "tests/recovery-sandbox.test.mjs": "82c19e4cd7da6976c1c1f49cfae3160c74c0e8f4573139b0f0fcc056534d138f"
+  }
+}

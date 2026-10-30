@@ -1,0 +1,12 @@
+// Data-only restore rehearsal. Never connects to the live database.
+import {PGlite} from '@electric-sql/pglite';
+import {readFile,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const file=process.argv[2];if(!file)throw Error('Provide private application-data.json');
+const data=JSON.parse(await readFile(file,'utf8')),db=new PGlite(),results=[];
+const q=x=>'"'+x.replaceAll('"','""')+'"';
+const stable=x=>Array.isArray(x)?x.map(stable):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,stable(x[k])])):x;
+const digest=rows=>createHash('sha256').update(JSON.stringify(rows.map(stable).map(x=>JSON.stringify(x)).sort())).digest('hex');
+try{await db.exec("set time zone 'UTC'");for(const schema of [...new Set(data.table_definitions.map(t=>t.schema))])if(schema!=='public')await db.exec('create schema '+q(schema));
+for(const t of data.table_definitions){const full=q(t.schema)+'.'+q(t.name),original=data.tables.find(x=>x.schema===t.schema&&x.name===t.name).rows;await db.exec('create table '+full+'('+t.columns.map(c=>q(c.name)+' '+c.type).join(',')+')');if(original.length)await db.query('insert into '+full+' select * from jsonb_populate_recordset(null::'+full+',$1::jsonb)',[JSON.stringify(original)]);const restored=(await db.query('select to_jsonb(t) r from '+full+' t')).rows.map(x=>x.r);const ok=digest(original)===digest(restored);results.push({table:t.schema+'.'+t.name,rows:original.length,sha256:digest(original),ok});if(!ok){console.log(JSON.stringify({table:t.schema+'.'+t.name,fields:t.columns.filter(c=>JSON.stringify(original[0]?.[c.name])!==JSON.stringify(restored[0]?.[c.name])).map(c=>({name:c.name,type:c.type,aLength:String(original[0]?.[c.name]).length,bLength:String(restored[0]?.[c.name]).length,diff:[...String(original[0]?.[c.name])].map((v,i)=>v===String(restored[0]?.[c.name])[i]?null:{position:i,a:v,b:String(restored[0]?.[c.name])[i]}).filter(Boolean)}))}));throw Error('Restore mismatch: '+t.schema+'.'+t.name);}}
+const report={verified_at:new Date().toISOString(),kind:'typed-table data-only local restore; not Auth/ACL/PITR restore',tables:results.length,rows:results.reduce((n,t)=>n+t.rows,0),all_equal:results.every(t=>t.ok),details:results};await writeFile(file.replace('application-data.json','restore-verification.json'),JSON.stringify(report,null,2),{mode:0o600});console.log(JSON.stringify({tables:report.tables,rows:report.rows,all_equal:report.all_equal}));}finally{await db.close();}

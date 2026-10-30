@@ -1,0 +1,107 @@
+name: Isolated recovery integration
+on:
+  push:
+    branches: [work/recovery-local-ci-20261028]
+permissions:
+  contents: read
+jobs:
+  recovery:
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+      - name: Start isolated local-only Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/recovery-local"
+          supabase init --workdir "$RUNNER_TEMP/recovery-local"
+          mkdir -p "$RUNNER_TEMP/recovery-local/supabase/templates"
+          printf '%s\n' '{{ .Token }}' > "$RUNNER_TEMP/recovery-local/supabase/templates/otp.html"
+          printf '\n[auth.email.template.magic_link]\nsubject = "Local OTP"\ncontent_path = "./supabase/templates/otp.html"\n' >> "$RUNNER_TEMP/recovery-local/supabase/config.toml"
+          supabase start --workdir "$RUNNER_TEMP/recovery-local"
+      - name: Verify recovery against local Auth and local database
+        shell: bash
+        run: |
+          set -euo pipefail
+          eval "$(supabase status --workdir "$RUNNER_TEMP/recovery-local" -o env)"
+          export API_URL ANON_KEY SERVICE_ROLE_KEY DB_URL
+          node .github/scripts/recovery-integration.mjs
+  turnstile-test:
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check Cloudflare test validation
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const api='https://challenges.cloudflare.com/turnstile/v0/siteverify';
+          async function check(secret){
+            const r=await fetch(api,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({secret,response:'XXXX.DUMMY.TOKEN.XXXX'}),signal:AbortSignal.timeout(15000)});
+            assert.ok(r.ok,'Cloudflare HTTP '+r.status);
+            return r.json();
+          }
+          const success=await check('1x0000000000000000000000000000000AA');
+          const fail=await check('2x0000000000000000000000000000000AA');
+          const duplicate=await check('3x0000000000000000000000000000000AA');
+          assert.equal(success.success,true);
+          assert.equal(fail.success,false);
+          assert.equal(duplicate.success,false);
+          assert.ok(duplicate['error-codes'].includes('timeout-or-duplicate'));
+          console.log('PASS Cloudflare test keys: accepted, rejected and duplicate token.');
+          console.log('Test response action:',success.action,'hostname:',success.hostname,'challenge_ts:',success.challenge_ts);
+          NODE
+  browser-test:
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browser test tools
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify recovery form on mobile and desktop
+        run: node .github/scripts/recovery-browser.mjs
+  combined-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+      - name: Install test tools
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1 nodemailer@6.10.1
+          npx playwright install --with-deps chromium
+      - name: Start isolated local Supabase and mail sink
+        run: |
+          mkdir -p "$RUNNER_TEMP/recovery-combined"
+          supabase init --workdir "$RUNNER_TEMP/recovery-combined"
+          sed -i 's/^# smtp_port = 54325$/smtp_port = 54325/' "$RUNNER_TEMP/recovery-combined/supabase/config.toml"
+          mkdir -p "$RUNNER_TEMP/recovery-combined/supabase/templates"
+          printf '%s\n' '{{ .Token }}' > "$RUNNER_TEMP/recovery-combined/supabase/templates/otp.html"
+          printf '\n[auth.email.template.magic_link]\nsubject = "Local OTP"\ncontent_path = "./supabase/templates/otp.html"\n' >> "$RUNNER_TEMP/recovery-combined/supabase/config.toml"
+          supabase start --workdir "$RUNNER_TEMP/recovery-combined"
+      - name: Run connected recovery browser flow
+        shell: bash
+        run: |
+          set -euo pipefail
+          eval "$(supabase status --workdir "$RUNNER_TEMP/recovery-combined" -o env)"
+          export API_URL ANON_KEY SERVICE_ROLE_KEY DB_URL
+          node .github/scripts/recovery-combined.mjs

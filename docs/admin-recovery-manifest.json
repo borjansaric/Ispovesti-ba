@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-27",
+  "scope": "TEST_PREPARATION_ONLY",
+  "public_deployment": false,
+  "sql_applied": false,
+  "password_or_sessions_changed": false,
+  "tests": {
+    "all": 135,
+    "passed": 135,
+    "failed": 0,
+    "new": 8,
+    "real_auth_mail_e2e": "NOT_RUN",
+    "browser_visual": "PENDING"
+  },
+  "token": {
+    "entropy_bits": 256,
+    "expires_seconds": 600,
+    "single_use": true,
+    "database_stores": "SHA-256 verifier only"
+  },
+  "request_limits": {
+    "cooldown_seconds": 60,
+    "per_owner_per_hour": 3,
+    "turnstile_required": true
+  },
+  "approval_blockers": [
+    "Review and approve complete test SQL before execution",
+    "Isolated Auth owner/project or explicit consent to change shared real Auth password/sessions",
+    "Configure server mail, approved sender and Turnstile without exposing secrets",
+    "Resolve shared Pages deployment boundary; no main ref update attempted"
+  ],
+  "sha256": {
+    "admin-recovery/handler.mjs": "9424972b56646fc9520c3577fee6bb7cb70d7ae752ee5334fd57bc18a5370f04",
+    "admin-recovery/client.mjs": "d8b8b53528ff2bcf65ef39bdb62bcc3fcb9dc2bad4133bc420ae49f6d91b752a",
+    "admin-recovery/forgot.mjs": "5ca15da5da6bf4b48293da1fc0d70de48041c628e575547b29d6239cd43bc37c",
+    "admin-recovery/reset.mjs": "8388365182a748445503233418690a7f328b00b03e657c34b3cad4310817a08f",
+    "admin-recovery/reset-template.html": "28cf5ff16dc32e5a43d389c354701aed196114cdcda3891374bdeb28d9357c68",
+    "supabase/functions/admin-recovery-test-api/index.ts": "4e051d10490209a34379bebbb2266b156ef853960ba72703cebf36b1cd528be6",
+    "supabase/admin-password-recovery-test.sql": "a8e603c95d702d8751f7782401e015d35b1119ca51fdb6a23562ce677986db9c",
+    "test/admin.html": "d621592f570399de19a351f9980c48072d16d5601caa2a34ea64db4525e3f3fb",
+    "test/admin-recovery.html": "28cf5ff16dc32e5a43d389c354701aed196114cdcda3891374bdeb28d9357c68",
+    "test/admin-recovery/client.mjs": "d8b8b53528ff2bcf65ef39bdb62bcc3fcb9dc2bad4133bc420ae49f6d91b752a",
+    "test/admin-recovery/forgot.mjs": "5ca15da5da6bf4b48293da1fc0d70de48041c628e575547b29d6239cd43bc37c",
+    "test/admin-recovery/reset.mjs": "8388365182a748445503233418690a7f328b00b03e657c34b3cad4310817a08f",
+    "scripts/build-test-review.mjs": "30b505ca28b1d44db7f712fbef4884d52e7f73ea9583170343f1c951b4223320",
+    "tests/admin-recovery.test.mjs": "f44f179aa935eb82ff2b91898cc142ca718833bc5e2f2b8bbff43681c38578fe",
+    "docs/ADMIN-RECOVERY-20261027.md": "8af569bf841da21b4da2b94ea3f62082e15a2a04622e40c23059705dd11d5b43"
+  }
+}

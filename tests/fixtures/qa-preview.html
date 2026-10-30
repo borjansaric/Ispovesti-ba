@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="description" content="Reci šta ti je na duši. Mjesto za anonimne ispovijesti, priče i komentare.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; base-uri 'none'; form-action 'self'; object-src 'none'">
+<meta name="referrer" content="no-referrer"><meta name="theme-color" content="#111111"><title>Ispovesti.ba — Reci šta ti je na duši.</title>
+<link rel="stylesheet" href="original.css"><link rel="stylesheet" href="styles.css?v=admin1"><script src="qa-preview-config.js" defer></script><script src="vendor/supabase.js" defer></script><script type="module" src="app.js?v=latency3"></script>
+</head>
+<body>
+<header class="site-header"><h1>Ispovesti.ba</h1><p>Neke priče nikad nisu zaboravljene. Neke nikad nisu ni ispričane.</p></header>
+<button type="button" class="menu-toggle" id="menu-toggle" aria-label="Otvori meni" aria-expanded="false" aria-controls="side-menu">☰</button>
+<div class="menu-overlay" id="menu-overlay" hidden></div>
+<aside class="side-menu" id="side-menu" aria-label="Glavni meni" hidden>
+<h2>Meni</h2>
+<nav class="menu-links" aria-label="Sortiranje ispovijesti">
+<button type="button" data-view="oldest" class="nav-button active">Sve ispovijesti</button>
+<button type="button" data-view="new" class="nav-button">Novo</button>
+<button type="button" data-view="popular" class="nav-button">Popularno</button>
+</nav>
+<section class="panel"><h2>Podijeli svoju ispovijest</h2><div id="sidebar-compose"></div></section>
+<section class="private-panel"><h2>Moje liste</h2><p class="hint">Privatne liste vezane su za anonimni nalog ovog pregledača i nisu javne.</p>
+<nav class="private-actions" aria-label="Moje privatne liste">
+<button type="button" data-view="favorites">♡ Omiljene ispovijesti</button>
+<button type="button" data-view="recently_read">Nedavno pročitane</button>
+<button type="button" data-view="my_comments">Moji komentari</button>
+</nav>
+<button type="button" class="text-button" id="privacy">O anonimnosti</button>
+<button type="button" class="text-button" id="rules">Pravila zajednice</button>
+</section>
+</aside>
+<main id="main"><section><h2 id="feed-title">Ispovijesti</h2><p id="feed-subtitle" hidden></p><div id="feed" aria-live="polite"></div><button type="button" id="more" class="load-more">Učitaj još ispovijesti</button></section></main>
+<footer>Ispovesti.ba — neke stvari jednostavno zaslužuju drugu šansu.</footer>
+<button type="button" id="write" hidden>Napiši ispovijest</button><button type="button" id="footer-privacy" hidden>O anonimnosti</button>
+<div id="preview" class="preview">UI provjera · podaci samo u ovom pregledniku</div>
+<dialog id="dialog"><div class="dialog-heading"><h2 id="dialog-title"></h2><button type="button" id="close-dialog" class="icon-button" aria-label="Zatvori">×</button></div><div id="dialog-body"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+</body></html>
