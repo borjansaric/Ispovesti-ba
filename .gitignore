@@ -8,3 +8,5 @@ node_modules/
 .production-review/
 
 .recovery-sandbox-review/
+
+node_modules

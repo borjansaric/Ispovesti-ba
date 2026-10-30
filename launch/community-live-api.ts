@@ -108,6 +108,19 @@ Deno.serve(async(req:Request)=>{
    if(!result.verified)fail('Potvrda nije dovršena. Prijavi se ponovo.',403);
    return send({verified:true});
   }
+  if(action==='admin_recovery_config_get'||action==='admin_recovery_config_set'){
+   let ciphertext;
+   if(action==='admin_recovery_config_set'&&typeof args.mail_key==='string'&&args.mail_key.trim()){
+    // Check the verified owner and e-mail proof before accepting any new secret.
+    await timedRpc('community_live_dispatch',uid,'admin_session',{_session_id:args._session_id});
+    const proof=await timedRpc('community_live_admin_email',uid,'status',{_session_id:args._session_id});
+    if(!proof.verified)fail('Potvrdi pristup e-mail kodom.',403);
+    const secret=args.mail_key.trim();if(!/^re_[A-Za-z0-9_-]{10,200}$/.test(secret))fail('Unesi ispravan Resend ključ za slanje.');
+    ciphertext=await encrypt(secret);
+   }
+   const r=await fetch(url+'/rest/v1/rpc/community_live_recovery_settings',{method:'POST',headers:{apikey:serviceKey,Authorization:'Bearer '+serviceKey,'Content-Type':'application/json'},body:JSON.stringify({p_action:action.endsWith('_get')?'get':'set',p_args:{_uid:uid,_session_id:args._session_id,enabled:args.enabled===true,sender:args.sender,mail_key_ciphertext:ciphertext}}),signal:AbortSignal.timeout(12000)});
+   if(!r.ok)fail('Postavke oporavka nisu sačuvane. Provjeri e-mail potvrdu, pošiljaoca i ključ.',403);return send(await r.json());
+  }
   if(action==='admin_security_get')return send(await timedRpc('community_live_security',uid,action,{_session_id:args._session_id,_aal:args._aal}));
   if(action==='admin_security_set'){
    const current=await timedRpc('community_live_security',uid,'admin_security_get',{_session_id:args._session_id,_aal:args._aal});

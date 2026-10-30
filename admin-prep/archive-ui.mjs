@@ -1,8 +1,8 @@
 import {chatRequest} from '../chat/client.mjs?v=room2';
 // Isolated preview only; every request requires the server-owned admin session.
-export function mountArchive(container){
+export function mountArchive(container,{request:remoteRequest,moderate=chatRequest,title:heading='Probna arhiva chata'}={}){
  const section=document.createElement('section'),title=document.createElement('h2'),form=document.createElement('form'),out=document.createElement('div'),status=document.createElement('p'),more=document.createElement('button');
- title.textContent='Probna arhiva chata';status.setAttribute('role','status');form.className='form';
+ title.textContent=heading;status.setAttribute('role','status');form.className='form';
  for(const [name,label,type] of [['text','Tekst','text'],['author','Anonimni ID','text'],['from','Od','date'],['to','Do','date']]){
   const l=document.createElement('label'),input=document.createElement('input');l.textContent=label;input.name=name;input.type=type;if(name==='text')input.maxLength=100;l.append(input);form.append(l);
  }
@@ -14,6 +14,7 @@ export function mountArchive(container){
  section.append(title,form,status,out,more);container.append(section);
  let filters={},cursor=null,generation=0,controller=null,loading=false,count=0;
  async function call(body,signal){
+  if(remoteRequest)return remoteRequest(body,signal);
   const r=await fetch('/api/admin-archive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'same-origin',signal});
   const result=await r.json();if(!r.ok)throw Error(result.error||'Arhiva nije dostupna.');return result;
  }
@@ -31,9 +32,9 @@ export function mountArchive(container){
    catch(err){if(err.name!=='AbortError'&&version===generation)status.textContent=err.message}finally{context.disabled=false}
   };
   const remove=document.createElement('button');remove.type='button';remove.className='action';remove.textContent=m.removed?'Vrati poruku':'Ukloni poruku';
-  remove.onclick=async()=>{remove.disabled=true;try{await chatRequest(m.removed?'admin_restore':'admin_remove',{id:m.id},true);await load(false)}catch(err){status.textContent=err.message}finally{remove.disabled=false}};
+  remove.onclick=async()=>{remove.disabled=true;try{await moderate(m.removed?'admin_restore':'admin_remove',{id:m.id},true);await load(false)}catch(err){status.textContent=err.message}finally{remove.disabled=false}};
   row.append(context,remove);
-  if(m.author_public_id){const ban=document.createElement('button');ban.type='button';ban.className='action';ban.textContent='Zabrani pristup 24 sata';ban.onclick=async()=>{ban.disabled=true;try{await chatRequest('admin_ban',{target:m.author_public_id,hours:24,reason:'Moderacija'},true);status.textContent='Probna zabrana je postavljena.'}catch(err){status.textContent=err.message}finally{ban.disabled=false}};row.append(ban)}
+  if(m.author_public_id){const ban=document.createElement('button');ban.type='button';ban.className='action';ban.textContent='Zabrani pristup 24 sata';ban.onclick=async()=>{ban.disabled=true;try{await moderate('admin_ban',{target:m.author_public_id,hours:24,reason:'Moderacija'},true);status.textContent='Zabrana je postavljena.'}catch(err){status.textContent=err.message}finally{ban.disabled=false}};row.append(ban);const unban=document.createElement('button');unban.type='button';unban.className='action';unban.textContent='Ukloni zabranu';unban.onclick=async()=>{unban.disabled=true;try{await moderate('admin_unban',{target:m.author_public_id},true);status.textContent='Zabrana je uklonjena.'}catch(e){status.textContent=e.message}finally{unban.disabled=false}};row.append(unban)}
   row.append(contextOut);return row;
  }
  async function load(append){

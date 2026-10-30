@@ -3,6 +3,7 @@ export const avatars={ghost:'👻',moon:'🌙',star:'⭐',owl:'🦉',fox:'🦊',
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const button=(label,run,cls='chat-small')=>{const b=el('button',cls,label);b.type='button';b.onclick=()=>Promise.resolve(run()).catch(e=>alert(e.message));return b;};
 export async function openChat(){
+ const live=window.ISPOVESTI_CONFIG?.chatEnvironment==='live';
  let stopMetrics=()=>{},metricsActive=false;
  const dialog=document.querySelector('#dialog'),root=el('section','chat-panel');let stopped=false,polling=false,timer,profile,sending=false,requestId,lastBody,initial=true,noOlder=false;
  const pages=[null];let messages=[];
@@ -13,8 +14,8 @@ export async function openChat(){
  const settings=el('section','chat-settings-content');settings.append(el('h2','','Pravila i privatnost'),el('p','','Jedna zajednička anonimna soba, bez privatnih poruka. Bez prijetnji, vrijeđanja, spama, linkova i dijeljenja tuđih ličnih podataka. Poruke imaju najviše 1.000 znakova; fotografije nisu dozvoljene.'),el('p','','Lično blokiranje sakriva poruke izabranog korisnika samo tebi. Administratorska zabrana onemogućava pristup chatu; administrator pregleda prijave i može ukloniti ili vratiti poruku.'),el('p','','Veza koristi HTTPS. Chat nije end-to-end šifrovan: ovlašteni moderatori i infrastruktura mogu pristupiti sadržaju. Ne šalji osjetljive podatke. Pomična istorija od 1, 7 ili 31 sat ograničava pristup porukama, a ne njihov rok čuvanja. Konačan rok čuvanja bit će objavljen prije stvarnog pokretanja.'),el('p','','Pristupni kod važi do prvobitnog isteka paketa. Ponovni unos ne produžava paket. Aktivacija u drugoj sesiji prekida prethodnu; dozvoljena su najviše tri prelaska u 24 sata. Kod čuvaj privatno: ko ga zna može pokušati preuzeti chat pristup. Stvarna SMS naplata još nije povezana.'));
  const account=el('div','chat-account'),blocked=el('div');settings.append(account,blocked);privacy.append(summary,settings);top.append(privacy);
  const status=el('p','chat-status');status.setAttribute('role','status');
- const gate=el('section','chat-gate'),codeForm=el('form','form'),label=el('label','','Pristupni kod'),code=el('input');code.type='password';code.autocomplete='off';code.maxLength=40;code.placeholder='TEST-…';code.setAttribute('aria-label','Pristupni kod');label.append(code);
- const enter=el('button','primary','Uđi');enter.type='submit';codeForm.append(label,enter);gate.append(codeForm,el('p','hint','Probna verzija: kod izdaje administrator, bez naplate. SMS slanje još nije povezano.'),button('Provjeri postojeći paket',loadProfile));
+ const gate=el('section','chat-gate'),codeForm=el('form','form'),label=el('label','','Pristupni kod'),code=el('input');code.type='password';code.autocomplete='off';code.maxLength=40;code.placeholder=live?'Pristupni kod':'TEST-…';codeForm.hidden=live;code.setAttribute('aria-label','Pristupni kod');label.append(code);
+ const enter=el('button','primary','Uđi');enter.type='submit';codeForm.append(label,enter);gate.append(codeForm,el('p','hint',live?'Kupovina pristupa još nije dostupna.':'Probna verzija: kod izdaje administrator, bez naplate. SMS slanje još nije povezano.'),button('Provjeri postojeći paket',loadProfile));
  const list=el('div','chat-messages');list.setAttribute('aria-label','Poruke u zajedničkoj sobi');list.setAttribute('role','log');list.setAttribute('aria-live','polite');
  const form=el('form','chat-compose'),text=el('textarea');text.maxLength=2000;text.required=true;text.rows=1;text.placeholder='Napiši poruku…';text.setAttribute('aria-label','Poruka u zajedničkom chatu');
  const send=el('button','chat-send','➤');send.type='submit';send.setAttribute('aria-label','Pošalji poruku');form.append(text,send);form.hidden=true;root.append(top,status,gate,list,form);
@@ -37,7 +38,7 @@ export async function openChat(){
   finally{polling=false;}
  }
  async function loadProfile(){try{profile=await chatRequest('profile');if(stopped)return;root.dataset.ownSide=profile.side||'left';
-   account.replaceChildren(el('p','hint','Tvoj testni chat ID: '+profile.id),el('p','hint',profile.active?'Paket '+profile.plan+' · ističe '+new Date(profile.expires_at).toLocaleString('sr-Latn'):'Nema aktivnog paketa.'));
+   account.replaceChildren(el('p','hint',(live?'Tvoj chat ID: ':'Tvoj testni chat ID: ')+profile.id),el('p','hint',profile.active?'Paket '+profile.plan+' · ističe '+new Date(profile.expires_at).toLocaleString('sr-Latn'):'Nema aktivnog paketa.'));
    blocked.replaceChildren();for(const [i,b]of (profile.blocked||[]).entries())blocked.append(button('Odblokiraj korisnika '+(i+1),async()=>{await chatRequest('unblock',{target:b.id});await loadProfile();}));
    gate.hidden=!!profile.active;form.hidden=!profile.active;if(profile.active){if(window.ISPOVESTI_CONFIG?.mode==='local'&&!metricsActive){metricsActive=true;import('../admin-prep/telemetry-local.mjs').then(m=>{if(!stopped&&profile?.active)stopMetrics=m.begin('chat')})}status.textContent='';await refresh();clearInterval(timer);timer=setInterval(()=>refresh(),1500);}else resetAccess('');
   }catch(e){resetAccess(e.message);}}

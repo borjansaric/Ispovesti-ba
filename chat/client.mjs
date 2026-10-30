@@ -8,11 +8,11 @@ export async function chatRequest(action,args={},admin=false){
  const headers={'Content-Type':'application/json'};let url;
  if(isLocal){await localSession();url='/api/chat';}
  else{
-  const config=window.ISPOVESTI_CONFIG||{};if(config.chatEnvironment!=='test')throw Error('Probni chat još nije uključen.');
+  const config=window.ISPOVESTI_CONFIG||{};if(!['test','live'].includes(config.chatEnvironment))throw Error('Probni chat još nije uključen.');
   const sb=authClient(admin);let {data,error}=await sb.auth.getSession();if(error)throw error;
   if(!data.session&&!admin){const signed=await sb.auth.signInAnonymously();if(signed.error)throw signed.error;data=signed.data;}
   if(!data.session)throw Error('Prvo se prijavi kao administrator.');
-  headers.Authorization='Bearer '+data.session.access_token;headers.apikey=config.publishableKey;url=config.supabaseUrl+'/functions/v1/chat-test-api';
+  headers.Authorization='Bearer '+data.session.access_token;headers.apikey=config.publishableKey;url=config.supabaseUrl+'/functions/v1/'+(config.chatEnvironment==='live'?'chat-live-api':'chat-test-api');
  }
  const r=await fetch(url,{method:'POST',headers,body:JSON.stringify({action,args}),credentials:'same-origin',signal:AbortSignal.timeout(15000),cache:'no-store'});const d=await r.json();
  if(!r.ok){const e=Error(d.error||'Chat trenutno nije dostupan.');e.status=r.status;throw e;}return d;

@@ -5,7 +5,7 @@ export async function hashToken(token){return Array.from(new Uint8Array(await cr
 function randomToken(){return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 export function recoveryHandler({config,store,auth,mail,captcha,delay=()=>new Promise(r=>setTimeout(r,250))}){
  const target=new URL(config.linkURL);
- if(target.protocol!=='https:'||!target.pathname.endsWith('/test/admin-recovery.html')||target.search||target.hash||target.username||target.password)throw Error('Recovery requires a fixed test HTTPS URL');
+ if(target.protocol!=='https:'||(!target.pathname.endsWith('/test/admin-recovery.html')&&!(config.environment==='live'&&target.pathname==='/Ispovesti-ba/admin-recovery.html'))||target.search||target.hash||target.username||target.password)throw Error('Recovery requires a fixed test HTTPS URL');
  const allowed=target.origin;
  return async req=>{
   const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Pragma':'no-cache','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Vary':'Origin'};
@@ -14,7 +14,7 @@ export function recoveryHandler({config,store,auth,mail,captcha,delay=()=>new Pr
   if(req.headers.get('origin')!==allowed)return send({error:'Nedozvoljeno porijeklo.'},403);
   if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
   if(req.method!=='POST')return send({error:'Nedozvoljen zahtjev.'},405);
-  if(!config.enabled||!config.authResetApproved)return send({error:'Probni oporavak još nije aktiviran.'},503);
+  if(!config.enabled||!config.authResetApproved)return send({error:config.environment==='live'?'Oporavak još nije povezan s e-mail servisom.':'Probni oporavak još nije aktiviran.'},503);
   try{
    const reader=req.body?.getReader();if(!reader)return send({error:'Neispravan zahtjev.'},400);
    let size=0,chunks=[];while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>4096){await reader.cancel();return send({error:'Zahtjev je prevelik.'},413);}chunks.push(value);}
