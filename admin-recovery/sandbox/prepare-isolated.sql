@@ -163,5 +163,12 @@ revoke all on function public.recovery_sandbox_login(uuid,text,jsonb) from publi
 grant execute on function public.recovery_sandbox_login(uuid,text,jsonb) to service_role;
 revoke all on all functions in schema recovery_sandbox from public,anon,authenticated;
 grant execute on all functions in schema recovery_sandbox to service_role;
+create function public.recovery_sandbox_owner() returns uuid
+language plpgsql security invoker set search_path='' as $$ begin
+ if current_user not in ('service_role','postgres') then raise exception 'Zabranjeno.' using errcode='42501';end if;
+ return (select user_id from recovery_sandbox.admins);
+end $$;
+revoke all on function public.recovery_sandbox_owner() from public,anon,authenticated;
+grant execute on function public.recovery_sandbox_owner() to service_role;
 notify pgrst,'reload schema';
 commit;
