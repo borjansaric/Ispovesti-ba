@@ -33,7 +33,7 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
  }});
  const old=server.listeners('request')[0];server.removeAllListeners('request');
  server.on('request',async(req,res)=>{
-  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat','/api/admin-archive','/api/admin-advertising','/api/owner-anonymous-chat','/api/local-metrics','/api/admin-metrics','/api/local-banner','/api/admin-community'].includes(pathname))return old(req,res);
+  const pathname=new URL(req.url,'http://'+req.headers.host).pathname;if(!['/api/chat-session','/api/chat-owner-login','/api/chat-owner-logout','/api/chat','/api/admin-archive','/api/admin-advertising','/api/owner-anonymous-chat','/api/local-metrics','/api/admin-metrics','/api/local-banner','/api/admin-community'].includes(pathname))return old(req,res);
   const reply=(status,data,cookie,admin=false)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(cookie?{'Set-Cookie':(admin?'ispovesti_chat_preview_admin=':'ispovesti_chat_preview=')+cookie+'; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800'}:{})});res.end(JSON.stringify(data));};
   if(req.method!=='POST')return reply(405,{error:'Nedozvoljen zahtjev.'});
   const allowed=new Set(['http://'+req.headers.host,process.env.LOCAL_PREVIEW_ORIGIN||'http://terminal.local:4173']);
@@ -44,6 +44,10 @@ export async function createChatPreview({ownerKey=randomBytes(32).toString('hex'
    if(pathname==='/api/chat-owner-login'){
     if(typeof body.key!=='string'||body.key.length!==ownerKey.length||!timingSafeEqual(Buffer.from(body.key),Buffer.from(ownerKey)))return reply(403,{error:'Potreban je privatni ključ vlasnika lokalnog pregleda.'});
     const {cookie}=await mint(true);return reply(200,{success:true,local:true},cookie,true);
+   }
+   if(pathname==='/api/chat-owner-logout'){
+    const ownerSession=session(req,true);if(ownerSession){for(const [key,value] of cookies)if(value===ownerSession)cookies.delete(key);tokens.delete(ownerSession.token)}
+    res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store','Set-Cookie':'ispovesti_chat_preview_admin=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'});return res.end('{"success":true}');
    }
    if(pathname==='/api/chat-session'){if(session(req))return reply(200,{success:true});const {cookie}=await mint();return reply(200,{success:true},cookie);}
    if(pathname==='/api/local-metrics'){
