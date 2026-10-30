@@ -5,7 +5,7 @@ await cp(new URL('vendor/',root),new URL('vendor/',out),{recursive:true});await 
 // Publish only the connected live clients; no trial generator or server source.
 for(const f of ['ui.mjs','client.mjs'])await copyFile(new URL('chat/'+f,root),new URL('chat/'+f,out));
 let chatClient=await readFile(new URL('chat/client.mjs',out),'utf8');
-chatClient=chatClient.slice(0,chatClient.indexOf('export const recoveryKey='));
+const marker=chatClient.indexOf('export const recoveryKey=');if(marker>=0)chatClient=chatClient.slice(0,marker);
 chatClient=chatClient.replace("(config.chatEnvironment==='live'?'chat-live-api':'chat-test-api')","'chat-live-api'");
 await writeFile(new URL('chat/client.mjs',out),chatClient);
 await copyFile(new URL('chat-admin.html',root),new URL('chat-admin.html',out));

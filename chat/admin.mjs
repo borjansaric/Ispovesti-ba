@@ -1,4 +1,4 @@
-import {chatRequest,trialCode} from './client.mjs?v=room2';import {isLocal} from '../api.js?v=room2';
+import {chatRequest} from './client.mjs?v=room2';import {trialCode} from './trial-client.mjs';import {isLocal} from '../api.js?v=room2';
 if(isLocal)import('../admin-prep/archive-ui.mjs').then(m=>m.mountArchive(document.querySelector('#chat-admin-tools')));
 if(isLocal)import('../admin-prep/advertising-ui.mjs').then(m=>m.mountAdvertising(document.querySelector('#chat-admin-tools')));
 if(isLocal)import('../admin-prep/owner-chat-ui.mjs').then(m=>m.mountOwnerChat(document.querySelector('#chat-admin-tools')));

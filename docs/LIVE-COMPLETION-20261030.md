@@ -76,3 +76,18 @@ Objava preko postojećeg Pages allowlist postupka. U browser izlaz ulaze samo
 klijenti, ne SQL, gateway/server adapteri ili servisni ključevi. Posebni site/probe
 projekat ostaje sačuvan, ali novi glavni UI ga ne koristi. Novi Cloudflare widget
 na telefonu nije potreban za ove glavne funkcije.
+
+## Završna objava klijenata
+
+Glavna objava4f226fa3706b90de83f0b1f98c01e3efcd22ae74 i oba Pages postupka
+41035993357/41035992337 su uspješni. Browser je otvorio novi glavni chat,
+koji ispravno prikazuje zatvorenu kupovinu bez paketa; nova glavna prijava
+prikazuje Zaboravljena lozinka. Nije unesena lozinka, OTP ili sintetička poruka.
+
+Provjera javnih datoteka je našla i uslovne testne adrese u generičkim root
+klijentima, iako ih allowlist builder uklanja. Root klijenti su zato dodatno
+ograničeni na glavni servis; testni generator je izdvojen u trial-client.mjs
+samo za lokalni/testni admin. Review builderi eksplicitno prilagođavaju svoj
+klijent. Zaštita na serveru već je odbijala probne radnje. Još20 relevantnih
+provjera nakon ove dorade prošlo je, uključujući sandbox/test pakovanje.
+Testno stablo i originalni CSS ostaju identični prethodnoj glavnoj objavi.

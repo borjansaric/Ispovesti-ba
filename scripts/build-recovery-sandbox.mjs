@@ -8,8 +8,8 @@ export async function buildSandbox(value){
  for(const f of ['original.css','styles.css','vendor/supabase.js','vendor/SUPABASE-LICENSE'])await copyFile(new URL(f,root),new URL('test/'+f,out));
  for(const f of ['client.mjs','forgot.mjs','reset.mjs']){
   let s=await readFile(new URL('admin-recovery/'+f,root),'utf8');
-  if(f==='client.mjs')s=s.replace("if(c.mode!=='live-test')", "if(c.mode!=='recovery-sandbox')").replace('admin-recovery-test-api','admin-recovery-isolated-api');
-  if(f==='forgot.mjs')s=s.replace("c.mode==='live-test'", "c.mode==='recovery-sandbox'");
+  if(f==='client.mjs')s=s.replace("if(c.mode!=='live')", "if(c.mode!=='recovery-sandbox')").replace('admin-recovery-live-api','admin-recovery-isolated-api');
+  if(f==='forgot.mjs')s=s.replace("['live-test','live'].includes(c.mode)", "c.mode==='recovery-sandbox'").replace(/const sitekey=.*?;/, 'const sitekey=c.recoverySitekey;');
   await writeFile(new URL('test/admin-recovery/'+f,out),s);
  }
  // The existing CAPTCHA helper is copied, but only explicit sandbox sitekey/action are used.
