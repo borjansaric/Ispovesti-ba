@@ -1,5 +1,9 @@
 # Povezivanje glavne administracije, chata i oporavka —30.10.2026.
 
+Najnovije završene funkcije statistike, zakupa, direktnog banera i kontakta:
+[OPERATIONS-20261030.md](OPERATIONS-20261030.md). Stariji navodi ispod o
+samo lokalnoj pripremi analitike/zakupa time su zamijenjeni.
+
 ## Naknadno završeno 30.10.2026. u 13:36 (Sarajevo)
 
 Ovaj odjeljak zamjenjuje starije navode ispod o nepotvrđenoj glavnoj prijavi,

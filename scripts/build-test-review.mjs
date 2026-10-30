@@ -10,7 +10,7 @@ let admin=await readFile(path.join(out,'admin.html'),'utf8');await writeFile(pat
 const text=await readFile(path.join(root,'dist/config.js'),'utf8');const config=JSON.parse(text.slice(text.indexOf('=')+1).trim().replace(/;$/,''));config.chatEnvironment='test';config.mode='live-test';await writeFile(path.join(out,'config.js'),'window.ISPOVESTI_CONFIG = '+JSON.stringify(config)+';\n');
 console.log('Test review bundle prepared in .test-review; /test/ and dist remain unchanged.');
 
-let index=await readFile(path.join(out,'index.html'),'utf8');await writeFile(path.join(out,'index.html'),index.replace('index,follow','noindex,nofollow'));
+let index=await readFile(path.join(out,'index.html'),'utf8');await writeFile(path.join(out,'index.html'),index.replace('index,follow','noindex,nofollow').replace('<link rel="stylesheet" href="live/banner.css">','').replace('<script type="module" src="live/banner.mjs"></script>','').replace(' · <a href="contact.html">Kontakt</a>',''));
 
 // Test-only recovery. The root/production administrator remains unchanged.
 await mkdir(path.join(out,'admin-recovery'),{recursive:true});
@@ -22,5 +22,5 @@ await writeFile(path.join(out,'admin.html'),recoveryAdmin.replace('</head>','<sc
 // Keep main clients live-only; this explicitly selected review uses its retained test client.
 await copyFile(path.join(root,'test/chat/client.mjs'),path.join(out,'chat/client.mjs'));
 await copyFile(path.join(root,'test/chat-admin.html'),path.join(out,'chat-admin.html'));
-let testAdmin=await readFile(path.join(out,'admin.html'),'utf8');testAdmin=testAdmin.replace('<script type="module" src="live/recovery-settings.mjs"></script>','');await writeFile(path.join(out,'admin.html'),testAdmin);
+let testAdmin=await readFile(path.join(out,'admin.html'),'utf8');testAdmin=testAdmin.replace('<script type="module" src="live/recovery-settings.mjs"></script>','').replace('<script type="module" src="live/operations.mjs"></script>','').replace('<link rel="stylesheet" href="live/operations.css">','');await writeFile(path.join(out,'admin.html'),testAdmin);
 let testRecovery=await readFile(path.join(out,'admin-recovery/client.mjs'),'utf8');testRecovery=testRecovery.replace("c.mode!=='live'","c.mode!=='live-test'").replaceAll('admin-recovery-live-api','admin-recovery-test-api');await writeFile(path.join(out,'admin-recovery/client.mjs'),testRecovery);

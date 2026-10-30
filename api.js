@@ -3,11 +3,11 @@ const config = window.ISPOVESTI_CONFIG || {};
 export const isPreview = config.mode === 'preview';
 export const isLocal = config.mode === 'local';
 export function prepareSubmission(kind,host){if(!isPreview&&!isLocal){prepareCaptcha({kind,host});void session().catch(()=>{});}}
-let client, sessionPromise;
+let client, adminClient, sessionPromise;
 export function authClient(admin = false) {
   if (isPreview) throw new Error('Administracija je dostupna samo na povezanom testnom ili živom okruženju.');
   if (!config.supabaseUrl || !config.publishableKey || !window.supabase) throw new Error('Veza sa serverom nije podešena.');
-  if (admin) return window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-admin-session', storage: window.sessionStorage } });
+  if (admin) return adminClient ||= window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-admin-session', storage: window.sessionStorage } });
   return client ||= window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-user-session' } });
 }
 async function session() {
@@ -41,7 +41,7 @@ export async function request(action, args = {}, adminSession = null, captchaHos
   if(config.mode==='local')return localRequest(action,args);
   if (isPreview) return previewRequest(action, args);
   const headers = { apikey: config.publishableKey, 'Content-Type': 'application/json' };
-  if (!['feed', 'comments', 'confession', 'captcha_config', 'activate_admin'].includes(action)) {
+  if (!['feed', 'comments', 'confession', 'captcha_config', 'activate_admin', 'public_contact'].includes(action)) {
     const authAt=performance.now();
     const s = adminSession || await session();
     if(action==='submit')performance.measure('ispovesti-submit-session',{start:authAt,end:performance.now()});

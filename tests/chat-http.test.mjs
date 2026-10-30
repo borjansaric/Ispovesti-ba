@@ -4,7 +4,7 @@ async function post(path,body={},cookie){const r=await fetch(base+path,{method:'
 const chat=(cookie,action,args={})=>post('/api/chat',{action,args},cookie);
 before(async()=>{stage=await createChatPreview({ownerKey:key});await new Promise(r=>stage.server.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+stage.server.address().port;});after(()=>stage.close());
 test('new UI preserves original CSS and serves an inert banner; secrets/server files are not served',async()=>{
- const html=await(await fetch(base+'/')).text();assert.match(html,/id="open-chat"/);assert.match(html,/id="banner-slot"[^>]*aria-label="Probno mjesto za reklamu"/);
+ const html=await(await fetch(base+'/')).text();assert.match(html,/id="open-chat"/);assert.match(html,/id="banner-slot"[^>]*aria-label="Prostor za reklamu"/);
  for(const file of ['original.css','styles.css'])assert.equal(await(await fetch(base+'/'+file)).text(),await readFile(new URL('../'+file,import.meta.url),'utf8'));
  for(const path of ['/chat/prepare-test.sql','/chat/gateway.mjs','/.local-stage/owner-key','/scripts/chat-preview.mjs'])assert.equal((await fetch(base+path)).status,404);
  assert.doesNotMatch(await(await fetch(base+'/config.js')).text(),new RegExp(key));

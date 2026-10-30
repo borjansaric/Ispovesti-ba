@@ -1,5 +1,7 @@
 # Ispovesti.ba — pregled produkcijske pripreme release12
 
+**Istorijski dokument od 26.10.2026.** Trenutno stanje glavnog sajta vodi se u [LIVE-COMPLETION](../docs/LIVE-COMPLETION-20261030.md) i [završnim operacijama](../docs/OPERATIONS-20261030.md). Već primijenjeni SQL se ne ponavlja.
+
 Aktuelni status 26.10.2026: pripremljeno i lokalno testirano, **nije primijenjeno na produkciju**. Osnovni sajt je besplatan. Posljednji javni /test/ je progressive11; nova release12 dorada nije objavljena. Testni chat ostaje nepromijenjen, produkcijski chat i naplata isključeni.
 
 Počni od [objedinjenog izvještaja](../docs/final-readiness-20261026.md), [konačne specifikacije](../docs/CURRENT-SPEC-20261026.md) i [redoslijeda prelaska](../docs/SAFE-CUTOVER-20261026.md). Starije READINESS bilješke su istorijske i ne predstavljaju stanje odobrenja.
