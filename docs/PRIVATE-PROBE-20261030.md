@@ -75,3 +75,29 @@ postojeće tajne iz browsera ili iz baze radi zaobilaženja te prijave.
 
 Glavni sajt nije objavljen ovim radom. Nemamo opravdanje da prijavimo potpuno
 završen projekat dok gore opisani povezani tok ne radi.
+
+## Ažuriranje nakon vlasnikovih postavki, 08:34 UTC
+
+Ovaj odjeljak zamjenjuje raniji opis praznog projekta i blokirane prijave.
+Vlasnik je u svom Chrome-u podesio novi Site URL i oba redirecta, Resend SMTP
+(ključ je sam unio), OTP šablon, rok600s i dužinu8, te napravio jedan potvrđeni
+probni nalog sopstvenom lozinkom. MCP je potvrdio tačno1 neanonimnog potvrđenog
+korisnika; e-mail, lozinka i ključ nisu čitani.
+
+Primijenjena je `isolated_recovery_bootstrap` samo u novom projektu. UID je
+izveden iz jedinog potvrđenog korisnika unutar transakcije. Dodatni service-only
+RPC `recovery_sandbox_owner()` vezuje login na taj zapis, bez UID-a u javnom
+izvoru ili novog ručnog podešavanja tajne. Nema ponavljanja bootstrap migracije.
+Provjera: jedan owner, poklapanje s Auth korisnikom, anon/authenticated nemaju
+EXECUTE na owner/login RPC. Advisors: 5 očekivanih INFO za privatne RLS tabele
+bez javnih politika (namjerno deny-all); WARN za isključenu provjeru kompromitovanih
+lozinki koja prema dashboardu traži Pro. Nije uključen plaćeni plan.
+
+Login Edge je verzija3. UI ima `loginReady:true`, `deploymentReady:false`:
+lozinka+OTP proba je dostupna, recovery ostaje neaktivan. Login bez tokena vraća401;
+recovery503. Devet relevantnih lokalnih testova prošlo. Stvarna dostava OTP-a i
+korisnička prijava tek slijede; nisu zamijenjeni lokalnim testovima.
+Privatni Site commit841e51d1bc7cfd1353a8c97c9cd61eaafe63045f i deploy
+appgdep_6ae4567581f481918b726b17b71f0ad4 su uspješni. Odvojena prijava nije
+kompletan moderatorski panel. Preostali recovery CAPTCHA/server secrets i
+povezivanje moderatorskih alata ostaju otvoreni. Ne tražiti tajne u razgovoru.
