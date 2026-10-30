@@ -1,14 +1,14 @@
 // Server-only login probe: no content, moderation or owner-activation operations.
 import {hashToken} from '../handler.mjs';
 const random=()=>btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-export function sandboxLogin({origin,ownerUID,auth,rpc}){return async req=>{
+export function sandboxLogin({origin,ownerUID,resolveOwner,auth,rpc}){return async req=>{
  const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'authorization,apikey,content-type','Access-Control-Allow-Methods':'POST,OPTIONS'};
  const send=(d,status=200)=>new Response(JSON.stringify(d),{status,headers});
  if(req.headers.get('origin')!==origin)return send({error:'Nedozvoljeno porijeklo.'},403);
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers});if(req.method!=='POST')return send({error:'Nedozvoljen metod.'},405);
  try{
   const token=req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];if(!token)return send({error:'Prijavi se probnim nalogom.'},401);
-  const user=await auth.getUser(token);if(!user||user.id!==ownerUID||user.is_anonymous!==false||!user.email_confirmed_at)return send({error:'Probni administratorski nalog je potreban.'},403);
+  const user=await auth.getUser(token);const expectedOwner=resolveOwner?await resolveOwner():ownerUID;if(!expectedOwner||!user||user.id!==expectedOwner||user.is_anonymous!==false||!user.email_confirmed_at)return send({error:'Probni administratorski nalog je potreban.'},403);
   const claims=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
   if(typeof claims.session_id!=='string'||!/^[0-9a-f-]{36}$/i.test(claims.session_id))return send({error:'Nedostaje provjerena sesija.'},403);
   const proof={_session_id:claims.session_id};await rpc('login',user.id,'session',proof);
