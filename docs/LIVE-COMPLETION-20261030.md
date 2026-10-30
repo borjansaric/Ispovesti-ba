@@ -1,5 +1,36 @@
 # Povezivanje glavne administracije, chata i oporavka —30.10.2026.
 
+## Naknadno završeno 30.10.2026. u 13:36 (Sarajevo)
+
+Ovaj odjeljak zamjenjuje starije navode ispod o nepotvrđenoj glavnoj prijavi,
+nepovezanom Resendu i otvorenom legacy API-ju. Vlasnik je slikama potvrdio
+stvarni glavni administratorski pristup, zatim uključene recovery postavke.
+Read-only provjera baze potvrdila je enabled=true i mail_configured=true;
+ključ nije pročitan niti otkriven. Na zahtjev vlasnika preskočena je provjera
+isporuke recovery e-maila i stvarna promjena lozinke. Ne predstavljati to kao
+potvrđen end-to-end reset.
+
+Poslije vlasnikovog „Dobro aj uradi sta treba“ primijenjena je migracija
+finalize_legacy_archive_20261030 iz launch/finalize-legacy-20261030.sql.
+Transakcija je zaključala šest starih public tabela, napravila dodatnu privatnu
+kopiju legacy_archive_20261030 i uporedila sve redove EXCEPT ALL u oba smjera.
+Ukupno 141 red: confessions17, comments25, votes2, private_user_lists91,
+submission_limits6, test_spam0. Originalni redovi i ranije kopije ostaju.
+Nema DELETE/TRUNCATE/DROP. Opozvane su sve dozvole PUBLIC/anon/authenticated/
+service_role nad šest starih tabela; provjereni i column grants. Nema javnih
+views ili izvršivih public funkcija koje bi zaobišle ovo zatvaranje.
+
+Poslije migracije provjereno: nula otvorenih starih grantova, šest privatnih
+kopija/141 red, glavni HTTP ready/live/CAPTCHA=true, svih šest starih REST
+čitanja odbijeno. Advisors nema novih WARN nalaza; ostaju raniji sistemski
+cron policy WARN i isključena Pro provjera kompromitovanih lozinki.
+Snapshot je u istom projektu, nije nezavisna infrastrukturna/Auth/PITR kopija.
+community_test/chat_test, /test/, glavni sadržaj, izgled i lozinka nisu mijenjani.
+
+Preostalo: SMS provajder/ugovor/cijene i naplata, izbor oglašivača, konačni
+pravni tekstovi/javni kontakt/domena i ranije nepovezana analitika/zakupi.
+Nisu aktivirani troškovi niti predstavljena cijela šira specifikacija završenom.
+
 Vlasnik je ponovo izričito zatražio završavanje preostalih dijelova poslije
 objave osnovnog sajta. Postojeća odobrenja važe, bez novog probnog naloga,
 isključivanja zaštite, redizajna, brisanja podataka ili dodatnih troškova.
