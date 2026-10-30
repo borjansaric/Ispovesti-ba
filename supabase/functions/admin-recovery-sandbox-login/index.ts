@@ -8,7 +8,7 @@ if(env('RECOVERY_ISOLATED_APPROVED')!=='true')throw Error('Only the approved iso
 const options={auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{fetch:(input:RequestInfo|URL,init?:RequestInit)=>fetch(input,{...init,signal:AbortSignal.timeout(12000)})}};
 const client=()=>createClient(url,env('SUPABASE_SERVICE_ROLE_KEY'),options),db=client();
 const check=<T>(r:{data:T,error:unknown})=>{if(r.error)throw Error('Probni servis nije dostupan');return r.data;};
-Deno.serve(sandboxLogin({origin:new URL(env('RECOVERY_LINK_URL')).origin,ownerUID:env('RECOVERY_OWNER_UID'),
+Deno.serve(sandboxLogin({origin:new URL(env('RECOVERY_LINK_URL')).origin,resolveOwner:async()=>check(await db.rpc('recovery_sandbox_owner')), 
  rpc:async(kind:string,uid:string,action:string,args:unknown)=>check(await db.rpc(kind==='email'?'recovery_sandbox_admin_email':'recovery_sandbox_login',{p_uid:uid,p_action:action,p_args:args})),
  auth:{getUser:async(token:string)=>check(await db.auth.getUser(token)).user,
  sendOtp:async(email:string)=>{check(await client().auth.signInWithOtp({email,options:{shouldCreateUser:false}}));},
