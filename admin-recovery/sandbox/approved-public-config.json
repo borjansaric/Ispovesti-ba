@@ -5,5 +5,6 @@
   "publishableKey": "sb_publishable_11-6h4LD6Nugaxn7B8M91Q_BL6lO-h6",
   "siteOrigin": "https://ispovesti-admin-recovery-sandbox.borjan-saric.chatgpt.site",
   "recoverySitekey": "",
-  "deploymentReady": false
+  "deploymentReady": false,
+  "loginReady": true
 }
