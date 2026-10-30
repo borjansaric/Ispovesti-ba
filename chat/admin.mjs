@@ -19,6 +19,7 @@ if(isLocal){
  const follow=document.createElement('button');follow.type='button';follow.className='action';follow.textContent='Pokreni praćenje uživo';$('#chat-admin-tools').append(follow);let liveTimer=null,liveBusy=false;
  const tick=async()=>{if(liveBusy||document.hidden)return;liveBusy=true;try{await messages()}catch(e){status(e.message)}finally{liveBusy=false}};
  follow.onclick=()=>{if(liveTimer){clearInterval(liveTimer);liveTimer=null;follow.textContent='Pokreni praćenje uživo';return}void tick();liveTimer=setInterval(tick,5000);follow.textContent='Zaustavi praćenje uživo'};
+ const logout=document.createElement('button');logout.type='button';logout.className='action';logout.textContent='Odjavi se';logout.onclick=async()=>{try{await fetch('/api/chat-owner-logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',credentials:'same-origin'});clearInterval(liveTimer);liveTimer=null;follow.textContent='Pokreni praćenje uživo';$('#chat-admin-tools').hidden=true;$('#chat-owner-login').hidden=false;status('Odjavljen si iz probnog panela.')}catch{status('Odjava nije uspjela.')}};$('#chat-admin-tools').append(logout);
  window.addEventListener('pagehide',()=>clearInterval(liveTimer),{once:true});
 }
 
