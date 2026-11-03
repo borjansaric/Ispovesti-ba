@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="bs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pregled mobilnog reklamnog banera</title>
+<style>
+  :root { color-scheme: dark; --gold:#d4af5a; --bg:#090909; --panel:#151515; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:22px 14px 40px; background:var(--bg); color:#eee; font:16px/1.45 system-ui,sans-serif; }
+  main { width:min(100%,420px); margin:0 auto; }
+  h1 { margin:0 0 8px; color:var(--gold); font-size:21px; }
+  .note { margin:0 0 22px; color:#bbb; font-size:14px; }
+  .site-head { padding:15px 12px; border:1px solid #393027; border-radius:10px 10px 0 0; background:#111; text-align:center; color:var(--gold); font-weight:700; letter-spacing:.08em; }
+  .slot-wrap { padding:10px; border:1px dashed #6d5b35; border-top:0; background:#101010; }
+  .slot-label { margin:0 0 7px; color:#b9a16c; font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+  .ad { width:100%; max-width:320px; aspect-ratio:3.2/1; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; overflow:hidden; border:1px solid #b18c3e; border-radius:7px; background:linear-gradient(110deg,#292216,#111 68%); }
+  .ad-copy { min-width:0; }
+  .ad-kicker { margin:0 0 3px; color:var(--gold); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+  .ad-title { margin:0; color:#fff; font-size:clamp(12px,4vw,16px); font-weight:750; line-height:1.15; }
+  .ad-desc { margin:3px 0 0; color:#d0c7b4; font-size:10px; }
+  .ad-cta { flex:0 0 auto; padding:7px 9px; border-radius:4px; background:var(--gold); color:#17130b; font-size:10px; font-weight:800; white-space:nowrap; }
+  .page-sample { min-height:230px; padding:18px 14px; border:1px solid #292929; border-top:0; background:#111; color:#bdbdbd; }
+  .page-sample h2 { margin:0 0 8px; color:#eee; font-size:17px; }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; margin:15px 0; }
+  button { padding:9px 12px; border:1px solid #6d5b35; border-radius:6px; background:#1a1a1a; color:#f0d58f; font:inherit; font-size:13px; }
+  .status { min-height:22px; color:#d4af5a; font-size:13px; }
+  .spec { margin-top:20px; padding:13px; border:1px solid #333; border-radius:8px; background:var(--panel); font-size:13px; }
+  .spec strong { color:var(--gold); }
+  .hidden { display:none; }
+  @media (max-width:360px) { body { padding-inline:9px; } .ad { padding:8px; } .ad-cta { padding:6px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mobilni baner — probni prikaz</h1>
+  <p class="note">Odvojeni prototip za pregled na telefonu. Ne mijenja javni sajt i ne učitava stvarne oglase.</p>
+  <div class="site-head">ISPovesti.ba</div>
+  <section class="slot-wrap" id="slot">
+    <p class="slot-label">Oglasni prostor · probni primjer</p>
+    <div class="ad" role="img" aria-label="Primjer reklamnog banera">
+      <div class="ad-copy">
+        <p class="ad-kicker">Sponzorisano</p>
+        <p class="ad-title">Vaša reklama ovdje</p>
+        <p class="ad-desc">Kratka poruka vašeg brenda</p>
+      </div>
+      <span class="ad-cta">Saznaj više</span>
+    </div>
+  </section>
+  <section class="page-sample">
+    <h2>Primjer sadržaja stranice</h2>
+    <p>Ovdje se nastavlja sadržaj sajta. Baner je prikazan iznad sadržaja i prilagođava se širini ekrana.</p>
+    <p>Ovo je samo vizuelna proba, ne stvarna integracija reklamnog sistema.</p>
+  </section>
+  <div class="controls">
+    <button type="button" id="chat">Simuliraj otvaranje chata</button>
+    <button type="button" id="close" disabled>Zatvori chat</button>
+  </div>
+  <p class="status" id="status" aria-live="polite">Chat je zatvoren — probni baner je vidljiv.</p>
+  <section class="spec">
+    <div><strong>Predloženi format:</strong> 320 × 100 px</div>
+    <div><strong>Prikaz:</strong> širina do 320 px, proporcionalno skaliranje na užim ekranima</div>
+    <div><strong>Status:</strong> prototip; dimenzije i ponašanje još nisu odobreni za produkciju</div>
+  </section>
+</main>
+<script>
+const slot = document.getElementById('slot');
+const chat = document.getElementById('chat');
+const close = document.getElementById('close');
+const status = document.getElementById('status');
+chat.addEventListener('click', () => {
+  slot.classList.add('hidden');
+  chat.disabled = true;
+  close.disabled = false;
+  status.textContent = 'Chat je otvoren — probni baner je sakriven.';
+});
+close.addEventListener('click', () => {
+  slot.classList.remove('hidden');
+  chat.disabled = false;
+  close.disabled = true;
+  status.textContent = 'Chat je zatvoren — probni baner je vidljiv.';
+});
+</script>
+</body>
+</html>
