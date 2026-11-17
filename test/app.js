@@ -82,10 +82,58 @@ function contentForm(kind,extra,done,onBack){
  return form;
 }
 function pulseHeart(b){if(b.getAttribute('aria-pressed')==='true'&&!matchMedia('(prefers-reduced-motion: reduce)').matches)b.animate([{transform:'scale(1)'},{transform:'scale(1.14)'},{transform:'scale(1)'}],{duration:200,easing:'ease-out'});}
+const REACTIONS=[['❤️','Sviđa mi se'],['😂','Smiješno'],['😢','Tužno'],['😮','Iznenađujuće'],['🤗','Podrška'],['😡','Osuđujem']];
+async function showReactionPicker(item,row){
+ row.querySelector('.reaction-picker')?.remove();
+ const panel=node('div','reaction-picker'),label=node('span','reaction-picker-label','Reakcija');
+ panel.append(label);
+ let status;
+ try{status=await request('reaction_status',{id:item.id});}catch(err){toast(err.message);return;}
+ if(status.can_change===false){panel.append(node('span','hint','Vrijeme za promjenu reakcije je isteklo.'));row.append(panel);return;}
+ for(const [emoji,title] of REACTIONS){
+  const b=button(emoji,async()=>{
+   b.disabled=true;
+   try{
+    const result=await request('reaction',{id:item.id,emoji});
+    panel.querySelectorAll('button').forEach(x=>x.classList.toggle('selected',x===b));
+    b.classList.add('selected');
+    panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija: '+title+' · možeš je promijeniti još 10 minuta';
+    panel.querySelectorAll('button').forEach(x=>x.disabled=result.can_change===false);
+   }catch(err){toast(err.message);b.disabled=false;}
+  },'reaction-choice');
+  b.title=title;b.setAttribute('aria-label',title);if(status.my_reaction===emoji)b.classList.add('selected');panel.append(b);
+ }
+ if(status.my_reaction)panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija · možeš je promijeniti još 10 minuta';
+ row.append(panel);
+}
+async function showReactionStats(item){
+ try{
+  const result=await request('reaction_status',{id:item.id});
+  if(!result.stats){toast('Statistika reakcija biće dostupna nakon isteka 10 minuta.');return;}
+  const content=node('div','reaction-statistics');
+  for(const [emoji,title] of REACTIONS){const line=node('div','reaction-stat-line');line.append(node('span','',emoji+' '+title),node('strong','',String(result.stats[emoji]||0)));content.append(line);}
+  modal('Statistika reakcija',content);
+ }catch(err){toast(err.message);}
+}
 function voteControls(item){
  const row=node('div','vote-controls');row.style.display='contents';const buttons=[];
- for(const [value,symbol] of [[1,'👍'],[-1,'👎']])buttons.push(button(symbol,async b=>{if(buttons.some(x=>x.dataset.pending==='true'))return;b.dataset.pending='true';b.disabled=true;try{render(await request('vote',{id:item.id,value}));}finally{delete b.dataset.pending;b.disabled=b.dataset.locked==='true';}}));
- function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.dataset.locked=String(r.can_change===false);b.disabled=r.can_change===false;b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=(i===0?'👍':'👎')+(r.likes===undefined?'':' '+(i===0?r.likes:r.dislikes));});}
+ for(const [value,symbol] of [[1,'👍'],[-1,'👎']]){
+  const b=button(symbol,async btn=>{
+   if(btn.dataset.locked==='true'||buttons.some(x=>x.dataset.pending==='true'))return;
+   btn.dataset.pending='true';btn.disabled=true;
+   try{render(await request('vote',{id:item.id,value}));await showReactionPicker(item,row);}
+   finally{delete btn.dataset.pending;btn.disabled=false;}
+  });
+  let holdTimer=null,longPressed=false;
+  b.addEventListener('pointerdown',()=>{
+   if(b.dataset.locked!=='true')return;
+   longPressed=false;holdTimer=setTimeout(()=>{longPressed=true;showReactionStats(item);},550);
+  });
+  for(const eventName of ['pointerup','pointerleave','pointercancel'])b.addEventListener(eventName,()=>{if(holdTimer)clearTimeout(holdTimer);holdTimer=null;});
+  b.addEventListener('click',event=>{if(longPressed){event.preventDefault();event.stopImmediatePropagation();longPressed=false;}});
+  buttons.push(b);
+ }
+ function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.dataset.locked=String(r.can_change===false);b.setAttribute('aria-disabled',String(r.can_change===false));b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=i===0?'👍':'👎';if(r.likes!==undefined)b.textContent+=(i===0?' '+r.likes:' '+r.dislikes);});}
  row.append(...buttons);render({});
  watchState(item.id,'vote',row,render);
  return row;
