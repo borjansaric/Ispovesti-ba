@@ -98,3 +98,83 @@ dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;bo
   50%{box-shadow:0 0 10px rgba(255,205,112,.88),0 0 21px rgba(220,47,55,.78),0 0 32px rgba(222,170,82,.48),0 0 39px rgba(174,30,39,.36),inset 0 0 13px rgba(255,225,160,.25),inset 0 0 21px rgba(190,35,46,.3)}
  }
 }
+
+
+/* Clean, compact vote and reaction controls: glow only, no square selection tile. */
+.vote-controls{display:inline-flex!important;gap:9px;align-items:center;flex-wrap:nowrap}
+.vote-controls>.action{
+ min-width:0!important;
+ padding:4px 7px!important;
+ border:1px solid transparent!important;
+ border-radius:999px!important;
+ background:transparent!important;
+ box-shadow:none!important;
+ color:#bdbdbd!important;
+ transition:color .2s ease,text-shadow .2s ease,filter .2s ease;
+}
+.vote-controls>.action.selected{
+ border-color:transparent!important;
+ background:transparent!important;
+ color:#f1d28d!important;
+ box-shadow:0 0 8px rgba(235,194,103,.48),0 0 17px rgba(221,177,83,.2)!important;
+ text-shadow:0 0 7px rgba(255,222,150,.72),0 0 14px rgba(238,194,103,.32)!important;
+}
+.vote-controls>.action.selected[aria-label="Negativan glas"]{
+ color:#e4b1aa!important;
+ box-shadow:0 0 8px rgba(225,169,105,.42),0 0 16px rgba(190,65,65,.3)!important;
+ text-shadow:0 0 7px rgba(245,185,155,.55),0 0 13px rgba(200,70,70,.25)!important;
+}
+.vote-controls>.action[aria-disabled="true"]{opacity:1!important}
+.reaction-picker{
+ display:flex!important;
+ flex-direction:row!important;
+ flex-wrap:nowrap!important;
+ align-items:center;
+ justify-content:flex-start;
+ gap:5px!important;
+ width:fit-content!important;
+ max-width:100%;
+ margin-top:7px!important;
+ padding:5px 7px!important;
+ border:1px solid #353535!important;
+ border-radius:20px!important;
+ background:#111!important;
+ box-shadow:none!important;
+ overflow-x:auto;
+}
+.reaction-picker-label{display:none!important}
+.reaction-choice{
+ flex:0 0 27px!important;
+ width:27px!important;
+ min-width:27px!important;
+ height:27px!important;
+ padding:0!important;
+ margin:0!important;
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ border:1px solid transparent!important;
+ border-radius:50%!important;
+ background:transparent!important;
+ box-shadow:none!important;
+ font-size:13px!important;
+ line-height:1!important;
+ filter:grayscale(1);
+ opacity:.72;
+ text-shadow:none!important;
+}
+.reaction-choice:hover,.reaction-choice:focus-visible{
+ border-color:#555!important;
+ background:#202020!important;
+ box-shadow:none!important;
+}
+.reaction-choice.selected{
+ filter:none;
+ opacity:1;
+ border-color:#8b7448!important;
+ background:#252017!important;
+ box-shadow:0 0 7px rgba(212,174,88,.28)!important;
+ text-shadow:none!important;
+ animation:none!important;
+}
+.reaction-choice:disabled{opacity:.45}
