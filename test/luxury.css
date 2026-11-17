@@ -135,3 +135,59 @@ button:disabled{opacity:.55}
 .vote-controls>.action[aria-label="Negativan glas"].selected{color:#ffd0d0!important;background:transparent!important;border:0!important;box-shadow:0 0 5px rgba(224,83,83,.52),0 0 13px rgba(205,55,58,.36)!important;text-shadow:0 0 7px rgba(255,115,115,.62)!important}
 .reaction-picker,.reaction-choice,.reaction-choice.selected{background:transparent!important;border:0!important;border-radius:0!important}
 .reaction-choice{filter:none!important;opacity:1!important}
+
+
+/* Refined warm-gold reaction language + distinct intertwined dislike glow. */
+:root{
+ --lux-gold-main:#d8b45f;
+ --lux-gold-light:#f4d98f;
+ --lux-gold-deep:#a98237;
+}
+.story-actions>.favorite,
+.comment-actions>.comment-heart,
+.comment-actions>.comment-heart.selected{
+ color:var(--lux-gold-main)!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;text-shadow:0 0 7px rgba(216,180,95,.28)!important;
+}
+.vote-controls>.action[aria-label="Pozitivan glas"].selected{
+ color:var(--lux-gold-light)!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:0 0 5px rgba(244,217,143,.48),0 0 12px rgba(216,180,95,.3)!important;
+ text-shadow:0 0 7px rgba(244,217,143,.62)!important;
+}
+.vote-controls>.action[aria-label="Negativan glas"].selected{
+ color:#f4d6b0!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:
+  0 0 5px rgba(244,217,143,.42),
+  0 0 9px rgba(216,180,95,.5),
+  0 0 13px rgba(190,55,53,.48),
+  0 0 19px rgba(216,180,95,.22),
+  0 0 25px rgba(190,55,53,.2)!important;
+ text-shadow:0 0 6px rgba(255,224,172,.72),0 0 10px rgba(225,65,61,.58)!important;
+}
+.reaction-picker{border:0!important;background:transparent!important;box-shadow:none!important}
+.reaction-picker-label{color:var(--lux-gold-main)!important}
+.reaction-choice,.reaction-choice:hover{
+ color:inherit!important;background:transparent!important;border:0!important;
+ border-radius:0!important;box-shadow:none!important;filter:none!important;
+}
+.reaction-choice.selected{
+ background:transparent!important;border:0!important;
+ box-shadow:0 0 5px rgba(244,217,143,.36),0 0 12px rgba(216,180,95,.3)!important;
+ text-shadow:0 0 6px rgba(244,217,143,.65),0 0 12px rgba(216,180,95,.42)!important;
+}
+/* Report/exclamation is intentionally smaller and red-only: no gold tint or frame. */
+.story-actions>.action.report,
+.comment-actions>.action.comment-report{
+ color:#e46a68!important;font-size:13px!important;line-height:1!important;
+ min-width:0!important;padding:3px 5px!important;margin:0!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;text-shadow:0 0 5px rgba(230,73,73,.72),0 0 10px rgba(190,35,42,.42)!important;
+}
+.story-actions>.action.report:hover,
+.comment-actions>.action.comment-report:hover{
+ color:#ff9995!important;background:transparent!important;
+ text-shadow:0 0 6px rgba(255,112,106,.82),0 0 12px rgba(190,35,42,.52)!important;
+}
