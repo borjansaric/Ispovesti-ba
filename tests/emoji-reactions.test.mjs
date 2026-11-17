@@ -31,7 +31,7 @@ test('picker explains the one permitted change and stats are requested by long p
  assert.match(app,/pointerdown/);
  assert.match(app,/showReactionStats\(item\)/);
  assert.match(app,/request\('reaction_status'/);
- assert.match(app,/izmjenu iskorištena/);
+ assert.match(app,/izmjena iskorištena/);
  assert.match(app,/prvom izboru/);
  assert.match(app,/function voteControls/);
  assert.match(app,/row\.append\(voteControls\(item\)/);
