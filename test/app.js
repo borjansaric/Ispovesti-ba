@@ -10,8 +10,14 @@ const stateListeners=new Set(),branchViews=new WeakMap();let stateTimer;
 function watchState(id,type,element,render){stateListeners.add({id,type,element,render});clearTimeout(stateTimer);stateTimer=setTimeout(refreshStates,30);}
 async function refreshStates(){
  for(const entry of stateListeners)if(!entry.element.isConnected)stateListeners.delete(entry);
- const ids=[...new Set([...stateListeners].map(e=>e.id))];
- for(let i=0;i<ids.length;i+=20){try{const result=await request('cards',{ids:ids.slice(i,i+20)});for(const e of stateListeners){const data=result[e.id]?.[e.type];if(data)e.render(data);}}catch{}}
+ const entries=[...stateListeners],ids=[...new Set(entries.map(e=>e.id))];
+ for(let i=0;i<ids.length;i+=20){try{const result=await request('cards',{ids:ids.slice(i,i+20)});for(const e of entries){const data=result[e.id]?.[e.type];if(data)e.render(data);}}catch{}}
+ await Promise.all(entries.map(async e=>{
+  try{
+   const status=await request('reaction_status',{id:e.id});
+   if(status.can_change!==undefined)e.element.querySelectorAll('.vote-controls button').forEach(b=>b.dataset.locked=String(status.can_change===false));
+  }catch{}
+ }));
 }
 setInterval(()=>{if(!document.hidden)refreshStates();},60000);
 setInterval(()=>{if(!document.hidden&&currentView.startsWith('daily_'))load(true);},60000);
@@ -122,7 +128,7 @@ function voteControls(item){
    if(longPressed){longPressed=false;return;}
    if(btn.dataset.locked==='true'||buttons.some(x=>x.dataset.pending==='true'))return;
    btn.dataset.pending='true';btn.disabled=true;
-   try{render(await request('vote',{id:item.id,value}));await showReactionPicker(item,row);}
+   try{render(await request('vote',{id:item.id,value}));await showReactionPicker(item,row);await refreshReactionLock();}
    finally{delete btn.dataset.pending;btn.disabled=false;}
   });
   let holdTimer=null,longPressed=false;
@@ -135,9 +141,13 @@ function voteControls(item){
   b.addEventListener('click',event=>{if(longPressed){event.preventDefault();event.stopImmediatePropagation();longPressed=false;}});
   buttons.push(b);
  }
- function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.dataset.locked=String(r.can_change===false);b.setAttribute('aria-disabled',String(r.can_change===false));b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=i===0?'👍':'👎';if(r.likes!==undefined)b.textContent+=(i===0?' '+r.likes:' '+r.dislikes);});}
+ function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.setAttribute('aria-disabled',String(b.dataset.locked==='true'));b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=i===0?'👍':'👎';if(r.likes!==undefined)b.textContent+=(i===0?' '+r.likes:' '+r.dislikes);});}
+ async function refreshReactionLock(){
+  try{const status=await request('reaction_status',{id:item.id});if(status.can_change!==undefined)buttons.forEach(b=>{b.dataset.locked=String(status.can_change===false);b.setAttribute('aria-disabled',String(status.can_change===false));});}catch{}
+ }
  row.append(...buttons);render({});
  watchState(item.id,'vote',row,render);
+ void refreshReactionLock();
  return row;
 }
 function report(item){const form=node('form','form');const label=node('label','','Razlog prijave'),select=node('select');for(const [value,text]of [['abuse','Vrijeđanje ili uznemiravanje'],['threat','Prijetnje'],['spam','Spam'],['other','Ostalo']]){const o=node('option','',text);o.value=value;select.append(o);}label.append(select);const send=node('button','primary','Pošalji prijavu');form.append(label,send);let sending=false;form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;try{await request('report',{id:item.id,reason:select.value});dialog.close();toast('Prijava je zabilježena. Hvala.');}catch(err){toast(err.message);}finally{sending=false;send.disabled=false;}};modal('Prijavi sadržaj',form);}
