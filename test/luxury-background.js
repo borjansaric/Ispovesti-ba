@@ -5,7 +5,7 @@
  const update=()=>{
   scheduled=false;
   const max=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
-  root.style.setProperty('--lux-scroll',(window.scrollY/max).toFixed(4));
+  root.style.setProperty('--lux-scroll-y',(-window.scrollY*.055).toFixed(1)+'px');
  };
  window.addEventListener('scroll',()=>{
   if(!scheduled){scheduled=true;requestAnimationFrame(update);}
