@@ -89,7 +89,7 @@ async function showReactionPicker(item,row){
  panel.append(label);
  let status;
  try{status=await request('reaction_status',{id:item.id});}catch(err){toast(err.message);return;}
- if(status.can_change===false){panel.append(node('span','hint','Vrijeme za promjenu reakcije je isteklo.'));row.append(panel);return;}
+ if(status.can_change===false){panel.append(node('span','hint',status.change_used?'Već si iskoristio jedinu dozvoljenu promjenu reakcije.':'Isteklo je 10 minuta od prve reakcije.'));row.append(panel);return;}
  for(const [emoji,title] of REACTIONS){
   const b=button(emoji,async()=>{
    b.disabled=true;
@@ -97,13 +97,13 @@ async function showReactionPicker(item,row){
     const result=await request('reaction',{id:item.id,emoji});
     panel.querySelectorAll('button').forEach(x=>x.classList.toggle('selected',x===b));
     b.classList.add('selected');
-    panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija: '+title+' · možeš je mijenjati do isteka 10 minuta od glasanja';
+    panel.querySelector('.reaction-picker-label').textContent=result.change_used?'Tvoja reakcija: '+title+' · izmjena iskorištena':'Tvoja reakcija: '+title+' · možeš je promijeniti još jednom u roku od 10 minuta od prvog izbora';
     panel.querySelectorAll('button').forEach(x=>x.disabled=result.can_change===false);
    }catch(err){toast(err.message);b.disabled=false;}
   },'reaction-choice');
   b.title=title;b.setAttribute('aria-label',title);if(status.my_reaction===emoji)b.classList.add('selected');panel.append(b);
  }
- if(status.my_reaction)panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija · možeš je mijenjati do isteka 10 minuta od glasanja';
+ if(status.my_reaction)panel.querySelector('.reaction-picker-label').textContent=status.change_used?'Tvoja reakcija · izmjena iskorištena': 'Tvoja reakcija · možeš je promijeniti još jednom u roku od 10 minuta od prvog izbora';
  row.append(panel);
 }
 async function showReactionStats(item){
