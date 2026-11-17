@@ -8,7 +8,8 @@ This feature is isolated to the `community_test` schema and the `/test/` applica
 - A user can hold one emoji reaction per content item. The unique key is (content_id, user_id), so the reaction can be changed during the same ten-minute vote window.
 - The ten-minute window starts with the user's first vote for that item. After it expires, the vote and emoji reaction are locked.
 - Emoji counts are not returned before the vote lock expires.
-- After the lock, a long press on either 👍 or 👎 requests and displays aggregate emoji counts.
+- The long-press control is unlocked from the emoji reaction status, not the separate 👍/👎 vote status. It becomes available when the reaction is locked (after the one permitted change or after the ten-minute window expires).
+- Aggregate counts remain hidden until the full ten minutes from the first emoji choice have elapsed; a long press before then explains that statistics are not yet available.
 - Individual users' reactions are never exposed; only the current user's own selection and aggregate totals are returned.
 - The same vote/reaction component is used by confessions, comments, and replies.
 
