@@ -83,7 +83,7 @@ function contentForm(kind,extra,done,onBack){
 }
 function pulseHeart(b){if(b.getAttribute('aria-pressed')==='true'&&!matchMedia('(prefers-reduced-motion: reduce)').matches)b.animate([{transform:'scale(1)'},{transform:'scale(1.14)'},{transform:'scale(1)'}],{duration:200,easing:'ease-out'});}
 const REACTIONS=[['❤️','Sviđa mi se'],['😂','Smiješno'],['😢','Tužno'],['😮','Iznenađujuće'],['🤗','Podrška'],['😡','Osuđujem']];
-async function showReactionPicker(item,row){
+async async function showReactionPicker(item,row){
  row.querySelector('.reaction-picker')?.remove();
  const panel=node('div','reaction-picker'),label=node('span','reaction-picker-label','Reakcija');
  panel.append(label);
