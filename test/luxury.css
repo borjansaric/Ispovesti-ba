@@ -178,7 +178,7 @@ button:disabled{opacity:.55}
  box-shadow:0 0 5px rgba(244,217,143,.36),0 0 12px rgba(216,180,95,.3)!important;
  text-shadow:0 0 6px rgba(244,217,143,.65),0 0 12px rgba(216,180,95,.42)!important;
 }
-/* Report/exclamation is intentionally smaller and red-only: no gold tint or frame. */
+/* Report/exclamation is intentionally larger and red-only: no gold tint or frame. */
 .story-actions>.action.report,
 .comment-actions>.action.comment-report{
  color:#e46a68!important;font-size:20px!important;line-height:1!important;
