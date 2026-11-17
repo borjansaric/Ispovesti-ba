@@ -36,64 +36,158 @@ body::after{
 .comment{padding:9px 0!important}
 .replies,.comment-replies{padding-left:12px!important}
 .comments-area,.comments{border-top:1px solid rgba(201,167,91,.16)!important}
-button,.action,.nav-button,.daily-tab,.reply-button,.load-more,.text-button,.icon-button{
- border:0!important;border-radius:0!important;box-shadow:none!important;outline:none;
+
+/* Ispovesti.ba — restrained black/gold presentation for the isolated test app.
+   Functional controls remain accessible; decorative frames and tiles are removed. */
+:root{--gold:#d6b15e;--gold-soft:#f0d58e;--red-glow:rgba(205,55,58,.58)}
+body{background:#0b0b0b;color:#eee}
+.panel,.story,.private-panel{
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;padding:16px 0!important;
 }
-button:focus-visible,a:focus-visible{outline:0!important;text-shadow:0 0 10px rgba(220,184,105,.55)}
-.story-actions,.comment-actions{position:relative}
-.story-actions .action,.comment-actions .action,.comment-actions .comment-heart,.comment-actions .reply-toggle,
-.reply-button,.text-button,.private-actions button,.menu-links button,.daily-tab,.load-more{
- background:transparent!important;color:#c9a75b!important;border:0!important;border-radius:0!important;
-}
-.story-actions .action.selected,.comment-actions .action.selected,.comment-actions .comment-heart.selected,
-.private-actions button.active,.menu-links button.active,.daily-tab.active{
- color:#f1d99e!important;background:transparent!important;border:0!important;
- text-shadow:0 0 7px rgba(232,196,119,.55),0 0 18px rgba(201,167,91,.22)!important;
- box-shadow:none!important
-}
-.menu-toggle{background:transparent!important;border:0!important;box-shadow:none!important}
-.side-menu{background:rgba(10,10,10,.97)!important;border:0!important;box-shadow:12px 0 45px #0009!important}
-.side-menu .panel,.side-menu .private-panel{background:transparent!important;border:0!important}
-.daily-tabs{gap:22px!important;border-bottom:1px solid rgba(201,167,91,.18);padding-bottom:8px}
-.daily-tab{position:relative;padding:8px 2px!important}
-.daily-tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:1px;background:linear-gradient(90deg,transparent,var(--lux-gold),transparent)}
-.daily-day-heading{border:0!important}
-.form input,.form select,.form textarea,textarea{
- background:rgba(8,8,8,.65)!important;border:0!important;border-bottom:1px solid rgba(201,167,91,.35)!important;border-radius:0!important;
- box-shadow:none!important
-}
-.form input:focus,.form select:focus,.form textarea:focus,textarea:focus{border-bottom-color:var(--lux-gold)!important;outline:0!important}
-dialog,.thread-dialog{border:0!important;border-radius:0!important;background:rgba(12,12,12,.98)!important;box-shadow:0 20px 80px #000b!important}
-#toast{border:0!important;border-radius:0!important;background:#19150d!important;box-shadow:0 8px 30px #0009!important}
-.vote-controls>.action.selected{background:transparent!important;border:0!important;box-shadow:none!important}
-.reaction-picker{
- position:absolute!important;left:0;top:50%;transform:translateY(-50%);z-index:50;
- display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center;
- gap:8px!important;width:max-content!important;max-width:min(100%,340px)!important;margin:0!important;padding:4px 0!important;
- border:0!important;border-radius:0!important;background:rgba(8,8,8,.96)!important;box-shadow:0 0 28px 12px rgba(0,0,0,.85)!important;overflow-x:auto
-}
-.reaction-picker-label{display:none!important}
-.reaction-choice{
- flex:0 0 30px!important;width:30px!important;min-width:30px!important;height:30px!important;padding:0!important;margin:0!important;
- display:inline-flex;align-items:center;justify-content:center;font-size:17px!important;line-height:1!important;
- border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
- filter:none!important;opacity:.84!important;text-shadow:0 1px 5px #000!important;
- transition:opacity .16s ease,filter .16s ease,transform .16s ease!important
-}
-.reaction-choice:hover,.reaction-choice:focus-visible{background:transparent!important;border:0!important;box-shadow:none!important;opacity:1!important;transform:scale(1.08)}
-.reaction-choice.selected{
- opacity:1!important;filter:saturate(1.12) brightness(1.04)!important;
- background:transparent!important;border:0!important;
+.story{border-bottom:1px solid rgba(214,177,94,.17)!important;margin-bottom:20px!important}
+.private-panel{margin:0 auto 22px!important}
+.comment{background:transparent!important;border:0!important;border-left:0!important;border-radius:0!important;padding:8px 0!important}
+.replies,.comment-replies{border-left:1px solid rgba(214,177,94,.22)!important}
+.comments-area{border-top:1px solid rgba(214,177,94,.2)!important}
+button,.action,.reply-button,.nav-button,.daily-tab,.load-more,.text-button,
+.icon-button,.comment-heart,.comment-report,.vote-controls button,.reaction-choice{
+ border:0!important;border-radius:0!important;outline-offset:4px;
  box-shadow:none!important;
- text-shadow:0 0 5px rgba(255,255,255,.45),0 0 12px rgba(221,178,85,.8),0 0 22px rgba(221,178,85,.45)!important;
- animation:none!important
 }
-.reaction-choice:disabled{opacity:.38!important}
-@media(max-width:640px){
- :root{--lux-figure-size:clamp(260px,74vw,360px)}
- body::before{background-position:left -104px top calc(4vh + var(--lux-scroll-y,0px)),right -104px top calc(4vh + var(--lux-scroll-y,0px)),center,center,center;opacity:.82}
- .story{padding-left:1px!important;padding-right:1px!important}
- .reaction-picker{max-width:calc(100vw - 54px)!important;gap:6px!important}
- .reaction-choice{flex-basis:28px!important;width:28px!important;min-width:28px!important;height:28px!important;font-size:16px!important}
+button{background:transparent;color:var(--gold);padding:7px 5px}
+button:hover{color:var(--gold-soft);background:transparent}
+button:disabled{opacity:.55}
+.action,.vote-controls>.action,.comment>.action,.reply-button,.text-button,
+.icon-button,.comment-report,.comment-heart{
+ background:transparent!important;color:var(--gold)!important;
+ padding:5px 7px!important;margin:0!important;
 }
-@media(prefers-reduced-motion:reduce){body::before,body::after{transition:none!important;transform:none!important}}
+.story-actions,.comment-actions,.vote-controls{gap:12px!important}
+.vote-controls{display:inline-flex!important;align-items:center;gap:12px!important}
+.vote-controls>.action{min-width:0!important;font-size:15px!important}
+.vote-controls>.action.selected{
+ color:var(--gold-soft)!important;
+ background:transparent!important;
+ box-shadow:0 0 5px rgba(240,213,142,.42),0 0 12px rgba(214,177,94,.24)!important;
+ text-shadow:0 0 7px rgba(240,213,142,.65)!important;
+}
+.vote-controls>.action.selected[aria-label="Negativan glas"]{
+ color:#ffd0d0!important;
+ background:transparent!important;
+ box-shadow:0 0 5px rgba(224,83,83,.6),0 0 13px rgba(205,55,58,.42)!important;
+ text-shadow:0 0 7px rgba(255,115,115,.72)!important;
+}
+.comment-heart,.comment-heart.selected{
+ color:var(--gold)!important;background:transparent!important;
+ box-shadow:none!important;text-shadow:none!important;font-size:19px!important;
+}
+.comment-report{color:var(--gold)!important;font-size:16px!important}
+.reaction-picker{
+ display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;
+ margin-top:9px;padding:7px 0!important;border:0!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;
+}
+.reaction-picker-label{flex-basis:100%;font-size:11px;color:#aaa}
+.reaction-choice{
+ min-width:0!important;padding:3px 4px!important;margin:0!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ filter:none!important;opacity:1!important;font-size:21px!important;
+ box-shadow:none!important;text-shadow:none!important;
+ transition:transform .16s ease,text-shadow .16s ease;
+}
+.reaction-choice:hover{background:transparent!important;transform:scale(1.08)}
+.reaction-choice.selected{
+ background:transparent!important;border:0!important;
+ box-shadow:none!important;opacity:1!important;
+ text-shadow:0 0 5px rgba(255,255,255,.6),0 0 11px rgba(214,177,94,.52)!important;
+ transform:scale(1.12);
+}
+.reaction-choice:disabled{opacity:.75!important}
+.daily-tabs{gap:18px!important;border-bottom:1px solid rgba(214,177,94,.22);padding-bottom:8px}
+.daily-tab{background:transparent!important;color:#aaa!important;padding:8px 2px!important}
+.daily-tab.active{color:var(--gold)!important;border-bottom:1px solid var(--gold)!important}
+.daily-day-heading{border-bottom:1px solid rgba(214,177,94,.2)!important}
+.load-more{width:auto!important;display:block!important;margin:18px auto!important;background:transparent!important;color:var(--gold)!important}
+.menu-toggle{background:transparent!important;border:0!important;color:var(--gold)!important;box-shadow:none!important}
+.menu-links button,.side-menu .private-actions button{
+ background:transparent!important;border:0!important;border-radius:0!important;
+ text-align:left;color:#ddd;padding:8px 0!important;
+}
+.menu-links button.active,.side-menu .private-actions button.active{
+ color:var(--gold)!important;background:transparent!important;border:0!important;
+}
+.side-menu{background:#101010!important;border-right:1px solid rgba(214,177,94,.18)!important;box-shadow:none!important}
+.side-menu .panel{background:transparent!important;border:0!important;box-shadow:none!important}
+.form input,.form select,textarea{
+ background:#101010;color:#eee;border:1px solid #454545;border-radius:3px;
+}
+.dialog-heading .icon-button{padding:0 5px!important}
+#toast{border:0!important;border-radius:3px!important;box-shadow:none!important}
+.preview{border:0!important;border-radius:0!important}
+@media(prefers-reduced-motion:reduce){.reaction-choice{transition:none}}
+
+/* Harmonize hearts and positive votes; keep a restrained red dislike glow. */
+.story-actions>.favorite,.comment-actions>.comment-heart,
+.comment-actions>.comment-heart.selected{color:#d6b15e!important;background:transparent!important;border:0!important;box-shadow:none!important;text-shadow:none!important}
+.vote-controls>.action[aria-label="Pozitivan glas"].selected,
+.vote-controls>.action[aria-label="Pozitivan glas"]:active{color:#f0d58e!important;background:transparent!important;border:0!important;box-shadow:0 0 5px rgba(240,213,142,.38),0 0 11px rgba(214,177,94,.2)!important;text-shadow:0 0 7px rgba(240,213,142,.5)!important}
+.vote-controls>.action[aria-label="Negativan glas"].selected{color:#ffd0d0!important;background:transparent!important;border:0!important;box-shadow:0 0 5px rgba(224,83,83,.52),0 0 13px rgba(205,55,58,.36)!important;text-shadow:0 0 7px rgba(255,115,115,.62)!important}
+.reaction-picker,.reaction-choice,.reaction-choice.selected{background:transparent!important;border:0!important;border-radius:0!important}
+.reaction-choice{filter:none!important;opacity:1!important}
+
+
+/* Refined warm-gold reaction language + distinct intertwined dislike glow. */
+:root{
+ --lux-gold-main:#d8b45f;
+ --lux-gold-light:#f4d98f;
+ --lux-gold-deep:#a98237;
+}
+.story-actions>.favorite,
+.comment-actions>.comment-heart,
+.comment-actions>.comment-heart.selected{
+ color:var(--lux-gold-main)!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;text-shadow:0 0 7px rgba(216,180,95,.28)!important;
+}
+.vote-controls>.action[aria-label="Pozitivan glas"].selected{
+ color:var(--lux-gold-light)!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:0 0 5px rgba(244,217,143,.48),0 0 12px rgba(216,180,95,.3)!important;
+ text-shadow:0 0 7px rgba(244,217,143,.62)!important;
+}
+.vote-controls>.action[aria-label="Negativan glas"].selected{
+ color:#f4d6b0!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:
+  0 0 5px rgba(244,217,143,.42),
+  0 0 9px rgba(216,180,95,.5),
+  0 0 13px rgba(190,55,53,.48),
+  0 0 19px rgba(216,180,95,.22),
+  0 0 25px rgba(190,55,53,.2)!important;
+ text-shadow:0 0 6px rgba(255,224,172,.72),0 0 10px rgba(225,65,61,.58)!important;
+}
+.reaction-picker{border:0!important;background:transparent!important;box-shadow:none!important}
+.reaction-picker-label{color:var(--lux-gold-main)!important}
+.reaction-choice,.reaction-choice:hover{
+ color:inherit!important;background:transparent!important;border:0!important;
+ border-radius:0!important;box-shadow:none!important;filter:none!important;
+}
+.reaction-choice.selected{
+ background:transparent!important;border:0!important;
+ box-shadow:0 0 5px rgba(244,217,143,.36),0 0 12px rgba(216,180,95,.3)!important;
+ text-shadow:0 0 6px rgba(244,217,143,.65),0 0 12px rgba(216,180,95,.42)!important;
+}
+/* Report/exclamation is intentionally larger and red-only: no gold tint or frame. */
+.story-actions>.action.report,
+.comment-actions>.action.comment-report{
+ color:#e46a68!important;font-size:20px!important;line-height:1!important;
+ min-width:0!important;padding:3px 5px!important;margin:0!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;text-shadow:0 0 5px rgba(230,73,73,.72),0 0 10px rgba(190,35,42,.42)!important;
+}
+.story-actions>.action.report:hover,
+.comment-actions>.action.comment-report:hover{
+ color:#ff9995!important;background:transparent!important;
+ text-shadow:0 0 6px rgba(255,112,106,.82),0 0 12px rgba(190,35,42,.52)!important;
+}
