@@ -31,7 +31,7 @@ body.chat-open,body.thread-open{overflow:hidden}
 body.menu-open #menu-toggle{position:fixed}
 
 /* Approved subtle reporting and compact discussion navigation; chat unchanged. */
-.story-actions .action.report,.comment-actions .action.comment-report{font-family:Arial,sans-serif;font-size:12px;font-weight:normal;color:#ad7777;text-shadow:none}
+.story-actions .action.report,.comment-actions .action.comment-report{font-family:Arial,sans-serif;font-size:12px;font-weight:normal;color:var(--gold)!important;text-shadow:none}
 .comment-actions .action.comment-report{margin-left:0;min-width:22px;padding:3px}
 .comment-actions .comment-heart+.comment-report{margin-left:auto}
 .comment-actions .reply-toggle{margin-left:auto}
