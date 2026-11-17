@@ -8,3 +8,12 @@
 dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;border:1px solid #625332;border-radius:12px;padding:22px;background:var(--panel);color:var(--text)}dialog::backdrop{background:#000b}.dialog-heading{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}.dialog-heading h2{margin:0}.icon-button{background:transparent;color:var(--muted);font-size:25px;font-weight:normal;margin:0;padding:0 6px}#toast{position:fixed;z-index:1100;bottom:26px;left:50%;transform:translateX(-50%);max-width:calc(100% - 28px);width:max-content;background:#302819;border:1px solid #625332;border-radius:8px;padding:12px 18px;color:var(--text);font-size:13px}#toast:empty{display:none}.admin{max-width:800px;margin:40px auto;padding:20px}.admin-tools{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.brand{font-size:30px;color:var(--gold);font-weight:bold;text-decoration:none}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 .captcha-check{max-width:100%;margin-top:8px}.admin #totp-qr{display:block;max-width:100%;height:auto;background:white;margin:12px 0}.admin #totp-open{display:block;width:fit-content;margin:12px 0}.admin #totp-secret{max-width:100%}.admin #logout{margin-bottom:16px}
+
+/* Daily winners: two equal-width tabs, preserving the existing black-and-gold theme. */
+.daily-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 16px}
+.daily-tab{margin:0;padding:10px 12px;background:#242424;color:var(--text);border:1px solid #625332;border-radius:7px;font-size:14px;font-weight:bold;text-align:center}
+.daily-tab.active{color:var(--gold);border-color:var(--gold);background:#302819}
+.daily-day-heading{margin:20px 0 8px;padding:0 0 6px;border-bottom:1px solid var(--border);color:var(--gold);font-size:14px;font-weight:bold;text-transform:capitalize}
+.daily-winner:first-child .daily-day-heading{margin-top:4px}
+.daily-comment-story>.comment{margin:0}
+.daily-comment-story .daily-context{display:inline-block;margin:8px 0 0;padding:4px 0}
