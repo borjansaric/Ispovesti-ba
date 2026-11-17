@@ -21,7 +21,7 @@ test('one emoji reaction can be changed only during the first ten minutes',()=>{
 });
 
 test('the picker opens from vote controls and statistics are requested by long press',()=>{
- assert.match(app,/function showReactionPicker/);
+ assert.match(app,/async function showReactionPicker/);
  assert.match(app,/request\('reaction'/);
  assert.match(app,/pointerdown/);
  assert.match(app,/showReactionStats\(item\)/);
