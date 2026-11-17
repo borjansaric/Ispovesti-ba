@@ -27,7 +27,7 @@ test('the picker opens from vote controls and statistics are requested by long p
  assert.match(app,/request\('reaction_status'/);
  assert.match(app,/function voteControls/);
  assert.match(app,/row\.append\(voteControls\(item\)/);
- assert.match(app,/row\.append\(voteControls\(item\)\)/);
+ assert.match(app,/row\.append\(voteControls\(item\),/);
 });
 
 test('reaction picker and statistics keep the black-and-gold UI',()=>{
