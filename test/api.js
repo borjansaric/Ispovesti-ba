@@ -41,7 +41,7 @@ export async function request(action, args = {}, adminSession = null, captchaHos
   if(config.mode==='local')return localRequest(action,args);
   if (isPreview) return previewRequest(action, args);
   const headers = { apikey: config.publishableKey, 'Content-Type': 'application/json' };
-  if (!['feed', 'comments', 'confession', 'captcha_config', 'activate_admin'].includes(action)) {
+  if (!['feed', 'comments', 'confession', 'daily_highlights', 'captcha_config', 'activate_admin'].includes(action)) {
     const authAt=performance.now();
     const s = adminSession || await session();
     if(action==='submit')performance.measure('ispovesti-submit-session',{start:authAt,end:performance.now()});
