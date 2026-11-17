@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const sql=readFileSync(new URL('../supabase/migrations/20261117180000_emoji_reactions_test.sql',import.meta.url),'utf8');
+const lockSql=readFileSync(new URL('../supabase/migrations/20261117181500_emoji_reaction_lock_to_vote_window_test.sql',import.meta.url),'utf8');
 const app=readFileSync(new URL('../test/app.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../test/styles.css',import.meta.url),'utf8');
 
@@ -14,8 +15,8 @@ test('emoji reactions are stored separately in the isolated test schema',()=>{
 });
 
 test('one emoji reaction can be changed only during the first ten minutes',()=>{
- assert.match(sql,/first_voted_at \+ interval '10 minutes'/);
- assert.match(sql,/clock_timestamp\(\) < v_vote_at \+ interval '10 minutes'/);
+ assert.match(lockSql,/first_voted_at \+ interval '10 minutes'/);
+ assert.match(lockSql,/clock_timestamp\(\) < v_vote_at \+ interval '10 minutes'/);
  assert.match(sql,/❤️.*😂.*😢.*😮.*🤗.*😡/s);
 });
 
