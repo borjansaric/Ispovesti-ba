@@ -15,7 +15,7 @@ async function refreshStates(){
  await Promise.all(entries.map(async e=>{
   try{
    const status=await request('reaction_status',{id:e.id});
-   if(status.can_change!==undefined)e.element.querySelectorAll('.vote-controls button').forEach(b=>b.dataset.locked=String(status.can_change===false));
+   if(status.can_change!==undefined)e.element.querySelectorAll('.vote-controls button').forEach(b=>b.dataset.reactionLocked=String(status.can_change===false));
   }catch{}
  }));
 }
@@ -93,7 +93,7 @@ async function showReactionPicker(item,row){
  row.querySelector('.reaction-picker')?.remove();
  const panel=node('div','reaction-picker'),label=node('span','reaction-picker-label','Reakcija');
  panel.append(label);
- const syncLock=locked=>row.querySelectorAll(':scope > button').forEach(b=>{b.dataset.locked=String(locked);b.setAttribute('aria-disabled',String(locked));});
+ const syncLock=locked=>row.querySelectorAll(':scope > button').forEach(b=>{b.dataset.reactionLocked=String(locked);});
  let status;
  try{status=await request('reaction_status',{id:item.id});}catch(err){toast(err.message);return;}
  syncLock(status.can_change===false);
@@ -129,24 +129,24 @@ function voteControls(item){
  for(const [value,symbol] of [[1,'👍'],[-1,'👎']]){
   const b=button(symbol,async btn=>{
    if(longPressed){longPressed=false;return;}
-   if(btn.dataset.locked==='true'||buttons.some(x=>x.dataset.pending==='true'))return;
+   if(btn.dataset.voteLocked==='true'||buttons.some(x=>x.dataset.pending==='true'))return;
    btn.dataset.pending='true';btn.disabled=true;
    try{render(await request('vote',{id:item.id,value}));await showReactionPicker(item,row);await refreshReactionLock();}
    finally{delete btn.dataset.pending;btn.disabled=false;}
   });
   let holdTimer=null,longPressed=false;
   b.addEventListener('pointerdown',()=>{
-   if(b.dataset.locked!=='true')return;
+   if(b.dataset.reactionLocked!=='true')return;
    longPressed=false;holdTimer=setTimeout(()=>{longPressed=true;showReactionStats(item);},550);
   });
   for(const eventName of ['pointerup','pointerleave','pointercancel'])b.addEventListener(eventName,event=>{if(holdTimer)clearTimeout(holdTimer);holdTimer=null;if(eventName==='pointerup'&&longPressed)event.preventDefault();});
-  b.addEventListener('contextmenu',event=>{if(b.dataset.locked==='true'){event.preventDefault();showReactionStats(item);}});
+  b.addEventListener('contextmenu',event=>{if(b.dataset.reactionLocked==='true'){event.preventDefault();showReactionStats(item);}});
   b.addEventListener('click',event=>{if(longPressed){event.preventDefault();event.stopImmediatePropagation();longPressed=false;}});
   buttons.push(b);
  }
- function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.setAttribute('aria-disabled',String(b.dataset.locked==='true'));b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=i===0?'👍':'👎';if(r.likes!==undefined)b.textContent+=(i===0?' '+r.likes:' '+r.dislikes);});}
+ function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.setAttribute('aria-disabled',String(b.dataset.reactionLocked==='true'));b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=i===0?'👍':'👎';if(r.likes!==undefined)b.textContent+=(i===0?' '+r.likes:' '+r.dislikes);});}
  async function refreshReactionLock(){
-  try{const status=await request('reaction_status',{id:item.id});if(status.can_change!==undefined)buttons.forEach(b=>{b.dataset.locked=String(status.can_change===false);b.setAttribute('aria-disabled',String(status.can_change===false));});}catch{}
+  try{const status=await request('reaction_status',{id:item.id});if(status.can_change!==undefined)buttons.forEach(b=>{b.dataset.reactionLocked=String(status.can_change===false);b.setAttribute('aria-disabled',String(status.can_change===false));});}catch{}
  }
  row.append(...buttons);render({});
  watchState(item.id,'vote',row,render);
