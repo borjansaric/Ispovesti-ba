@@ -1,25 +1,30 @@
-/* Ispovesti.ba — restrained luxury presentation layer (test app only). */
-:root{--lux-gold:#c9a75b;--lux-gold-soft:rgba(201,167,91,.22)}
+/* Ispovesti.ba — luxury background and restrained controls (test app only). */
+:root{--lux-gold:#c9a75b;--lux-gold-soft:rgba(201,167,91,.22);--lux-figure-size:clamp(420px,42vw,760px)}
 body{isolation:isolate;background:#090909!important;position:relative}
-body::before,body::after{content:"";position:fixed;inset:-12vh -8vw;pointer-events:none;z-index:-1;will-change:transform,background-position}
+body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;will-change:transform,background-position}
 body::before{
- background:
-  radial-gradient(ellipse 11% 20% at 18% 24%,rgba(8,8,8,.04) 0 32%,rgba(3,3,3,.78) 34% 47%,transparent 49%),
-  radial-gradient(ellipse 5% 9% at 18% 23%,rgba(166,145,104,.09) 0 48%,rgba(5,5,5,.82) 51% 65%,transparent 68%),
-  radial-gradient(ellipse 15% 23% at 18% 43%,rgba(4,4,4,.88) 0 48%,transparent 51%),
-  radial-gradient(ellipse 8% 13% at 79% 25%,rgba(7,7,7,.9) 0 52%,transparent 55%),
-  radial-gradient(ellipse 4.2% 5.2% at 79% 24%,rgba(176,153,113,.13) 0 45%,rgba(4,4,4,.9) 49% 66%,transparent 69%),
-  radial-gradient(ellipse 13% 20% at 79% 43%,rgba(3,3,3,.88) 0 48%,transparent 51%),
-  linear-gradient(112deg,transparent 0 17%,rgba(201,167,91,.16) 17.08%,transparent 17.18% 31%,rgba(201,167,91,.10) 31.08%,transparent 31.18% 67%,rgba(201,167,91,.12) 67.08%,transparent 67.18%),
-  linear-gradient(72deg,transparent 0 42%,rgba(201,167,91,.11) 42.06%,transparent 42.16% 84%,rgba(201,167,91,.09) 84.06%,transparent 84.16%),
-  radial-gradient(ellipse at 50% 40%,#15130f 0%,#090909 70%);
- background-size:100% 150vh;background-position:center var(--lux-scroll-y,0px);
- opacity:.9;transition:background-position .15s linear
+ background-image:
+  url("luxury-hooded.svg"),
+  url("luxury-masked-woman.svg"),
+  radial-gradient(ellipse at 50% 38%,#17140e 0%,#0b0a08 48%,#090909 82%),
+  linear-gradient(112deg,transparent 0 17%,rgba(201,167,91,.09) 17.08%,transparent 17.18% 31%,rgba(201,167,91,.055) 31.08%,transparent 31.18% 67%,rgba(201,167,91,.075) 67.08%,transparent 67.18%),
+  linear-gradient(72deg,transparent 0 42%,rgba(201,167,91,.07) 42.06%,transparent 42.16% 84%,rgba(201,167,91,.055) 84.06%,transparent 84.16%);
+ background-size:var(--lux-figure-size) auto,var(--lux-figure-size) auto,100% 100%,100% 100%,100% 100%;
+ background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat;
+ background-position:
+  left -3vw top calc(2vh + var(--lux-scroll-y,0px)),
+  right -3vw top calc(2vh + var(--lux-scroll-y,0px)),
+  center,
+  center,
+  center;
+ opacity:.88;transition:background-position .16s linear
 }
 body::after{
- background:repeating-linear-gradient(128deg,transparent 0 145px,rgba(201,167,91,.12) 146px,transparent 147px 270px),repeating-linear-gradient(58deg,transparent 0 205px,rgba(201,167,91,.075) 206px,transparent 207px 360px);
+ background:
+  repeating-linear-gradient(128deg,transparent 0 145px,rgba(201,167,91,.105) 146px,transparent 147px 270px),
+  repeating-linear-gradient(58deg,transparent 0 205px,rgba(201,167,91,.065) 206px,transparent 207px 360px);
  mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 88%,transparent);
- transform:translate3d(0,var(--lux-scroll-y,0px),0);opacity:.65
+ transform:translate3d(0,var(--lux-scroll-y,0px),0);opacity:.55
 }
 .site-header,main,footer,.side-menu{position:relative;z-index:1}
 .site-header{background:transparent!important}
@@ -84,7 +89,9 @@ dialog,.thread-dialog{border:0!important;border-radius:0!important;background:rg
  animation:none!important
 }
 .reaction-choice:disabled{opacity:.38!important}
-@media(max-width:480px){
+@media(max-width:640px){
+ :root{--lux-figure-size:clamp(260px,74vw,360px)}
+ body::before{background-position:left -104px top calc(4vh + var(--lux-scroll-y,0px)),right -104px top calc(4vh + var(--lux-scroll-y,0px)),center,center,center;opacity:.82}
  .story{padding-left:1px!important;padding-right:1px!important}
  .reaction-picker{max-width:calc(100vw - 54px)!important;gap:6px!important}
  .reaction-choice{flex-basis:28px!important;width:28px!important;min-width:28px!important;height:28px!important;font-size:16px!important}
