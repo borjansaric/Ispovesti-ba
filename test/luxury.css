@@ -4,8 +4,8 @@ body{isolation:isolate;background:#090909!important;position:relative}
 body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;will-change:transform,background-position}
 body::before{
  background-image:
-  url("luxury-hooded.svg"),
-  url("luxury-masked-woman.svg"),
+  url("luxury-hooded.svg?v=luxury2"),
+  url("luxury-masked-woman.svg?v=luxury2"),
   radial-gradient(ellipse at 50% 38%,#17140e 0%,#0b0a08 48%,#090909 82%),
   linear-gradient(112deg,transparent 0 17%,rgba(201,167,91,.09) 17.08%,transparent 17.18% 31%,rgba(201,167,91,.055) 31.08%,transparent 31.18% 67%,rgba(201,167,91,.075) 67.08%,transparent 67.18%),
   linear-gradient(72deg,transparent 0 42%,rgba(201,167,91,.07) 42.06%,transparent 42.16% 84%,rgba(201,167,91,.055) 84.06%,transparent 84.16%);
