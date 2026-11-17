@@ -29,3 +29,47 @@ dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;bo
 .reaction-choice:disabled{opacity:.65}
 .reaction-statistics{display:grid;gap:9px}
 .reaction-stat-line{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--border)}
+
+/* Premium gold glow for emoji reactions and locked vote selection */
+.reaction-picker{
+ border-color:rgba(211,174,91,.48);
+ box-shadow:inset 0 0 18px rgba(212,174,88,.055),0 0 13px rgba(212,174,88,.12);
+}
+.reaction-choice{
+ position:relative;
+ border:1px solid rgba(196,157,76,.48);
+ background:linear-gradient(145deg,#29251c 0%,#171717 72%);
+ box-shadow:0 0 7px rgba(218,181,94,.13),inset 0 0 8px rgba(218,181,94,.06);
+ text-shadow:0 0 8px rgba(255,218,133,.3);
+ transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease,background .2s ease;
+}
+.reaction-choice:hover,
+.reaction-choice:focus-visible{
+ border-color:#e2bd68;
+ box-shadow:0 0 10px rgba(225,188,102,.42),0 0 22px rgba(225,188,102,.2),inset 0 0 10px rgba(225,188,102,.13);
+}
+.reaction-choice.selected{
+ border-color:#f0ce7a;
+ background:linear-gradient(145deg,#4a391b 0%,#211b12 78%);
+ box-shadow:0 0 8px rgba(245,204,111,.62),0 0 18px rgba(222,177,79,.48),0 0 30px rgba(222,177,79,.2),inset 0 0 13px rgba(255,222,145,.2);
+ text-shadow:0 0 7px rgba(255,225,158,.85),0 0 15px rgba(245,204,111,.5);
+}
+.vote-controls>.action.selected{
+ border-color:#e8c36e!important;
+ color:#ffe2a0!important;
+ background:linear-gradient(145deg,rgba(111,81,30,.72),rgba(34,27,17,.96))!important;
+ box-shadow:0 0 7px rgba(235,194,103,.65),0 0 17px rgba(221,177,83,.42),0 0 29px rgba(221,177,83,.18),inset 0 0 10px rgba(255,225,157,.16)!important;
+ text-shadow:0 0 8px rgba(255,222,150,.82),0 0 16px rgba(238,194,103,.5);
+}
+.vote-controls>.action[aria-disabled="true"].selected{
+ opacity:1;
+ border-color:#f0ce7a!important;
+ box-shadow:0 0 8px rgba(245,204,111,.72),0 0 20px rgba(222,177,79,.48),0 0 32px rgba(222,177,79,.22),inset 0 0 12px rgba(255,222,145,.18)!important;
+}
+@media(prefers-reduced-motion:no-preference){
+ .reaction-choice.selected{animation:gold-reaction-breathe 3.2s ease-in-out infinite}
+ @keyframes gold-reaction-breathe{
+  0%,100%{box-shadow:0 0 7px rgba(245,204,111,.48),0 0 16px rgba(222,177,79,.34),inset 0 0 10px rgba(255,222,145,.16)}
+  50%{box-shadow:0 0 11px rgba(245,204,111,.72),0 0 23px rgba(222,177,79,.52),0 0 34px rgba(222,177,79,.22),inset 0 0 15px rgba(255,222,145,.23)}
+ }
+}
