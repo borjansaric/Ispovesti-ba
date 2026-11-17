@@ -136,8 +136,12 @@ function voteControls(item){
   });
   let holdTimer=null,longPressed=false;
   b.addEventListener('pointerdown',()=>{
-   if(b.dataset.reactionLocked!=='true')return;
-   longPressed=false;holdTimer=setTimeout(()=>{longPressed=true;showReactionStats(item);},550);
+   longPressed=false;
+   holdTimer=setTimeout(()=>{
+    longPressed=true;
+    if(b.dataset.reactionLocked==='true')showReactionStats(item);
+    else showReactionPicker(item,row);
+   },500);
   });
   for(const eventName of ['pointerup','pointerleave','pointercancel'])b.addEventListener(eventName,event=>{if(holdTimer)clearTimeout(holdTimer);holdTimer=null;if(eventName==='pointerup'&&longPressed)event.preventDefault();});
   b.addEventListener('contextmenu',event=>{if(b.dataset.reactionLocked==='true'){event.preventDefault();showReactionStats(item);}});
