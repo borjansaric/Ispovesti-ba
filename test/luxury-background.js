@@ -12,7 +12,7 @@
  },{passive:true});
  update();
  document.addEventListener('pointerdown',event=>{
-  if(event.target.closest('.reaction-picker')||event.target.closest('.vote-controls'))return;
+  if(event.target.closest('.reaction-picker'))return;
   document.querySelectorAll('.reaction-picker').forEach(panel=>panel.remove());
  },true);
  document.addEventListener('keydown',event=>{
