@@ -181,7 +181,7 @@ button:disabled{opacity:.55}
 /* Report/exclamation is intentionally smaller and red-only: no gold tint or frame. */
 .story-actions>.action.report,
 .comment-actions>.action.comment-report{
- color:#e46a68!important;font-size:13px!important;line-height:1!important;
+ color:#e46a68!important;font-size:20px!important;line-height:1!important;
  min-width:0!important;padding:3px 5px!important;margin:0!important;
  background:transparent!important;border:0!important;border-radius:0!important;
  box-shadow:none!important;text-shadow:0 0 5px rgba(230,73,73,.72),0 0 10px rgba(190,35,42,.42)!important;
