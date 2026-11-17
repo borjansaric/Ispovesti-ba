@@ -73,3 +73,28 @@ dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;bo
   50%{box-shadow:0 0 11px rgba(245,204,111,.72),0 0 23px rgba(222,177,79,.52),0 0 34px rgba(222,177,79,.22),inset 0 0 15px rgba(255,222,145,.23)}
  }
 }
+
+
+/* Dislike: intertwined premium gold and deep-red glow, distinct from like. */
+.vote-controls>.action.selected[aria-label="Negativan glas"]{
+ border-color:#d9a65e!important;
+ color:#ffd0c8!important;
+ background:linear-gradient(135deg,rgba(112,28,31,.82) 0%,rgba(67,43,24,.9) 52%,rgba(35,25,18,.98) 100%)!important;
+ box-shadow:
+  0 0 7px rgba(232,183,94,.78),
+  0 0 15px rgba(194,43,48,.66),
+  0 0 25px rgba(222,170,82,.38),
+  0 0 34px rgba(174,30,39,.28),
+  inset 0 0 10px rgba(255,215,145,.2),
+  inset 0 0 17px rgba(166,28,39,.22)!important;
+ text-shadow:0 0 7px rgba(255,220,170,.85),0 0 13px rgba(255,75,75,.62);
+}
+@media(prefers-reduced-motion:no-preference){
+ .vote-controls>.action.selected[aria-label="Negativan glas"]{
+  animation:dislike-gold-red-breathe 2.8s ease-in-out infinite;
+ }
+ @keyframes dislike-gold-red-breathe{
+  0%,100%{box-shadow:0 0 6px rgba(232,183,94,.62),0 0 13px rgba(194,43,48,.48),0 0 23px rgba(222,170,82,.3),inset 0 0 9px rgba(255,215,145,.16),inset 0 0 14px rgba(166,28,39,.18)}
+  50%{box-shadow:0 0 10px rgba(255,205,112,.88),0 0 21px rgba(220,47,55,.78),0 0 32px rgba(222,170,82,.48),0 0 39px rgba(174,30,39,.36),inset 0 0 13px rgba(255,225,160,.25),inset 0 0 21px rgba(190,35,46,.3)}
+ }
+}
