@@ -30,7 +30,7 @@ body::after{
 .site-header{background:transparent!important}
 .site-header h1{letter-spacing:.09em;text-shadow:0 0 24px rgba(201,167,91,.18)}
 .site-header p{letter-spacing:.025em}
-.panel,.story,.private-panel{background:rgba(10,10,10,.38)!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.panel,.story,.private-panel{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 .story{padding:18px 3px!important;border-bottom:1px solid rgba(201,167,91,.16)!important;margin-bottom:15px!important}
 .comment,.replies,.comment-replies{background:transparent!important;border:0!important;border-radius:0!important}
 .comment{padding:9px 0!important}
