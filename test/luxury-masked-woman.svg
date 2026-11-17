@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" role="img" aria-label="Tamna silueta žene s dugom kosom i stilizovanom Anonymous maskom">
+<defs>
+ <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#19150f" stop-opacity=".82"/><stop offset=".52" stop-color="#030303" stop-opacity=".97"/><stop offset="1" stop-color="#211a10" stop-opacity=".72"/></linearGradient>
+ <linearGradient id="mask" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e0d3b4" stop-opacity=".29"/><stop offset=".55" stop-color="#b7a887" stop-opacity=".21"/><stop offset="1" stop-color="#77694f" stop-opacity=".13"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#725628" stop-opacity=".1"/><stop offset=".5" stop-color="#d7b96f" stop-opacity=".62"/><stop offset="1" stop-color="#85652f" stop-opacity=".12"/></linearGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="16"/></filter>
+</defs>
+<ellipse cx="405" cy="655" rx="270" ry="445" fill="#b49352" opacity=".06" filter="url(#soft)"/>
+<path d="M81 1200C108 989 67 780 89 555C105 330 145 125 315 71C431 34 553 86 626 196C719 336 693 567 704 775C713 957 743 1090 770 1200C687 1155 626 1070 585 971L251 971C206 1080 148 1153 81 1200Z" fill="url(#hair)" stroke="url(#gold)" stroke-width="4"/>
+<path d="M170 1005C202 831 166 619 190 412C207 252 294 151 406 149C522 148 600 245 619 408C644 614 600 835 647 1008C585 949 563 869 540 798L263 798C240 883 215 952 170 1005Z" fill="#050505" opacity=".9"/>
+<path d="M265 373C296 292 354 249 418 252C491 255 548 303 572 388L552 691C539 795 486 857 415 865C344 856 289 794 278 692Z" fill="#17140f" opacity=".92" stroke="#94723c" stroke-opacity=".22" stroke-width="3"/>
+<path d="M276 455C321 414 516 414 557 458L539 701C525 786 480 834 414 843C346 833 300 784 290 701Z" fill="url(#mask)" stroke="#d0b16a" stroke-opacity=".67" stroke-width="3"/>
+<path d="M299 535C333 507 372 507 401 533C370 550 334 553 299 535Z" fill="#070706" opacity=".95"/>
+<path d="M427 533C457 506 500 507 532 535C496 553 460 550 427 533Z" fill="#070706" opacity=".95"/>
+<path d="M305 522Q349 494 396 520M432 520Q481 493 526 522" fill="none" stroke="#dec58a" stroke-opacity=".48" stroke-width="5" stroke-linecap="round"/>
+<path d="M415 548C405 600 392 635 378 658C397 679 431 678 451 658" fill="none" stroke="#c3ad79" stroke-opacity=".54" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M307 711C334 692 362 694 388 711C404 721 428 721 447 711C474 694 500 692 524 711" fill="none" stroke="#e2d2ae" stroke-opacity=".67" stroke-width="5" stroke-linecap="round"/>
+<path d="M325 738C356 769 472 769 506 738" fill="none" stroke="#d9c7a0" stroke-opacity=".58" stroke-width="4" stroke-linecap="round"/>
+<path d="M360 758C379 781 454 781 477 758" fill="none" stroke="#92784a" stroke-opacity=".54" stroke-width="3"/>
+<path d="M261 404C291 305 352 261 417 253C493 256 550 313 575 407" fill="none" stroke="#d2b36e" stroke-opacity=".4" stroke-width="4"/>
+<path d="M151 365C182 203 291 92 405 90C554 88 642 227 662 401" fill="none" stroke="#c9a75b" stroke-opacity=".26" stroke-width="4"/>
+<path d="M122 691C169 503 117 322 247 183M692 686C644 484 716 307 580 173" fill="none" stroke="#c9a75b" stroke-opacity=".28" stroke-width="3"/>
+<path d="M114 1030C185 966 202 874 233 818M730 1028C659 960 640 872 605 813" fill="none" stroke="#d6b66f" stroke-opacity=".24" stroke-width="3"/>
+<path d="M137 1146C227 1075 255 990 298 905M710 1142C615 1077 579 990 537 907" fill="none" stroke="#c9a75b" stroke-opacity=".23" stroke-width="2"/>
+</svg>
