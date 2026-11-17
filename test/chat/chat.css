@@ -53,3 +53,17 @@ body.menu-open #menu-toggle{letter-spacing:normal;font-size:23px}
 
 /* Keep the active inline discussion clear while dimming the surrounding feed. */
 body.inline-thread-open .site-header,body.inline-thread-open #feed-title,body.inline-thread-open footer,body.inline-thread-open .story:not(.thread-active-story),.thread-active-story>.story-content,.thread-active-story>.story-date,.thread-active-story>.story-nickname,.thread-active-story>.story-actions,.thread-active-story .comment-title,.thread-active-story .comment:not(.thread-active-comment):not(.inline-thread .comment),.thread-active-story .comment-list>.form{filter:blur(3px) brightness(.65)}
+
+
+/* Final action-color override: keep report icons red after chat action defaults. */
+.story-actions.vote-row>button.action.report,
+.comment-actions>button.action.comment-report{
+ color:#e46a68!important;
+ text-shadow:0 0 5px rgba(230,73,73,.72),0 0 10px rgba(190,35,42,.42)!important;
+ background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+.story-actions.vote-row>button.action.report:hover,
+.comment-actions>button.action.comment-report:hover{
+ color:#ff9995!important;
+ text-shadow:0 0 6px rgba(255,112,106,.82),0 0 12px rgba(190,35,42,.52)!important;
+}
