@@ -119,6 +119,7 @@ function voteControls(item){
  const row=node('div','vote-controls');row.style.display='contents';const buttons=[];
  for(const [value,symbol] of [[1,'👍'],[-1,'👎']]){
   const b=button(symbol,async btn=>{
+   if(longPressed){longPressed=false;return;}
    if(btn.dataset.locked==='true'||buttons.some(x=>x.dataset.pending==='true'))return;
    btn.dataset.pending='true';btn.disabled=true;
    try{render(await request('vote',{id:item.id,value}));await showReactionPicker(item,row);}
@@ -129,7 +130,7 @@ function voteControls(item){
    if(b.dataset.locked!=='true')return;
    longPressed=false;holdTimer=setTimeout(()=>{longPressed=true;showReactionStats(item);},550);
   });
-  for(const eventName of ['pointerup','pointerleave','pointercancel'])b.addEventListener(eventName,()=>{if(holdTimer)clearTimeout(holdTimer);holdTimer=null;});
+  for(const eventName of ['pointerup','pointerleave','pointercancel'])b.addEventListener(eventName,event=>{if(holdTimer)clearTimeout(holdTimer);holdTimer=null;if(eventName==='pointerup'&&longPressed)event.preventDefault();});
   b.addEventListener('click',event=>{if(longPressed){event.preventDefault();event.stopImmediatePropagation();longPressed=false;}});
   buttons.push(b);
  }
