@@ -144,9 +144,9 @@ function voteControls(item){
   b.addEventListener('click',event=>{if(longPressed){event.preventDefault();event.stopImmediatePropagation();longPressed=false;}});
   buttons.push(b);
  }
- function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.setAttribute('aria-disabled',String(b.dataset.reactionLocked==='true'));b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=i===0?'👍':'👎';if(r.likes!==undefined)b.textContent+=(i===0?' '+r.likes:' '+r.dislikes);});}
+ function render(r){buttons.forEach((b,i)=>{const value=i===0?1:-1;b.classList.toggle('selected',r.my_vote===value);b.dataset.voteLocked=String(r.can_change===false);b.setAttribute('aria-disabled',String(r.can_change===false));b.setAttribute('aria-pressed',String(r.my_vote===value));b.setAttribute('aria-label',i===0?'Pozitivan glas':'Negativan glas');b.textContent=i===0?'👍':'👎';if(r.likes!==undefined)b.textContent+=(i===0?' '+r.likes:' '+r.dislikes);});}
  async function refreshReactionLock(){
-  try{const status=await request('reaction_status',{id:item.id});if(status.can_change!==undefined)buttons.forEach(b=>{b.dataset.reactionLocked=String(status.can_change===false);b.setAttribute('aria-disabled',String(status.can_change===false));});}catch{}
+  try{const status=await request('reaction_status',{id:item.id});if(status.can_change!==undefined)buttons.forEach(b=>{b.dataset.reactionLocked=String(status.can_change===false);});}catch{}
  }
  row.append(...buttons);render({});
  watchState(item.id,'vote',row,render);
