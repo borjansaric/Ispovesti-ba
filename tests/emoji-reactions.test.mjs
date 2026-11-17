@@ -14,8 +14,8 @@ test('emoji reactions are stored separately in the isolated test schema',()=>{
 });
 
 test('one emoji reaction can be changed only during the first ten minutes',()=>{
- assert.match(sql,/first_reacted_at \+ interval '10 minutes'/);
- assert.match(sql,/where clock_timestamp\(\) < community_test\.reactions\.first_reacted_at/);
+ assert.match(sql,/first_voted_at \+ interval '10 minutes'/);
+ assert.match(sql,/clock_timestamp\(\) < v_vote_at \+ interval '10 minutes'/);
  assert.match(sql,/❤️.*😂.*😢.*😮.*🤗.*😡/s);
 });
 
