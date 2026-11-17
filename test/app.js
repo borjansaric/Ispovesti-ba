@@ -3,6 +3,7 @@ import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progres
 import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=room2';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
+const dailyTabs={confession:$('#daily-confessions'),comment:$('#daily-comments')};
 let currentView='oldest',offset=0, generation=0, openMenu=null,openBranch=null,busy=false;
 // One batched state request per group of 20 cards, rather than 40 separate requests.
 const stateListeners=new Set(),branchViews=new WeakMap();let stateTimer;
@@ -13,10 +14,13 @@ async function refreshStates(){
  for(let i=0;i<ids.length;i+=20){try{const result=await request('cards',{ids:ids.slice(i,i+20)});for(const e of stateListeners){const data=result[e.id]?.[e.type];if(data)e.render(data);}}catch{}}
 }
 setInterval(()=>{if(!document.hidden)refreshStates();},60000);
-const titles={oldest:'Ispovijesti',new:'Novo',popular:'Popularno',favorites:'Omiljene ispovijesti',recently_read:'Nedavno pročitane',my_comments:'Moji komentari'};
+setInterval(()=>{if(!document.hidden&&currentView.startsWith('daily_'))load(true);},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&currentView.startsWith('daily_'))load(true);});
+const titles={oldest:'Ispovijesti',new:'Novo',popular:'Popularno',daily_confessions:'Ispovest dana',daily_comments:'Komentar dana',favorites:'Omiljene ispovijesti',recently_read:'Nedavno pročitane',my_comments:'Moji komentari'};
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn,cls='action')=>{const b=node('button',cls,text);b.type='button';b.addEventListener('click',()=>Promise.resolve(fn(b)).catch(err=>toast(err.message)));return b;};
 const date=v=>v?new Date(v).toLocaleString('sr-Latn',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+const dailyDayLabel=value=>{const d=new Date(String(value)+'T12:00:00');return Number.isNaN(d.getTime())?String(value):d.toLocaleDateString('sr-Latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'});};
 function toast(text){$('#toast').textContent=text;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').textContent='',6500);}
 function modal(title,content){$('#dialog-title').textContent=title;$('#dialog-body').replaceChildren(content);if(!dialog.open)dialog.showModal();}
 const menuToggle=$('#menu-toggle'),sideMenu=$('#side-menu'),menuOverlay=$('#menu-overlay');
@@ -143,25 +147,69 @@ function story(item){
  const observer=new IntersectionObserver(entries=>{if(entries[0].isIntersecting&&!recorded){readTimer=setTimeout(()=>{recorded=true;request('read',{id:item.id}).catch(()=>{});observer.disconnect();},1500);}else clearTimeout(readTimer);},{threshold:.1});observer.observe(article);
  return article;
 }
+function dailyWinner(item,kind){
+ const section=node('section','daily-winner');
+ section.append(node('h3','daily-day-heading',dailyDayLabel(item.day)));
+ if(kind==='confession'){
+  section.append(story(item));
+ }else{
+  const card=node('article','story daily-comment-story');
+  card.append(comment(item,item.confession_id,async()=>{},{readOnly:true}));
+  card.append(button('Pogledaj ispovijest',async()=>{
+   const result=await request('confession',{id:item.confession_id});
+   modal('Ispovijest',story(result.item));
+  },'text-button daily-context'));
+  section.append(card);
+ }
+ return section;
+}
+function selectDailyView(kind){
+ currentView=kind==='confession'?'daily_confessions':'daily_comments';
+ closeMenu();
+ document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
+ for(const [key,tab] of Object.entries(dailyTabs)){
+  const active=key===kind;
+  tab.classList.toggle('active',active);
+  tab.setAttribute('aria-pressed',String(active));
+ }
+ $('#feed-title').textContent=titles[currentView];
+ $('#feed-subtitle').hidden=false;
+ $('#feed-subtitle').textContent=kind==='confession'
+  ?'Najlajkovanija ispovijest za svaki od posljednjih sedam dana.'
+  :'Najlajkovaniji glavni komentar za svaki od posljednjih sedam dana.';
+ load(true);
+}
+dailyTabs.confession.onclick=()=>selectDailyView('confession');
+dailyTabs.comment.onclick=()=>selectDailyView('comment');
 async function load(reset=false){
  if(busy&&!reset)return;busy=true;const version=reset?++generation:generation;
  if(reset){offset=0;feed.replaceChildren(node('p','empty','Učitavam priče…'));}
  $('#more').disabled=true;
  try{
+  const dailyKind=currentView==='daily_confessions'?'confession':currentView==='daily_comments'?'comment':null;
   const isList=['favorites','recently_read','my_comments'].includes(currentView);
-  const result=await request(isList?'list':'feed',isList?{list:currentView,offset}:{sort:currentView,offset});
+  const result=dailyKind
+   ?await request('daily_highlights',{kind:dailyKind})
+   :await request(isList?'list':'feed',isList?{list:currentView,offset}:{sort:currentView,offset});
   if(version!==generation)return;
   if(reset)feed.replaceChildren();
-  for(const item of result.items){if(currentView==='my_comments'){const entry=node('article','story');entry.append(metadata(item),node('p','body-text',item.body));entry.append(button('Otvori ispovijest',async()=>{
+  if(dailyKind){
+   for(const item of result.items)feed.append(dailyWinner(item,dailyKind));
+   offset=result.items.length;
+   $('#more').hidden=true;
+  }else{
+   for(const item of result.items){if(currentView==='my_comments'){const entry=node('article','story');entry.append(metadata(item),node('p','body-text',item.body));entry.append(button('Otvori ispovijest',async()=>{
       // Exact parent endpoint avoids searching only the first feed page.
       const r=await request('confession',{id:item.confession_id});modal('Ispovijest',story(r.item));
     }));feed.append(entry);}else feed.append(story(item));}
-  offset+=result.items.length;$('#more').hidden=result.items.length<20;
-  if(!offset)feed.append(node('p','empty',isList?'Ova privatna lista je još prazna.':'Još nema objavljenih ispovijesti.'));
+   offset+=result.items.length;
+   $('#more').hidden=result.items.length<20;
+  }
+  if(!offset)feed.append(node('p','empty',dailyKind?(dailyKind==='confession'?'Još nema ispovijesti za dnevni izbor.':'Još nema komentara za dnevni izbor.'):isList?'Ova privatna lista je još prazna.':'Još nema objavljenih ispovijesti.'));
  }catch(err){if(version!==generation)return;if(reset)feed.replaceChildren(node('p','empty error',err.message));else toast(err.message);$('#more').hidden=false;}
  finally{if(version===generation){busy=false;$('#more').disabled=false;}}
 }
-document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;closeMenu();document.querySelectorAll('[data-view]').forEach(n=>n.classList.toggle('active',n===b));$('#feed-title').textContent=titles[currentView];$('#feed-subtitle').textContent=['favorites','recently_read','my_comments'].includes(currentView)?'Privatno · samo u tvojoj anonimnoj sesiji':'Svaka priča ima svoje mjesto.';load(true);});
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;closeMenu();document.querySelectorAll('[data-view]').forEach(n=>n.classList.toggle('active',n===b));for(const tab of Object.values(dailyTabs)){tab.classList.remove('active');tab.setAttribute('aria-pressed','false');}$('#feed-title').textContent=titles[currentView];$('#feed-subtitle').hidden=false;$('#feed-subtitle').textContent=['favorites','recently_read','my_comments'].includes(currentView)?'Privatno · samo u tvojoj anonimnoj sesiji':'Svaka priča ima svoje mjesto.';load(true);});
 $('#sidebar-compose').append(contentForm('confession',{},()=>{}));
 $('#more').onclick=()=>load();
 load(true);
