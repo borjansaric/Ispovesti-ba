@@ -97,13 +97,13 @@ async function showReactionPicker(item,row){
     const result=await request('reaction',{id:item.id,emoji});
     panel.querySelectorAll('button').forEach(x=>x.classList.toggle('selected',x===b));
     b.classList.add('selected');
-    panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija: '+title+' · možeš je promijeniti još 10 minuta';
+    panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija: '+title+' · možeš je mijenjati do isteka 10 minuta od glasanja';
     panel.querySelectorAll('button').forEach(x=>x.disabled=result.can_change===false);
    }catch(err){toast(err.message);b.disabled=false;}
   },'reaction-choice');
   b.title=title;b.setAttribute('aria-label',title);if(status.my_reaction===emoji)b.classList.add('selected');panel.append(b);
  }
- if(status.my_reaction)panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija · možeš je promijeniti još 10 minuta';
+ if(status.my_reaction)panel.querySelector('.reaction-picker-label').textContent='Tvoja reakcija · možeš je mijenjati do isteka 10 minuta od glasanja';
  row.append(panel);
 }
 async function showReactionStats(item){
@@ -131,6 +131,7 @@ function voteControls(item){
    longPressed=false;holdTimer=setTimeout(()=>{longPressed=true;showReactionStats(item);},550);
   });
   for(const eventName of ['pointerup','pointerleave','pointercancel'])b.addEventListener(eventName,event=>{if(holdTimer)clearTimeout(holdTimer);holdTimer=null;if(eventName==='pointerup'&&longPressed)event.preventDefault();});
+  b.addEventListener('contextmenu',event=>{if(b.dataset.locked==='true'){event.preventDefault();showReactionStats(item);}});
   b.addEventListener('click',event=>{if(longPressed){event.preventDefault();event.stopImmediatePropagation();longPressed=false;}});
   buttons.push(b);
  }
