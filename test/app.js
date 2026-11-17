@@ -125,7 +125,7 @@ async function showReactionStats(item){
  }catch(err){toast(err.message);}
 }
 function voteControls(item){
- const row=node('div','vote-controls');row.style.display='contents';const buttons=[];
+ const row=node('div','vote-controls');const buttons=[];
  for(const [value,symbol] of [[1,'👍'],[-1,'👎']]){
   const b=button(symbol,async btn=>{
    if(longPressed){longPressed=false;return;}
