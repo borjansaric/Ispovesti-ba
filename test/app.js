@@ -93,14 +93,17 @@ async function showReactionPicker(item,row){
  row.querySelector('.reaction-picker')?.remove();
  const panel=node('div','reaction-picker'),label=node('span','reaction-picker-label','Reakcija');
  panel.append(label);
+ const syncLock=locked=>row.querySelectorAll(':scope > button').forEach(b=>{b.dataset.locked=String(locked);b.setAttribute('aria-disabled',String(locked));});
  let status;
  try{status=await request('reaction_status',{id:item.id});}catch(err){toast(err.message);return;}
+ syncLock(status.can_change===false);
  if(status.can_change===false){panel.append(node('span','hint',status.change_used?'Već si iskoristio jedinu dozvoljenu promjenu reakcije.':'Isteklo je 10 minuta od prve reakcije.'));row.append(panel);return;}
  for(const [emoji,title] of REACTIONS){
   const b=button(emoji,async()=>{
    b.disabled=true;
    try{
     const result=await request('reaction',{id:item.id,emoji});
+    syncLock(result.can_change===false);
     panel.querySelectorAll('button').forEach(x=>x.classList.toggle('selected',x===b));
     b.classList.add('selected');
     panel.querySelector('.reaction-picker-label').textContent=result.change_used?'Tvoja reakcija: '+title+' · izmjena iskorištena':'Tvoja reakcija: '+title+' · možeš je promijeniti još jednom u roku od 10 minuta od prvog izbora';
