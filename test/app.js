@@ -131,7 +131,7 @@ function voteControls(item){
    if(longPressed){longPressed=false;return;}
    if(btn.dataset.voteLocked==='true'||buttons.some(x=>x.dataset.pending==='true'))return;
    btn.dataset.pending='true';btn.disabled=true;
-   try{render(await request('vote',{id:item.id,value}));await showReactionPicker(item,row);await refreshReactionLock();}
+   try{render(await request('vote',{id:item.id,value}));await refreshReactionLock();}
    finally{delete btn.dataset.pending;btn.disabled=false;}
   });
   let holdTimer=null,longPressed=false;
