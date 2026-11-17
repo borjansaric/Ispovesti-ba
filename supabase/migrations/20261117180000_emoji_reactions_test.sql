@@ -61,8 +61,8 @@ begin
     raise exception 'Nepoznata radnja reakcije.';
   end if;
 
-  v_can_change := v_row.user_id is not null
-    and clock_timestamp() < v_row.first_reacted_at + interval '10 minutes';
+  v_can_change := v_row.user_id is null
+    or clock_timestamp() < v_row.first_reacted_at + interval '10 minutes';
 
   if v_row.user_id is not null and not v_can_change then
     select coalesce(jsonb_object_agg(x.emoji,x.total),'{}'::jsonb)
