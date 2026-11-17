@@ -38,6 +38,9 @@ test('picker explains the one permitted change and stats are requested by long p
  assert.match(app,/status\.can_change===false/);
  assert.match(app,/await refreshReactionLock\(\)/);
  assert.match(app,/syncLock\(result\.can_change===false\)/);
+ assert.match(app,/btn\.dataset\.voteLocked==='true'/);
+ assert.match(app,/b\.dataset\.reactionLocked==='true'/);
+ assert.match(app,/b\.dataset\.voteLocked=String\(r\.can_change===false\)/);
  assert.doesNotMatch(app,/b\.dataset\.locked=String\(r\.can_change===false\)/);
  assert.match(app,/row\.append\(voteControls\(item\)/);
  assert.match(app,/row\.append\(voteControls\(item\),/);
