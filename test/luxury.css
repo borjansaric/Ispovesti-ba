@@ -269,3 +269,10 @@ button:disabled{opacity:.55}
   content:none!important;
   display:none!important;
 }
+
+/* Hearts use exactly the same warm-gold shade as the positive like. */
+.story-actions>.favorite,
+.comment-actions>.comment-heart,
+.comment-actions>.comment-heart.selected{
+  color:#f4d98f!important;
+}
