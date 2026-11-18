@@ -408,19 +408,24 @@ body .comment-actions>button.action.comment-report:not(.reported){
  content:none!important;display:none!important;border:0!important;box-shadow:none!important;
 }
 #dialog.report-dialog .report-option:hover{color:#f0d58e!important}
-#dialog.report-dialog .report-reason{
- display:block!important;width:100%!important;min-height:34px!important;height:34px!important;
+#dialog.report-dialog textarea.report-reason,
+#dialog.report-dialog textarea.report-reason:hover,
+#dialog.report-dialog textarea.report-reason:focus{
+ display:block!important;appearance:none!important;-webkit-appearance:none!important;
+ width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;
  box-sizing:border-box!important;resize:none!important;overflow:hidden!important;
- border:0!important;border-bottom:1px solid rgba(214,177,94,.48)!important;
- border-radius:0!important;background:transparent!important;
- box-shadow:none!important;padding:7px 0 5px!important;
- color:#ddd!important;font:400 12px/1.5 inherit!important;outline:none!important;
+ border:0!important;border-top:0!important;border-left:0!important;border-right:0!important;
+ border-bottom:1px solid rgba(214,177,94,.48)!important;
+ border-radius:0!important;background:transparent!important;background-image:none!important;
+ box-shadow:none!important;padding:6px 0 4px!important;margin:0!important;
+ color:#ddd!important;font-family:Arial,sans-serif!important;font-size:12px!important;
+ font-weight:400!important;line-height:1.5!important;outline:0!important;
 }
-#dialog.report-dialog .report-reason:focus{
+#dialog.report-dialog textarea.report-reason:focus{
  border:0!important;border-bottom:1px solid rgba(214,177,94,.72)!important;
- box-shadow:none!important;
+ box-shadow:none!important;outline:0!important;
 }
-#dialog.report-dialog .report-reason::placeholder{color:#777!important;font-size:11px!important}
+
 
 /* Report picker has no close X; dismiss it by clicking outside the dialog. */
 #dialog.report-dialog #close-dialog{display:none!important}
