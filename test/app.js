@@ -1,6 +1,6 @@
 import {chatRequest} from './chat/client.mjs?v=room2';
 import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
-import { request, isPreview, isLocal, initializeCaptcha } from './api.js?v=entry-captcha1';
+import { request, isPreview, isLocal, initializeCaptcha } from './api.js?v=entry-captcha2';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 const dailyTabs={confession:$('#daily-confessions'),comment:$('#daily-comments')};
