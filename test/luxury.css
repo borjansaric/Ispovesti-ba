@@ -429,3 +429,8 @@ body .comment-actions>button.action.comment-report:not(.reported){
 
 /* Report picker has no close X; dismiss it by clicking outside the dialog. */
 #dialog.report-dialog #close-dialog{display:none!important}
+
+
+/* Confessions open into their own detail view; feed cards remain comment-free. */
+.story-openable{cursor:pointer}
+.story-openable:focus-visible{outline:1px solid rgba(214,177,94,.55)!important;outline-offset:4px}
