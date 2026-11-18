@@ -49,10 +49,10 @@ $('#rules').onclick=()=>modal('Pravila zajednice',node('p','', 'Piši bez vrije�
 if(isLocal)$('#preview').textContent='Lokalni test · bez veze sa živim sajtom';
 else if(window.ISPOVESTI_CONFIG?.mode==='live-test')$('#preview').textContent='TEST · prava baza, odvojeni probni podaci';
 else if(!isPreview)$('#preview').hidden=true;
-function metadata(item){const div=node('div','story-meta');div.append(node('span','avatar','“'),node('span','author',item.nickname||'Anonimno'));const t=node('time','',date(item.published_at||item.created_at));t.dateTime=item.published_at||item.created_at||'';div.append(t);return div;}
+function metadata(item){const div=node('div','story-meta');if(item.nickname){div.append(node('span','avatar','“'),node('span','author',item.nickname));}const t=node('time','',date(item.published_at||item.created_at));t.dateTime=item.published_at||item.created_at||'';div.append(t);return div;}
 function contentForm(kind,extra,done,onBack){
  const form=node('form',kind==='confession'?'form':'form discussion-form'),label=node('label','',kind==='confession'?'Tvoja priča':'Tvoje riječi'),text=node('textarea');text.addEventListener('focus',()=>prepareSubmission(kind,form));text.addEventListener('input',()=>prepareSubmission(kind,form));text.required=true;text.maxLength=kind==='confession'?10000:2000;text.placeholder=kind==='confession'?'Napiši ono što želiš da podijeliš...':kind==='comment'?'Napiši komentar...':'Napiši odgovor...';label.append(text);
- const nickLabel=node('label','','Nadimak'),nick=node('input');nick.maxLength=40;nick.autocomplete='off';nickLabel.append(nick);
+ const nickLabel=node('label','',kind==='confession'?'Ime autora':'Nadimak'),nick=node('input');nick.maxLength=40;nick.autocomplete='off';nickLabel.append(nick);
  const status=node('p','hint'),counter=node('span','hint','0 znakova'),send=node('button','primary',kind==='confession'?'Pošalji ispovijest':'Pošalji');send.type='submit';
  const row=node('div','row'),back=onBack?button('← Nazad',()=>onBack(),'discussion-back'):null;row.append(counter);if(back)row.append(back);row.append(send);text.oninput=()=>counter.textContent=[...text.value.trim()].length+' znakova';
  form.append(label,nickLabel,row,status);
@@ -154,10 +154,10 @@ async function load(reset=false){
   const result=await request(isList?'list':'feed',isList?{list:currentView,offset}:{sort:currentView,offset});
   if(version!==generation)return;
   if(reset)feed.replaceChildren();
-  for(const item of result.items){if(currentView==='my_comments'){const entry=node('article','story');entry.append(metadata(item),node('p','body-text',item.body));entry.append(button('Otvori ispovijest',async()=>{
+  for(const item of result.items){if(currentView==='my_comments'){const entry=node('article','story my-comment-entry');entry.append(metadata(item),node('p','body-text my-comment-text',item.body));const openStory=button('Otvori ispovijest',async()=>{
       // Exact parent endpoint avoids searching only the first feed page.
       const r=await request('confession',{id:item.confession_id});modal('Ispovijest',story(r.item));
-    }));feed.append(entry);}else feed.append(story(item));}
+    });openStory.classList.add('my-comment-open');entry.append(openStory);feed.append(entry);}else feed.append(story(item));}
   offset+=result.items.length;$('#more').hidden=result.items.length<20;
   if(!offset)feed.append(node('p','empty',isList?'Ova privatna lista je još prazna.':'Još nema objavljenih ispovijesti.'));
  }catch(err){if(version!==generation)return;if(reset)feed.replaceChildren(node('p','empty error',err.message));else toast(err.message);$('#more').hidden=false;}
