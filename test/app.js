@@ -232,15 +232,34 @@ async function openReplies(item,confessionId,refreshContext,trigger){
  }
  try{await collectReplies(request,confessionId,item.id,renderBatch,()=>closed||!thread.isConnected);if(closed)return;thread.dataset.loadedMs=String(Math.round(performance.now()-startedAt));notice.remove();}catch(e){if(!closed)notice.textContent=e.message;}
 }
-function story(item){
- const article=node('article','story');if(item.nickname)article.append(node('div','story-nickname',item.nickname));article.append(node('div','story-content body-text',item.body));const storyDate=node('div','story-date',date(item.published_at||item.created_at));article.append(storyDate);
- const row=node('div','story-actions vote-row'),commentsArea=node('section','comments-area comments');
- const comments=node('h3','comment-title','Komentari');const commentsList=node('div','comment-list');commentsArea.append(comments,commentsList);
+function story(item,detail=false){
+ const article=node('article',detail?'story story-detail':'story story-openable');
+ if(!detail){article.tabIndex=0;article.setAttribute('aria-label','Otvori ispovijest');}
+ if(item.nickname)article.append(node('div','story-nickname',item.nickname));
+ article.append(node('div','story-content body-text',item.body));
+ const storyDate=node('div','story-date',date(item.published_at||item.created_at));article.append(storyDate);
+ const row=node('div','story-actions vote-row');
+ let commentsArea,comments,commentsList;
+ if(detail){
+  commentsArea=node('section','comments-area comments');
+  comments=node('h3','comment-title','Komentari');
+  commentsList=node('div','comment-list');
+  commentsArea.append(comments,commentsList);
+ }
  const favorite=button('♡',async b=>{const enabled=b.getAttribute('aria-pressed')!=='true';await request('favorite',{id:item.id,enabled});setFavorite(enabled);pulseHeart(b);},'action favorite');favorite.setAttribute('aria-label','Dodaj ili ukloni iz omiljenih');
  function setFavorite(value){favorite.textContent=value?'♥':'♡';favorite.setAttribute('aria-pressed',String(value));favorite.classList.toggle('selected',value);}
- async function refreshContext(context){context ||= await request('context',{id:item.id});comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);}
- watchState(item.id,'context',row,context=>{comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);});
- const reportButton=button('❗︎',b=>report(item,b),'action report');reportButton.setAttribute('aria-label','Prijavi ispovijest');reportButton.title='Prijavi ispovijest';if(hasReported(item))reportButton.classList.add('reported');row.append(voteControls(item),favorite,reportButton);article.append(row,commentsArea);commentBranch(item.id,null,commentsList,refreshContext).catch(err=>{commentsList.textContent=err.message;});
+ async function refreshContext(context){context ||= await request('context',{id:item.id});if(comments)comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);}
+ watchState(item.id,'context',row,context=>{if(comments)comments.textContent='Komentari'+(context.comment_count===null?'':' ('+context.comment_count+')');setFavorite(context.favorite);});
+ const reportButton=button('❗︎',b=>report(item,b),'action report');reportButton.setAttribute('aria-label','Prijavi ispovijest');reportButton.title='Prijavi ispovijest';if(hasReported(item))reportButton.classList.add('reported');
+ row.append(voteControls(item),favorite,reportButton);article.append(row);
+ if(detail){
+  article.append(commentsArea);
+  commentBranch(item.id,null,commentsList,refreshContext).catch(err=>{commentsList.textContent=err.message;});
+ }else{
+  const open=()=>modal('Ispovijest',story(item,true));
+  article.addEventListener('click',event=>{if(event.target.closest('button,a,input,textarea,select'))return;open();});
+  article.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target===article){event.preventDefault();open();}});
+ }
  // A story is marked read after a visible part has remained visible for 1.5 seconds.
  let readTimer,recorded=false;
  const observer=new IntersectionObserver(entries=>{if(entries[0].isIntersecting&&!recorded){readTimer=setTimeout(()=>{recorded=true;request('read',{id:item.id}).catch(()=>{});observer.disconnect();},1500);}else clearTimeout(readTimer);},{threshold:.1});observer.observe(article);
@@ -256,7 +275,7 @@ function dailyWinner(item,kind){
   card.append(comment(item,item.confession_id,async()=>{},{readOnly:true}));
   card.append(button('Pogledaj ispovijest',async()=>{
    const result=await request('confession',{id:item.confession_id});
-   modal('Ispovijest',story(result.item));
+   modal('Ispovijest',story(result.item,true));
   },'text-button daily-context'));
   section.append(card);
  }
@@ -299,7 +318,7 @@ async function load(reset=false){
   }else{
    for(const item of result.items){if(currentView==='my_comments'){const entry=node('article','story');entry.append(metadata(item),node('p','body-text',item.body));entry.append(button('Otvori ispovijest',async()=>{
       // Exact parent endpoint avoids searching only the first feed page.
-      const r=await request('confession',{id:item.confession_id});modal('Ispovijest',story(r.item));
+      const r=await request('confession',{id:item.confession_id});modal('Ispovijest',story(r.item,true));
     }));feed.append(entry);}else feed.append(story(item));}
    offset+=result.items.length;
    $('#more').hidden=result.items.length<20;
