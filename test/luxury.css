@@ -178,7 +178,7 @@ button:disabled{opacity:.55}
  box-shadow:0 0 5px rgba(244,217,143,.36),0 0 12px rgba(216,180,95,.3)!important;
  text-shadow:0 0 6px rgba(244,217,143,.65),0 0 12px rgba(216,180,95,.42)!important;
 }
-/* Small report icon, separated from voting and aligned at the far right. */
+/* Keep report controls at the far right edge of the full action row. */
 .story-actions>.action.report,
 .comment-actions>.action.comment-report{
  color:#e46a68!important;font-size:10px!important;line-height:1!important;
@@ -186,7 +186,10 @@ button:disabled{opacity:.55}
  background:transparent!important;border:0!important;border-radius:0!important;
  box-shadow:none!important;text-shadow:0 0 5px rgba(230,73,73,.72),0 0 10px rgba(190,35,42,.42)!important;
 }
-.comment-actions .reply-toggle{margin-left:0!important}
+.comment-actions{width:100%!important;box-sizing:border-box!important}
+.comment-actions>.action.comment-report{margin-left:auto!important;flex:0 0 auto!important}
+.comment-actions>.reply-toggle{margin-left:0!important;flex:0 0 auto!important}
+.story-actions>.action.report{margin-left:auto!important;flex:0 0 auto!important}
 .story-actions>.action.report:hover,
 .comment-actions>.action.comment-report:hover{
  color:#ff9995!important;background:transparent!important;
