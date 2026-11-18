@@ -175,9 +175,9 @@ function report(item,trigger){
  }
  function openReason(){
   const field=node('textarea','report-reason');
-  field.setAttribute('aria-label','Navedi razlog prijave');
-  field.placeholder='Napiši razlog…';
-  field.rows=3;
+  field.removeAttribute('aria-label');
+  field.placeholder='';
+  field.rows=1;
   if(form.querySelector('.report-reason'))return;
   form.append(field);
   field.addEventListener('keydown',e=>{
