@@ -164,7 +164,7 @@ function report(item,trigger){
  const form=node('form','report-menu');
  const threat=button('Prijetnje',()=>sendReport('threat'),'report-option');
  const spam=button('Spam',()=>sendReport('spam'),'report-option');
- const custom=button('…',()=>openReason(),'report-option');
+ const custom=button('· · ·',()=>openReason(),'report-option');
  form.append(threat,spam,custom);
  let sending=false;
  async function sendReport(reason){
@@ -178,7 +178,8 @@ function report(item,trigger){
   field.setAttribute('aria-label','Navedi razlog prijave');
   field.placeholder='Napiši razlog…';
   field.rows=3;
-  form.replaceChildren(field);
+  if(form.querySelector('.report-reason'))return;
+  form.append(field);
   field.addEventListener('keydown',e=>{
    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const value=field.value.trim();if(value)sendReport(value);}
   });
