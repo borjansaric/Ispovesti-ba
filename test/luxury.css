@@ -314,3 +314,13 @@ button:disabled{opacity:.55}
   text-shadow:0 0 2px #f4d98f,0 0 5px rgba(244,217,143,.95),0 0 10px rgba(214,177,94,.9),0 0 18px rgba(214,177,94,.62),0 0 26px rgba(214,177,94,.38)!important;
   filter:drop-shadow(0 0 4px rgba(244,217,143,.85)) drop-shadow(0 0 9px rgba(214,177,94,.72))!important;
 }
+
+
+/* Match favorite-heart glyph size to the like/dislike icons. */
+.story-actions.vote-row>button.action.favorite,
+.story-actions.vote-row>button.action.favorite.selected,
+.comment-actions>button.comment-heart,
+.comment-actions>button.comment-heart.selected{
+  font-size:15px!important;
+  line-height:1!important;
+}
