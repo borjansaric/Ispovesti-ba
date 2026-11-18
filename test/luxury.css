@@ -369,3 +369,46 @@ body .comment-actions>button.action.comment-report:not(.reported){
 }
 #dialog .report-reason::placeholder{color:#777!important;font-size:11px!important}
 #dialog .report-reason:focus{border-color:rgba(214,177,94,.62)!important;box-shadow:none!important}
+
+
+/* Report picker: absolutely no frames around the choices or dialog.
+   The custom reason textarea is the only element allowed to have a border. */
+#dialog.report-dialog{
+ border:0!important;outline:0!important;box-shadow:none!important;
+ border-radius:0!important;background:#0b0b0b!important;
+ padding:14px 16px!important;
+}
+#dialog.report-dialog .dialog-heading,
+#dialog.report-dialog #dialog-body,
+#dialog.report-dialog .report-menu{
+ border:0!important;outline:0!important;border-radius:0!important;
+ box-shadow:none!important;background:transparent!important;
+}
+#dialog.report-dialog .dialog-heading{padding:0!important;margin:0!important}
+#dialog.report-dialog #dialog-body{padding:0!important;margin:0!important}
+#dialog.report-dialog .report-menu{
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ gap:11px!important;padding:0!important;margin:0!important;
+}
+#dialog.report-dialog button.report-option,
+#dialog.report-dialog .report-option,
+#dialog.report-dialog .report-option:hover,
+#dialog.report-dialog .report-option:focus,
+#dialog.report-dialog .report-option:active{
+ display:inline-block!important;width:auto!important;min-width:0!important;
+ border:0!important;border-width:0!important;border-style:none!important;
+ outline:0!important;outline-offset:0!important;border-radius:0!important;
+ box-shadow:none!important;background:none!important;
+ padding:0!important;margin:0!important;
+ color:#c9b783!important;font-size:12px!important;font-weight:400!important;
+ line-height:1.35!important;letter-spacing:.02em!important;text-align:left!important;
+}
+#dialog.report-dialog .report-option::before,
+#dialog.report-dialog .report-option::after{
+ content:none!important;display:none!important;border:0!important;box-shadow:none!important;
+}
+#dialog.report-dialog .report-option:hover{color:#f0d58e!important}
+#dialog.report-dialog .report-reason{
+ border:1px solid rgba(214,177,94,.38)!important;
+ border-radius:2px!important;background:#101010!important;
+}
