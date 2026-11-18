@@ -1,8 +1,7 @@
-import { captchaToken, prepareCaptcha } from './captcha.js?v=room2';
+import { captchaToken } from './captcha.js?v=room2';
 const config = window.ISPOVESTI_CONFIG || {};
 export const isPreview = config.mode === 'preview';
 export const isLocal = config.mode === 'local';
-export function prepareSubmission(kind,host){if(!isPreview&&!isLocal){prepareCaptcha({kind,host});void session().catch(()=>{});}}
 let client, sessionPromise;
 export function authClient(admin = false) {
   if (isPreview) throw new Error('Administracija je dostupna samo na povezanom testnom ili živom okruženju.');
@@ -21,6 +20,11 @@ async function session() {
     return data.session;
   })().finally(() => { sessionPromise = null; });
   return sessionPromise;
+}
+export async function initializeCaptcha(){
+  if(isPreview||isLocal)return;
+  const token=await captchaToken({kind:'entry',action:'app_entry'});
+  return request('captcha_init',{captcha_token:token});
 }
 let localSessionReady=false,localSessionPending;
 async function ensureLocalSession(){
@@ -47,7 +51,7 @@ export async function request(action, args = {}, adminSession = null, captchaHos
     if(action==='submit')performance.measure('ispovesti-submit-session',{start:authAt,end:performance.now()});
     headers.Authorization = 'Bearer ' + s.access_token;
   }
-  if(action==='submit'){const at=performance.now();args={...args,captcha_token:await captchaToken({kind:args.kind,host:captchaHost})};performance.measure('ispovesti-submit-captcha',{start:at,end:performance.now()});}
+
   const networkAt=performance.now();
   const response = await fetch(config.supabaseUrl + '/functions/v1/community-test-api?forceFunctionRegion=eu-central-1', {
     method: 'POST', headers, body: JSON.stringify({ action, args }), signal: AbortSignal.timeout(20000), cache: 'no-store',
