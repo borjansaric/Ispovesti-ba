@@ -160,7 +160,34 @@ function voteControls(item){
 const reportedStorageKey='ispovesti_reported_items_v3';
 function hasReported(item){if(item?.id===undefined||item?.id===null)return false;try{return JSON.parse(localStorage.getItem(reportedStorageKey)||'[]').includes(String(item.id));}catch{return false;}}
 function markReported(item,trigger){if(item?.id===undefined||item?.id===null)return;try{const ids=new Set(JSON.parse(localStorage.getItem(reportedStorageKey)||'[]'));ids.add(String(item.id));localStorage.setItem(reportedStorageKey,JSON.stringify([...ids]));}catch{}trigger?.classList.add('reported');}
-function report(item,trigger){const form=node('form','form');const label=node('label','','Razlog prijave'),select=node('select');for(const [value,text]of [['abuse','Vrijeđanje ili uznemiravanje'],['threat','Prijetnje'],['spam','Spam'],['other','Ostalo']]){const o=node('option','',text);o.value=value;select.append(o);}label.append(select);const send=node('button','primary','Pošalji prijavu');form.append(label,send);let sending=false;form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;try{await request('report',{id:item.id,reason:select.value});markReported(item,trigger);dialog.close();toast('Prijava je zabilježena. Hvala.');}catch(err){toast(err.message);}finally{sending=false;send.disabled=false;}};modal('Prijavi sadržaj',form);}
+function report(item,trigger){
+ const form=node('form','report-menu');
+ const threat=button('Prijetnje',()=>sendReport('threat'),'report-option');
+ const spam=button('Spam',()=>sendReport('spam'),'report-option');
+ const custom=button('Navedi razlog',()=>openReason(),'report-option');
+ form.append(threat,spam,custom);
+ let sending=false;
+ async function sendReport(reason){
+  if(sending)return;sending=true;
+  form.querySelectorAll('button').forEach(b=>b.disabled=true);
+  try{await request('report',{id:item.id,reason});markReported(item,trigger);dialog.close();toast('Prijava je zabilježena. Hvala.');}
+  catch(err){toast(err.message);form.querySelectorAll('button').forEach(b=>b.disabled=false);sending=false;}
+ }
+ function openReason(){
+  const field=node('textarea','report-reason');
+  field.setAttribute('aria-label','Navedi razlog prijave');
+  field.placeholder='Napiši razlog…';
+  field.rows=3;
+  form.replaceChildren(field);
+  field.addEventListener('keydown',e=>{
+   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const value=field.value.trim();if(value)sendReport(value);}
+  });
+  field.focus();
+ }
+ dialog.classList.add('report-dialog');
+ dialog.addEventListener('close',()=>dialog.classList.remove('report-dialog'),{once:true});
+ modal('',form);
+}
 async function commentBranch(confessionId,parentId,container,refreshContext,confirmed){
  let loaded=0;const rendered=new Set(),pending=new Map();
  const list=node('div'),sent=node('div'),more=button('Učitaj još komentara ↓',load,'load-more');container.replaceChildren(list,more,sent);
