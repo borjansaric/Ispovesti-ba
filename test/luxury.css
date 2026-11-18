@@ -316,11 +316,13 @@ button:disabled{opacity:.55}
 }
 
 
-/* Match favorite-heart glyph size to the like/dislike icons. */
+/* Match favorite-heart size to vote icons and soften the golden halo. */
 .story-actions.vote-row>button.action.favorite,
 .story-actions.vote-row>button.action.favorite.selected,
 .comment-actions>button.comment-heart,
 .comment-actions>button.comment-heart.selected{
   font-size:15px!important;
   line-height:1!important;
+  text-shadow:0 0 2px rgba(244,217,143,.55),0 0 4px rgba(214,177,94,.48),0 0 8px rgba(214,177,94,.24)!important;
+  filter:drop-shadow(0 0 2px rgba(244,217,143,.42))!important;
 }
