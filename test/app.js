@@ -180,7 +180,7 @@ function comment(item,confessionId,refreshContext,focusOptions={}){
  const reportButton=button('❗',()=>report(item),'action comment-report');reportButton.setAttribute('aria-label','Prijavi komentar');reportButton.title='Prijavi komentar';
  const count=node('span','reply-count',''),arrow=node('span','reply-triangle');arrow.setAttribute('aria-hidden','true');
  const repliesButton=button('',()=>focusOptions.close?focusOptions.close():focusOptions.reply?focusOptions.reply(item):openReplies(item,confessionId,refreshContext,repliesButton),'reply-toggle');
- repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);row.append(reportButton);if(!focusOptions.readOnly)row.append(repliesButton);wrap.append(card,row);
+ repliesButton.setAttribute('aria-label',focusOptions.close?'Zatvori odgovore':'Otvori ili napiši odgovore');repliesButton.append(count,arrow);if(!focusOptions.readOnly)row.append(repliesButton);row.append(reportButton);wrap.append(card,row);
  commentMeta.add({item,wrap,count,favorite});updateCommentMeta();return wrap;
 }
 const inlineThreads=new WeakMap();let activeInlineThread=null;
