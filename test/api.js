@@ -23,6 +23,8 @@ async function session() {
 }
 export async function initializeCaptcha(){
   if(isPreview||isLocal)return;
+  const status=await request('captcha_init',{});
+  if(status.verified||!status.required)return status;
   const token=await captchaToken({kind:'entry',action:'app_entry'});
   return request('captcha_init',{captcha_token:token});
 }
