@@ -295,7 +295,6 @@ function selectDailyView(kind){
  $('#feed-subtitle').textContent=kind==='confession'
   ?'Najlajkovanija ispovijest za svaki od posljednjih sedam dana.'
   :'Najlajkovaniji glavni komentar za svaki od posljednjih sedam dana.';
- void initializeCaptcha().catch(err=>toast(err.message));
  load(true);
 }
 dailyTabs.confession.onclick=()=>selectDailyView('confession');
@@ -331,4 +330,5 @@ async function load(reset=false){
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;closeMenu();document.querySelectorAll('[data-view]').forEach(n=>n.classList.toggle('active',n===b));for(const tab of Object.values(dailyTabs)){tab.classList.remove('active');tab.setAttribute('aria-pressed','false');}$('#feed-title').textContent=titles[currentView];$('#feed-subtitle').hidden=false;$('#feed-subtitle').textContent=['favorites','recently_read','my_comments'].includes(currentView)?'Privatno · samo u tvojoj anonimnoj sesiji':'Svaka priča ima svoje mjesto.';load(true);});
 $('#sidebar-compose').append(contentForm('confession',{},()=>{}));
 $('#more').onclick=()=>load();
+void initializeCaptcha().catch(err=>toast(err.message));
 load(true);
