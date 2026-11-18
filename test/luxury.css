@@ -342,3 +342,29 @@ body .comment-actions>button.action.comment-report:not(.reported){
   text-shadow:0 0 2px rgba(244,217,143,.55),0 0 4px rgba(214,177,94,.48),0 0 8px rgba(214,177,94,.24)!important;
   filter:drop-shadow(0 0 2px rgba(244,217,143,.42))!important;
 }
+
+
+/* Minimal report picker: quiet text choices, one plain rectangular custom-reason field. */
+#dialog.report-dialog .dialog-heading{display:none!important}
+#dialog.report-dialog #dialog-body{padding-top:2px!important}
+#dialog .report-menu{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:2px 0}
+#dialog .report-option{
+ appearance:none!important;-webkit-appearance:none!important;
+ background:transparent!important;border:0!important;box-shadow:none!important;
+ color:#c9b783!important;padding:2px 0!important;margin:0!important;
+ font-size:12px!important;font-weight:400!important;letter-spacing:.025em!important;
+ line-height:1.35!important;text-align:left!important;border-radius:0!important;
+}
+#dialog .report-option:hover{color:#f0d58e!important;background:transparent!important}
+#dialog .report-option:disabled{opacity:.55!important}
+#dialog .report-reason{
+ display:block!important;width:100%!important;min-height:82px!important;
+ box-sizing:border-box!important;resize:vertical!important;
+ background:#101010!important;color:#ddd!important;
+ border:1px solid rgba(214,177,94,.38)!important;border-radius:2px!important;
+ box-shadow:none!important;padding:9px 10px!important;
+ font:400 12px/1.5 inherit!important;letter-spacing:.015em!important;
+ outline:none!important;
+}
+#dialog .report-reason::placeholder{color:#777!important;font-size:11px!important}
+#dialog .report-reason:focus{border-color:rgba(214,177,94,.62)!important;box-shadow:none!important}
