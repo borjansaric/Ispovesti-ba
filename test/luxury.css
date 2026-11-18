@@ -345,7 +345,8 @@ body .comment-actions>button.action.comment-report:not(.reported){
 
 
 /* Minimal report picker: quiet text choices, one plain rectangular custom-reason field. */
-#dialog.report-dialog .dialog-heading{display:none!important}
+#dialog.report-dialog .dialog-heading h2{display:none!important}
+#dialog.report-dialog .dialog-heading{min-height:0!important;padding-bottom:2px!important}
 #dialog.report-dialog #dialog-body{padding-top:2px!important}
 #dialog .report-menu{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:2px 0}
 #dialog .report-option{
@@ -363,7 +364,7 @@ body .comment-actions>button.action.comment-report:not(.reported){
  background:#101010!important;color:#ddd!important;
  border:1px solid rgba(214,177,94,.38)!important;border-radius:2px!important;
  box-shadow:none!important;padding:9px 10px!important;
- font:400 12px/1.5 inherit!important;letter-spacing:.015em!important;
+ font-family:inherit!important;font-size:12px!important;font-weight:400!important;line-height:1.5!important;letter-spacing:.015em!important;
  outline:none!important;
 }
 #dialog .report-reason::placeholder{color:#777!important;font-size:11px!important}
