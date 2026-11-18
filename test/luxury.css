@@ -220,3 +220,20 @@ button:disabled{opacity:.55}
 }
 .replies,.comment-replies{padding-left:12px!important}
 .chat-panel .chat-body{padding:3px 0!important}
+
+/* Like/dislike/favorite controls: icons only, without button frames. */
+.story-actions .vote-controls>.action,
+.comment-actions .vote-controls>.action,
+.story-actions>.favorite,
+.comment-actions>.comment-heart,
+.story-actions .action.report,
+.comment-actions .action.comment-report{
+ border:0!important;
+ outline:0!important;
+ border-radius:0!important;
+ background:transparent!important;
+}
+.story-actions .vote-controls,
+.comment-actions .vote-controls{
+ border:0!important;background:transparent!important;box-shadow:none!important;
+}
