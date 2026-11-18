@@ -412,3 +412,6 @@ body .comment-actions>button.action.comment-report:not(.reported){
  border:1px solid rgba(214,177,94,.38)!important;
  border-radius:2px!important;background:#101010!important;
 }
+
+/* Report picker has no close X; dismiss it by clicking outside the dialog. */
+#dialog.report-dialog #close-dialog{display:none!important}
