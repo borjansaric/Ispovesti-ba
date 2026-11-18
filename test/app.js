@@ -276,5 +276,22 @@ async function load(reset=false){
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;closeMenu();document.querySelectorAll('[data-view]').forEach(n=>n.classList.toggle('active',n===b));for(const tab of Object.values(dailyTabs)){tab.classList.remove('active');tab.setAttribute('aria-pressed','false');}$('#feed-title').textContent=titles[currentView];$('#feed-subtitle').hidden=false;$('#feed-subtitle').textContent=['favorites','recently_read','my_comments'].includes(currentView)?'Privatno · samo u tvojoj anonimnoj sesiji':'Svaka priča ima svoje mjesto.';load(true);});
 $('#sidebar-compose').append(contentForm('confession',{},()=>{}));
+if(isPreview||isLocal){
+ const compare=node('section','heart-style-comparison');
+ compare.setAttribute('aria-label','Poređenje izgleda srca');
+ compare.style.cssText='display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:12px 0;margin:0 0 14px;border-bottom:1px solid rgba(214,177,94,.18)';
+ const samples=[
+  {label:'Zlatni sjaj',shadow:'0 0 4px rgba(216,180,95,.45),0 0 9px rgba(216,180,95,.28)'},
+  {label:'Zlatni neon',shadow:'0 0 5px rgba(255,225,150,.95),0 0 12px rgba(244,194,75,.9),0 0 22px rgba(216,160,35,.72),0 0 34px rgba(216,160,35,.42)'}
+ ];
+ for(const sample of samples){
+  const item=node('div','heart-style-sample'),heart=node('span','', '♥'),caption=node('span','',sample.label);
+  item.style.cssText='display:flex;align-items:center;gap:9px';
+  heart.style.cssText='display:inline-block;color:#f0ce7a;font-size:27px;line-height:1;text-shadow:'+sample.shadow;
+  caption.style.cssText='font-size:12px;color:#d8b45f';
+  item.append(heart,caption);compare.append(item);
+ }
+ $('#feed-title').before(compare);
+}
 $('#more').onclick=()=>load();
 load(true);
