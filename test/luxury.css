@@ -195,3 +195,28 @@ button:disabled{opacity:.55}
  color:#ff9995!important;background:transparent!important;
  text-shadow:0 0 6px rgba(255,112,106,.82),0 0 12px rgba(190,35,42,.52)!important;
 }
+
+/* Text-first layout: remove frames and boxed backgrounds around published text. */
+.story,.panel,.private-panel,.comment,.replies,.comment-replies,
+.story-content,.comment-content,.comment-card,.chat-panel .chat-message,
+.chat-panel .chat-body,.thread-original,.thread-replies>.comment,
+.daily-comment-story>.comment,.daily-comment-story .daily-context{
+ border:0!important;
+ outline:0!important;
+ border-radius:0!important;
+ box-shadow:none!important;
+}
+.story,.panel,.private-panel,.comment,.replies,.comment-replies,
+.chat-panel .chat-message,.chat-panel .chat-body,
+.thread-original,.thread-replies>.comment{
+ background:transparent!important;
+}
+.story{border-bottom:0!important}
+.comments-area,.comments,.comment-replies,.replies,
+.story-date,.comment-date,.thread-original{
+ border-top:0!important;
+ border-bottom:0!important;
+ border-left:0!important;
+}
+.replies,.comment-replies{padding-left:12px!important}
+.chat-panel .chat-body{padding:3px 0!important}
