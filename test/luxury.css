@@ -276,3 +276,9 @@ button:disabled{opacity:.55}
 .comment-actions>.comment-heart.selected{
   color:#f4d98f!important;
 }
+
+/* Match the confession's favorite heart in both idle and selected states. */
+.story-actions.vote-row>button.action.favorite,
+.story-actions.vote-row>button.action.favorite.selected{
+  color:#f4d98f!important;
+}
