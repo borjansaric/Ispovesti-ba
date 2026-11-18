@@ -237,3 +237,35 @@ button:disabled{opacity:.55}
 .comment-actions .vote-controls{
  border:0!important;background:transparent!important;box-shadow:none!important;
 }
+
+/* Final override: vote buttons must remain plain icons, including selected state. */
+.story-actions.vote-row .vote-controls > button.action,
+.comment-actions .vote-controls > button.action,
+.story-actions.vote-row > button.favorite,
+.comment-actions > button.comment-heart,
+.story-actions.vote-row > button.action.report,
+.comment-actions > button.action.comment-report{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  border:0!important;
+  outline:0!important;
+  border-radius:0!important;
+  background:none!important;
+  box-shadow:none!important;
+}
+.story-actions.vote-row .vote-controls > button.action.selected,
+.comment-actions .vote-controls > button.action.selected,
+.story-actions.vote-row .vote-controls > button.action:active,
+.comment-actions .vote-controls > button.action:active{
+  border:0!important;
+  outline:0!important;
+  background:none!important;
+  box-shadow:none!important;
+}
+.story-actions.vote-row .vote-controls > button.action::before,
+.story-actions.vote-row .vote-controls > button.action::after,
+.comment-actions .vote-controls > button.action::before,
+.comment-actions .vote-controls > button.action::after{
+  content:none!important;
+  display:none!important;
+}
