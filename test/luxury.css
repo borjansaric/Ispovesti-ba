@@ -178,14 +178,15 @@ button:disabled{opacity:.55}
  box-shadow:0 0 5px rgba(244,217,143,.36),0 0 12px rgba(216,180,95,.3)!important;
  text-shadow:0 0 6px rgba(244,217,143,.65),0 0 12px rgba(216,180,95,.42)!important;
 }
-/* Report/exclamation: restore its original compact size and red-only styling. */
+/* Small report icon, separated from voting and aligned at the far right. */
 .story-actions>.action.report,
 .comment-actions>.action.comment-report{
- color:#e46a68!important;font-size:13px!important;line-height:1!important;
- min-width:0!important;padding:3px 5px!important;margin:0!important;
+ color:#e46a68!important;font-size:10px!important;line-height:1!important;
+ min-width:0!important;padding:3px 5px!important;margin-left:auto!important;
  background:transparent!important;border:0!important;border-radius:0!important;
  box-shadow:none!important;text-shadow:0 0 5px rgba(230,73,73,.72),0 0 10px rgba(190,35,42,.42)!important;
 }
+.comment-actions .reply-toggle{margin-left:0!important}
 .story-actions>.action.report:hover,
 .comment-actions>.action.comment-report:hover{
  color:#ff9995!important;background:transparent!important;
