@@ -164,7 +164,7 @@ function report(item,trigger){
  const form=node('form','report-menu');
  const threat=button('Prijetnje',()=>sendReport('threat'),'report-option');
  const spam=button('Spam',()=>sendReport('spam'),'report-option');
- const custom=button('Navedi razlog',()=>openReason(),'report-option');
+ const custom=button('…',()=>openReason(),'report-option');
  form.append(threat,spam,custom);
  let sending=false;
  async function sendReport(reason){
@@ -186,6 +186,7 @@ function report(item,trigger){
  }
  dialog.classList.add('report-dialog');
  dialog.addEventListener('close',()=>dialog.classList.remove('report-dialog'),{once:true});
+ dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();},{once:true});
  modal('',form);
 }
 async function commentBranch(confessionId,parentId,container,refreshContext,confirmed){
