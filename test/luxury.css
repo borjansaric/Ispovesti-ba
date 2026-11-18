@@ -282,3 +282,11 @@ button:disabled{opacity:.55}
 .story-actions.vote-row>button.action.favorite.selected{
   color:#f4d98f!important;
 }
+
+/* All favorite hearts match the default positive-like gold exactly. */
+.story-actions.vote-row>button.action.favorite,
+.story-actions.vote-row>button.action.favorite.selected,
+.comment-actions>button.comment-heart,
+.comment-actions>button.comment-heart.selected{
+  color:#d6b15e!important;
+}
