@@ -157,9 +157,9 @@ function voteControls(item){
  void refreshReactionLock();
  return row;
 }
-const reportedStorageKey='ispovesti_reported_items_v2';
-function hasReported(item){try{return JSON.parse(localStorage.getItem(reportedStorageKey)||'[]').includes(String(item.id));}catch{return false;}}
-function markReported(item,trigger){try{const ids=new Set(JSON.parse(localStorage.getItem(reportedStorageKey)||'[]'));ids.add(String(item.id));localStorage.setItem(reportedStorageKey,JSON.stringify([...ids]));}catch{}trigger?.classList.add('reported');}
+const reportedStorageKey='ispovesti_reported_items_v3';
+function hasReported(item){if(item?.id===undefined||item?.id===null)return false;try{return JSON.parse(localStorage.getItem(reportedStorageKey)||'[]').includes(String(item.id));}catch{return false;}}
+function markReported(item,trigger){if(item?.id===undefined||item?.id===null)return;try{const ids=new Set(JSON.parse(localStorage.getItem(reportedStorageKey)||'[]'));ids.add(String(item.id));localStorage.setItem(reportedStorageKey,JSON.stringify([...ids]));}catch{}trigger?.classList.add('reported');}
 function report(item,trigger){const form=node('form','form');const label=node('label','','Razlog prijave'),select=node('select');for(const [value,text]of [['abuse','Vrijeđanje ili uznemiravanje'],['threat','Prijetnje'],['spam','Spam'],['other','Ostalo']]){const o=node('option','',text);o.value=value;select.append(o);}label.append(select);const send=node('button','primary','Pošalji prijavu');form.append(label,send);let sending=false;form.onsubmit=async e=>{e.preventDefault();if(sending)return;sending=true;send.disabled=true;try{await request('report',{id:item.id,reason:select.value});markReported(item,trigger);dialog.close();toast('Prijava je zabilježena. Hvala.');}catch(err){toast(err.message);}finally{sending=false;send.disabled=false;}};modal('Prijavi sadržaj',form);}
 async function commentBranch(confessionId,parentId,container,refreshContext,confirmed){
  let loaded=0;const rendered=new Set(),pending=new Map();
