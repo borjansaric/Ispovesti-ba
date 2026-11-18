@@ -1,6 +1,6 @@
 import {chatRequest} from './chat/client.mjs?v=room2';
 import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
-import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=room2';
+import { request, isPreview, isLocal, initializeCaptcha } from './api.js?v=entry-captcha1';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 const dailyTabs={confession:$('#daily-confessions'),comment:$('#daily-comments')};
@@ -59,7 +59,7 @@ else if(window.ISPOVESTI_CONFIG?.mode==='live-test')$('#preview').textContent='T
 else if(!isPreview)$('#preview').hidden=true;
 function metadata(item){const div=node('div','story-meta');div.append(node('span','avatar','“'),node('span','author',item.nickname||'Anonimno'));const t=node('time','',date(item.published_at||item.created_at));t.dateTime=item.published_at||item.created_at||'';div.append(t);return div;}
 function contentForm(kind,extra,done,onBack){
- const form=node('form',kind==='confession'?'form':'form discussion-form'),label=node('label','',kind==='confession'?'Tvoja priča':'Tvoje riječi'),text=node('textarea');text.addEventListener('focus',()=>prepareSubmission(kind,form));text.addEventListener('input',()=>prepareSubmission(kind,form));text.required=true;text.maxLength=kind==='confession'?10000:2000;text.placeholder=kind==='confession'?'Napiši ono što želiš da podijeliš...':kind==='comment'?'Napiši komentar...':'Napiši odgovor...';label.append(text);
+ const form=node('form',kind==='confession'?'form':'form discussion-form'),label=node('label','',kind==='confession'?'Tvoja priča':'Tvoje riječi'),text=node('textarea');text.required=true;text.maxLength=kind==='confession'?10000:2000;text.placeholder=kind==='confession'?'Napiši ono što želiš da podijeliš...':kind==='comment'?'Napiši komentar...':'Napiši odgovor...';label.append(text);
  const nickLabel=node('label','','Nadimak'),nick=node('input');nick.maxLength=40;nick.autocomplete='off';nickLabel.append(nick);
  const status=node('p','hint'),counter=node('span','hint','0 znakova'),send=node('button','primary',kind==='confession'?'Pošalji ispovijest':'Pošalji');send.type='submit';
  const row=node('div','row'),back=onBack?button('← Nazad',()=>onBack(),'discussion-back'):null;row.append(counter);if(back)row.append(back);row.append(send);text.oninput=()=>counter.textContent=[...text.value.trim()].length+' znakova';
@@ -295,6 +295,7 @@ function selectDailyView(kind){
  $('#feed-subtitle').textContent=kind==='confession'
   ?'Najlajkovanija ispovijest za svaki od posljednjih sedam dana.'
   :'Najlajkovaniji glavni komentar za svaki od posljednjih sedam dana.';
+ void initializeCaptcha().catch(err=>toast(err.message));
  load(true);
 }
 dailyTabs.confession.onclick=()=>selectDailyView('confession');
