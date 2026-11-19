@@ -1,6 +1,6 @@
-import {chatRequest} from './chat/client.mjs?v=room2';
+import {chatRequest} from './chat/client.mjs?v=live1';
 import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
-import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=20261119-vote-counts1';
+import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=20261119-live-align1';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 const dailyTabs={confession:$('#daily-confessions'),comment:$('#daily-comments')};
@@ -14,7 +14,7 @@ async function refreshStates(){
  for(let i=0;i<ids.length;i+=20){try{const result=await request('cards',{ids:ids.slice(i,i+20)});for(const e of entries){const data=result[e.id]?.[e.type];if(data)e.render(data);}}catch{}}
  await Promise.all(entries.map(async e=>{
   try{
-   const status=await request('reaction_status',{id:e.id});
+   const status=await request('vote_status',{id:e.id});
    if(status.can_change!==undefined)e.element.querySelectorAll('.vote-controls button').forEach(b=>{b.dataset.voteLocked=String(status.can_change===false);b.setAttribute('aria-disabled',String(status.can_change===false));});
   }catch{}
  }));
@@ -123,7 +123,7 @@ function voteControls(item){
  }
  async function refreshVoteLock(){
   try{
-   const status=await request('reaction_status',{id:item.id});
+   const status=await request('vote_status',{id:item.id});
    if(status.can_change!==undefined)buttons.forEach(b=>{
     b.dataset.voteLocked=String(status.can_change===false);
     b.setAttribute('aria-disabled',String(status.can_change===false));
