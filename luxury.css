@@ -1,0 +1,96 @@
+/* Ispovesti.ba — isolated preview theme. One canonical rule per selector. */
+:root{
+ --lux-gold:#c9a75b;
+ --lux-gold-soft:rgba(201,167,91,.22);
+ --gold-soft:#f0d58e;
+ --red-glow:rgba(205,55,58,.58);
+}
+body{isolation:isolate;background:#090909;color:#eee;position:relative}
+body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;will-change:transform,background-position}
+body::before{
+ background-image:
+  radial-gradient(ellipse at 50% 38%,#17140e 0%,#0b0a08 48%,#090909 82%),
+  linear-gradient(112deg,transparent 0 17%,rgba(201,167,91,.09) 17.08%,transparent 17.18% 31%,rgba(201,167,91,.055) 31.08%,transparent 31.18% 67%,rgba(201,167,91,.075) 67.08%,transparent 67.18%),
+  linear-gradient(72deg,transparent 0 42%,rgba(201,167,91,.07) 42.06%,transparent 42.16% 84%,rgba(201,167,91,.055) 84.06%,transparent 84.16%);
+ background-size:100% 100%,100% 100%,100% 100%;
+ background-repeat:no-repeat,no-repeat,no-repeat;
+ background-position:center,center,center;
+ opacity:.88;transition:background-position .16s linear;
+}
+body::after{
+ background:
+  repeating-linear-gradient(128deg,transparent 0 145px,rgba(201,167,91,.105) 146px,transparent 147px 270px),
+  repeating-linear-gradient(58deg,transparent 0 205px,rgba(201,167,91,.065) 206px,transparent 207px 360px);
+ mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 88%,transparent);
+ transform:translate3d(0,var(--lux-scroll-y,0px),0);opacity:.55;
+}
+.site-header,main,footer{position:relative;z-index:1}
+
+.site-header{background:transparent}
+.site-header h1{letter-spacing:.09em;text-shadow:0 0 24px rgba(201,167,91,.18)}
+.site-header p{letter-spacing:.025em}
+.panel,.private-panel{
+ background:transparent;border:0;border-radius:0;
+ box-shadow:none;padding:16px 0;
+}
+.story{
+ background:transparent;border:0;border-radius:0;
+ box-shadow:none;padding:4px 0;
+ border-bottom:1px solid rgba(214,177,94,.17);margin-bottom:1px;
+}
+.private-panel{margin:0 auto 22px}
+.comment,.replies,.comment-replies{background:transparent;border:0;border-radius:0}
+.comment{padding:0}
+.replies,.comment-replies{padding-left:8px;border-left:1px solid rgba(214,177,94,.22)}
+.comments-area,.comments{border-top:1px solid rgba(214,177,94,.2)}
+button{background:transparent;color:var(--gold);padding:7px 5px;border:0;border-radius:0;outline-offset:4px;box-shadow:none}
+button:hover{color:var(--gold-soft);background:transparent}
+button:disabled{opacity:.55}
+.reply-button,.text-button,.icon-button,.comment-report,.comment-heart{
+ background:transparent;color:var(--gold);padding:5px 7px;margin:0;
+}
+.comment-heart{
+ color:var(--gold);background:transparent;
+ box-shadow:none;text-shadow:none;font-size:19px;
+}
+.comment-report{color:var(--gold);font-size:16px}
+.daily-tabs{border-bottom:1px solid rgba(255,218,104,.24);padding-bottom:2px}
+.daily-tab{background:transparent;color:#ffdf86;padding:3px 1px;text-shadow:0 0 4px rgba(255,218,104,.72),0 0 10px rgba(255,190,54,.38)}
+.daily-tab.active{color:#fff0b0;border-bottom:1px solid #ffda68;text-shadow:0 0 5px rgba(255,226,130,.95),0 0 13px rgba(255,190,54,.62);box-shadow:0 2px 9px -5px rgba(255,218,104,.9)}
+.load-more{width:auto;display:block;margin:18px auto;background:transparent;color:var(--gold)}
+.menu-links button,.side-menu .private-actions button{
+ background:transparent;border:0;border-radius:0;
+ text-align:left;color:#ddd;padding:8px 0;
+}
+.menu-links button.active,.side-menu .private-actions button.active{
+ color:var(--gold);background:transparent;border:0;
+}
+.side-menu{background:#101010;border-right:1px solid rgba(214,177,94,.18);box-shadow:none}
+.side-menu .panel{background:transparent;border:0;box-shadow:none}
+
+.dialog-heading .icon-button{padding:0 5px}
+#toast{border:0;border-radius:3px;box-shadow:none}
+.preview{border:0;border-radius:0}
+
+/* Asymmetric fine-gold threads framing the masthead. */
+.site-header{isolation:isolate}
+.site-header::before{
+ content:"";position:absolute;z-index:-1;pointer-events:none;
+ left:50%;top:50%;width:min(620px,calc(100vw - 42px));height:112px;
+ transform:translate(-50%,-50%);
+ background:
+  linear-gradient(164deg,transparent 0 12%,rgba(255,218,104,.62) 12.18%,transparent 12.55% 100%),
+  linear-gradient(173deg,transparent 0 23%,rgba(201,167,91,.38) 23.14%,transparent 23.42% 100%),
+  linear-gradient(7deg,transparent 0 72%,rgba(255,218,104,.48) 72.16%,transparent 72.5% 100%),
+  linear-gradient(14deg,transparent 0 84%,rgba(201,167,91,.34) 84.12%,transparent 84.42% 100%);
+ opacity:.82;
+}
+.site-header::after{
+ content:"";position:absolute;pointer-events:none;left:50%;bottom:7px;
+ width:min(310px,58vw);height:7px;transform:translateX(-50%);
+ background:
+  radial-gradient(ellipse at 50% 50%,rgba(255,225,143,.78),transparent 12%),
+  linear-gradient(90deg,transparent,rgba(201,167,91,.48) 22%,rgba(255,218,104,.68) 50%,rgba(201,167,91,.38) 78%,transparent);
+ opacity:.72;
+}
+.site-header h1,.site-header p{position:relative;z-index:1}

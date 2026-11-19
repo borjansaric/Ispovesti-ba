@@ -1,6 +1,6 @@
 import {mkdir,copyFile,cp,readFile,writeFile,rm} from 'node:fs/promises';
 const out=new URL('../.production-review/',import.meta.url),root=new URL('../',import.meta.url);await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
-for(const file of ['index.html','app.js','api.js','captcha.js','admin.html','admin.js','config.js','original.css','styles.css','diagnostics.mjs','favicon.svg','share-card.png','privacy.html','terms.html','cookies.html','contact.html'])await copyFile(new URL(file,root),new URL(file,out));
+for(const file of ['index.html','app.js','api.js','captcha.js','admin.html','admin.js','config.js','original.css','styles.css','luxury.css','diagnostics.mjs','favicon.svg','share-card.png','privacy.html','terms.html','cookies.html','contact.html'])await copyFile(new URL(file,root),new URL(file,out));
 await cp(new URL('vendor/',root),new URL('vendor/',out),{recursive:true});await mkdir(new URL('chat/',out),{recursive:true});for(const f of ['chat.css','thread-model.mjs'])await copyFile(new URL('chat/'+f,root),new URL('chat/'+f,out));
 // Publish only the connected live clients; no trial generator or server source.
 for(const f of ['ui.mjs','client.mjs'])await copyFile(new URL('chat/'+f,root),new URL('chat/'+f,out));
