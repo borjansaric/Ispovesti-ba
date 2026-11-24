@@ -57,6 +57,15 @@ Na ovoj pripremnoj grani, samo u root/live klijentu:
 - Provjereno statički: root CAPTCHA ruta pokazuje na live endpoint, test endpoint se ne pojavljuje u root fajlu, a produkcijski allowlist build kopira root `app.js/api.js/captcha.js`.
 - **Automatizovani test nije pokrenut u ovom okruženju.** Ova promjena nije spojena u `main`, nije deployovana i nije mijenjala Supabase.
 
+### Izolovana chat prijava UI 24.11.2026.
+Na pripremnoj grani je prenesena mala, backend-kompatibilna chat UI dorada:
+- Browser prompt je zamijenjen jasnim izborima: abuse/uvredljiv sadržaj, prijetnja, spam, ostalo.
+- Razlozi su tačno live SQL vrijednosti `abuse`, `threat`, `spam`, `other`; prijava šalje samo `id` i `reason`. Nema `details` polja jer live gateway/SQL trenutno ne podržavaju dodatni opis.
+- Dodani su report option stilovi samo u `chat/chat.css` i desno-proširena dodirna površina tri tačke; cache-busteri osvježeni u `index.html`.
+- Dodan je `tests/live-chat-report-ui.test.mjs` koji provjerava reason contract i odsustvo prompta.
+- Statička provjera potvrdila je da prompt više nije u root live UI-u, da su sva četiri live reason koda prisutna i da se `details` ne šalje.
+- **Automatizovani test nije pokrenut.** Promjene su samo u pripremnoj grani; live gateway/SQL, `main` i deployment nisu mijenjani.
+
 ## Migracijski redoslijed
 1. Inventar svih root/live datoteka, `dist/` allowlist builda, `test/`, Pages workflowa i backend ugovora.
 2. Prenos HTML/CSS/UI komponenti koje ne mijenjaju API/security; provjeriti asset reference i mobilni raspored.
@@ -73,6 +82,7 @@ Na ovoj pripremnoj grani, samo u root/live klijentu:
 - [x] Početni inventar ključnih UI/API razlika napravljen.
 - [x] Pripremna grana: live CAPTCHA config endpoint usmjeren na live API; regresioni test dodat (nije pokrenut).
 - [ ] Potpuni pregled svih root/live i build datoteka.
-- [ ] Prenos UI dorada — nije počeo; API/backend kompatibilnost prvo.
+- [x] Prva chat report UI dorada prenesena uz postojeći live contract.
+- [ ] Ostale UI dorade — u toku; API/backend kompatibilnost prvo.
 - [ ] Testiranje i završna provjera — nije urađeno.
 - [ ] Produkcijska objava — nije odobrena/urađena.
