@@ -1,5 +1,5 @@
 /* Scoped additions only. The site's original black/gold styles are preserved. */
-#banner-slot{position:absolute;right:14px;top:12px;width:160px;height:60px;pointer-events:none}
+#banner-slot{position:sticky;top:0;z-index:100003;display:flex;align-items:center;justify-content:center;min-height:60px;padding:0 9px;box-sizing:border-box;background:#090909}#banner-slot .partner-banner-placeholder{width:100%;max-width:760px;min-height:52px;margin:0 auto;padding:5px 9px}body.chat-open #banner-slot{visibility:hidden}
 body.chat-open,body.thread-open{overflow:hidden}
 #dialog.chat-room{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#111;overflow:hidden;box-sizing:border-box}
 .chat-room .dialog-heading{position:absolute;top:max(7px,env(safe-area-inset-top));left:9px;z-index:3;margin:0}.chat-room .dialog-heading h2{display:none}.chat-room #close-dialog{font-size:26px;width:34px;height:34px;margin:0;padding:0;background:transparent;color:var(--muted)}
