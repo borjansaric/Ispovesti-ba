@@ -49,6 +49,14 @@ Read-only preview audit bilježi:
 
 Zbog toga preview `api.js` / `app.js` nisu direktno prenosivi. Usklađivanje mora zadržati live CAPTCHA ugovor dok se zasebno ne odobri i implementira server-side paritet.
 
+### Izolovana pripremna ispravka 24.11.2026.
+Na ovoj pripremnoj grani, samo u root/live klijentu:
+- `captcha.js` sada čita javni CAPTCHA config sa `community-live-api`, ne sa test API-ja.
+- Cache-buster je osvježen u `api.js` i `app.js`, da browser ne zadrži staru CAPTCHA konfiguracionu rutu.
+- Dodan je `tests/live-captcha-config-route.test.mjs` kao regresioni test.
+- Provjereno statički: root CAPTCHA ruta pokazuje na live endpoint, test endpoint se ne pojavljuje u root fajlu, a produkcijski allowlist build kopira root `app.js/api.js/captcha.js`.
+- **Automatizovani test nije pokrenut u ovom okruženju.** Ova promjena nije spojena u `main`, nije deployovana i nije mijenjala Supabase.
+
 ## Migracijski redoslijed
 1. Inventar svih root/live datoteka, `dist/` allowlist builda, `test/`, Pages workflowa i backend ugovora.
 2. Prenos HTML/CSS/UI komponenti koje ne mijenjaju API/security; provjeriti asset reference i mobilni raspored.
@@ -63,6 +71,7 @@ Zbog toga preview `api.js` / `app.js` nisu direktno prenosivi. Usklađivanje mor
 - [x] Odvojena produkcijska pripremna grana kreirana.
 - [x] Read-only pregled test/live izolacije i Pages build allowliste.
 - [x] Početni inventar ključnih UI/API razlika napravljen.
+- [x] Pripremna grana: live CAPTCHA config endpoint usmjeren na live API; regresioni test dodat (nije pokrenut).
 - [ ] Potpuni pregled svih root/live i build datoteka.
 - [ ] Prenos UI dorada — nije počeo; API/backend kompatibilnost prvo.
 - [ ] Testiranje i završna provjera — nije urađeno.
