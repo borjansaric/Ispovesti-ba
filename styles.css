@@ -85,9 +85,6 @@ dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;bo
 
 /* Discreet comment reactions: centered in the flexible space between replies and report. */
 .comment-reaction-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:32px}
-.comment-reaction-wrap>.comment-reaction-trigger{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:0;width:32px;height:32px;margin:0;padding:4px 5px;border:0;border-radius:0;background:transparent;color:var(--gold);font-size:16px;line-height:1;opacity:.58;box-shadow:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.comment-reaction-wrap>.comment-reaction-trigger::after{content:"";position:absolute;left:50%;top:50%;width:32px;height:44px;transform:translate(-50%,-50%)}
-.comment-reaction-wrap>.comment-reaction-trigger:hover,.comment-reaction-wrap>.comment-reaction-trigger:focus-visible,.comment-reaction-wrap>.comment-reaction-trigger[aria-expanded="true"]{opacity:1;color:var(--gold-soft);text-shadow:0 0 6px rgba(255,218,104,.35)}
 .comment-reaction-menu{position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);z-index:25;display:flex;align-items:center;justify-content:center;gap:3px;width:max-content;max-width:calc(100vw - 24px);padding:7px 8px;border:1px solid rgba(218,183,101,.72);border-radius:9px;background:linear-gradient(135deg,#17140e 0%,#292114 52%,#17140e 100%);box-shadow:0 7px 20px rgba(0,0,0,.62),inset 0 0 0 1px rgba(255,224,157,.08)}
 .comment-reaction-option{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:34px;margin:0;padding:2px;border:0;border-radius:6px;background:transparent;color:var(--gold);font-size:20px;line-height:1;box-shadow:none}
 .comment-reaction-option:hover,.comment-reaction-option[aria-pressed="true"]{background:rgba(218,183,101,.16);box-shadow:inset 0 0 0 1px rgba(218,183,101,.35)}
@@ -247,9 +244,7 @@ body.menu-open #quick-compose{display:none}
 body.menu-open #font-size-controls{display:none}
 
 
-/* Place the existing gold menu banner above the masthead; all page content follows beneath it. */
-.site-header{padding-top:8px}
-.site-header>.partner-banner-placeholder{width:100%;max-width:760px;min-height:88px;margin:0 auto 12px}
+/* The final masthead dimensions are defined once in the sticky header block below. */
 
 /* Floating controls: force transparent surfaces, including browser and pseudo-element painting. */
 button#menu-toggle,
