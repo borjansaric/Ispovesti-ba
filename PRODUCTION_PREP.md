@@ -26,10 +26,14 @@
 ## Pripremljene, ali NEPRIMIJENJENE SQL migracije
 - `20261124173000_chat_live_report_parity.sql`: usklađuje live prijave chata sa preview ugovorom: `hate_speech`, `spam`, `other` i opcioni opis do 500 znakova.
 - `20261124180000_live_entry_captcha_clearance.sql`: dodaje server-side CAPTCHA clearance po anonimnom Auth UID-u i provjeru pri slanju.
+- `20261124190000_live_preview_feature_parity.sql`: priprema live reakcije, privatnu listu mojih ispovijesti, administratorske preglede, analitiku posjeta i obavezni request ID.
+- `20261124200000_live_free_chat_parity.sql`: priprema besplatan zajednički chat kao u preview-u, uz očuvanje aktivnog kupljenog/vlasničkog pristupa i javnu istoriju poruka.
 - Nijedna migracija iz ove pripremne grane nije primijenjena na Supabase.
 
 ## Pripremljen, ali NEOBJAVLJEN backend kod
 - `launch/community-live-api.ts` sada sadrži planirani tok `captcha_init`: provjera postojeće clearance potvrde, Turnstile akcija `app_entry`, upis potvrde i provjera potvrde pri slanju.
+- Live community API sada priprema rute za `track_visit`, `my_confessions` i administratorske read akcije.
+- Chat live SQL migracija priprema besplatan pristup kao u preview-u; chat report ugovor prenosi opis prijave.
 - `chat/gateway.mjs` prosljeđuje `details` za prijave.
 - Edge Functions nisu deployovane; produkcijski endpointi i dalje izvršavaju trenutno deployovane verzije.
 
@@ -47,9 +51,9 @@
 - [x] Produkcijska pripremna grana odvojena od `main`.
 - [x] Glavni frontend i klijentski moduli preneseni.
 - [x] Produkcijska konfiguracija i API destinacije prilagođene.
-- [x] Pripremljene SQL migracije za chat prijave i CAPTCHA clearance.
-- [x] Pripremljen live community Edge Function kod za CAPTCHA clearance.
-- [ ] Potpun SQL/API paritet za sve funkcije preview-a.
+- [x] Pripremljene SQL migracije za chat prijave, CAPTCHA clearance, reakcije/analitiku/admin read funkcije i besplatan chat.
+- [x] Pripremljen live community Edge Function kod za CAPTCHA clearance, posjete, moje ispovijesti i administratorske preglede.
+- [ ] Potpun SQL/API paritet za sve funkcije preview-a (uključujući preostale razlike dispatch/chat admin funkcija i bezbjednosnih pravila).
 - [ ] Build i automatski testovi uspješno izvršeni.
 - [ ] Završni pregled i odobrenje.
 - [ ] Deploy (nije odobren niti izvršen).
