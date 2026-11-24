@@ -4,37 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'self'; object-src 'none'">
+<meta http-equiv="refresh" content="0;url=admin.html?view=chat">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#111111">
-<title>Administratorska arhiva chata · Ispovesti.ba</title>
-<link rel="stylesheet" href="chat/admin.css?v=20261124-email-login1">
-<script src="config.js" defer></script>
-<script src="vendor/supabase.js" defer></script>
-<script type="module" src="chat/admin.mjs?v=20261124-email-login1"></script>
+<title>Arhiva chata · Ispovesti.ba</title>
 </head>
-<body>
-<main class="admin-shell">
-<header><p class="eyebrow">ISPOVESTI.BA · LIVE OKRUŽENJE</p><h1>Arhiva anonimnog chata</h1><p class="intro">Kompletna istorija poruka dostupna je samo ovlašćenom administratoru.</p></header>
-<section id="login-panel" class="panel">
-<h2>Administratorska prijava</h2>
-<form id="login-form">
-<label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" required>
-<label for="password">Lozinka</label><input id="password" name="password" type="password" autocomplete="current-password" required>
-<button type="submit">Prijavi se</button>
-</form>
-<form id="email-code-form" hidden>
-<label for="email-code">Sigurnosni kod sa e-maila</label><input id="email-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required>
-<button type="submit">Potvrdi kod</button>
-</form>
-<p id="login-status" class="status" role="status"></p>
-</section>
-<section id="archive-panel" hidden>
-<div class="toolbar"><div><h2>Sačuvane poruke</h2><p id="archive-count" class="muted">Najnovije poruke prve</p></div><button id="sign-out" class="secondary" type="button">Odjavi se</button></div>
-<div id="messages" class="messages" aria-live="polite"></div>
-<button id="older" class="older" type="button" hidden>Učitaj starije poruke</button>
-<p id="archive-status" class="status" role="status"></p>
-</section>
-</main>
+<body style="margin:0;padding:24px;background:#111;color:#eee;font:16px system-ui">
+<p>Arhiva chata je sada dio glavne administracije.</p>
+<p><a href="admin.html?view=chat" style="color:#d8b45c">Otvori glavnu administraciju — Arhiva chata</a></p>
 </body>
 </html>
