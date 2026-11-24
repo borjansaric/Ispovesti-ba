@@ -24,9 +24,7 @@ body::after{
  mask-image:linear-gradient(to bottom,transparent,#000 12%,#000 88%,transparent);
  transform:translate3d(0,var(--lux-scroll-y,0px),0);opacity:.55;
 }
-.site-header,main,footer{position:relative;z-index:1}
-
-.site-header{background:transparent}
+main,footer{position:relative;z-index:1}
 .site-header h1{letter-spacing:.09em;text-shadow:0 0 24px rgba(201,167,91,.18)}
 .site-header p{letter-spacing:.025em}
 .panel,.private-panel{
