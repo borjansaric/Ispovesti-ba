@@ -29,3 +29,14 @@ exclude:
   - .sass-cache
   - .jekyll-cache
   - .bundle
+  - docs
+  - AGENTS.md
+  - AGENTS.html
+  - PROJECT_RULES.md
+  - PROJECT_RULES.html
+  - PRODUCTION_PREP.html
+  - admin-recovery/sandbox
+  - admin-recovery/reset-template.html
+  - admin-prep/*.sql
+  - admin-prep/telemetry-local.mjs
+  - admin-prep/banner-local.mjs
