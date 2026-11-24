@@ -1,1 +1,40 @@
-<!doctype html><html lang="sr-Latn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'"><title>Administracija chata · Ispovesti.ba</title><link rel="stylesheet" href="original.css"><link rel="stylesheet" href="styles.css"><script src="config.js" defer></script><script src="vendor/supabase.js" defer></script><script type="module" src="live/chat-admin.mjs"></script></head><body><main class="admin"><a class="brand" href="admin.html">Administracija</a><h1>Anonimni chat</h1><p id="chat-admin-status" role="status"></p><section id="chat-admin-tools" hidden><button id="owner-enter" class="action" type="button">Uđi anonimno u chat</button><a class="text-button" href="./">Otvori sajt</a></section><button class="text-button" id="chat-logout">Odjavi se</button></main></body></html>
+<!doctype html>
+<html lang="sr-Latn-RS">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'self'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#111111">
+<title>Administratorska arhiva chata · Ispovesti.ba</title>
+<link rel="stylesheet" href="chat/admin.css?v=20261124-email-login1">
+<script src="config.js" defer></script>
+<script src="vendor/supabase.js" defer></script>
+<script type="module" src="chat/admin.mjs?v=20261124-email-login1"></script>
+</head>
+<body>
+<main class="admin-shell">
+<header><p class="eyebrow">ISPOVESTI.BA · LIVE OKRUŽENJE</p><h1>Arhiva anonimnog chata</h1><p class="intro">Kompletna istorija poruka dostupna je samo ovlašćenom administratoru.</p></header>
+<section id="login-panel" class="panel">
+<h2>Administratorska prijava</h2>
+<form id="login-form">
+<label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" required>
+<label for="password">Lozinka</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+<button type="submit">Prijavi se</button>
+</form>
+<form id="email-code-form" hidden>
+<label for="email-code">Sigurnosni kod sa e-maila</label><input id="email-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required>
+<button type="submit">Potvrdi kod</button>
+</form>
+<p id="login-status" class="status" role="status"></p>
+</section>
+<section id="archive-panel" hidden>
+<div class="toolbar"><div><h2>Sačuvane poruke</h2><p id="archive-count" class="muted">Najnovije poruke prve</p></div><button id="sign-out" class="secondary" type="button">Odjavi se</button></div>
+<div id="messages" class="messages" aria-live="polite"></div>
+<button id="older" class="older" type="button" hidden>Učitaj starije poruke</button>
+<p id="archive-status" class="status" role="status"></p>
+</section>
+</main>
+</body>
+</html>
