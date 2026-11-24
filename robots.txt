@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /Ispovesti-ba/test/
+Sitemap: https://borjansaric.github.io/Ispovesti-ba/sitemap.xml
