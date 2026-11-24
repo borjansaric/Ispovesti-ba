@@ -75,7 +75,7 @@ export async function openChat(){
   }catch(e){if(stopped)return;if([401,403].includes(e.status))resetAccess(e.message);else status.textContent=e.message;}
   finally{polling=false;}
  }
- async function loadProfile(){try{const bootstrap=await chatRequest('bootstrap');if(stopped)return;profile=bootstrap.profile;root.dataset.ownSide=profile.side||'left';
+ async function loadProfile(){try{profile=await chatRequest('profile');if(stopped)return;root.dataset.ownSide=profile.side||'left';
    account.replaceChildren(el('p','hint','Tvoj anonimni chat ID: '+profile.id),el('p','hint',profile.active?(profile.plan==='free'?'Besplatan pristup':'Paket '+profile.plan+' · ističe '+new Date(profile.expires_at).toLocaleString('sr-Latn')):'Chat trenutno nije dostupan.'));
    blocked.replaceChildren();for(const [i,b]of (profile.blocked||[]).entries())blocked.append(button('Odblokiraj korisnika '+(i+1),async()=>{await chatRequest('unblock',{target:b.id});await loadProfile();}));
    form.hidden=!profile.active;if(profile.active){status.textContent='';await refresh(false,bootstrap.history);clearInterval(timer);timer=setInterval(()=>refresh(),1500);}else status.textContent='Chat trenutno nije dostupan.';
