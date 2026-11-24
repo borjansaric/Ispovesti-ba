@@ -8,7 +8,7 @@ test('live chat report contract matches the locked preview UI', async () => {
   const [ui, gateway, migration] = await Promise.all([
     read('../chat/ui.mjs'),
     read('../chat/gateway.mjs'),
-    read('../supabase/migrations/20261124173000_chat_live_report_parity.sql')
+    read('../supabase/migrations/20261124175331_chat_live_report_parity.sql')
   ]);
 
   assert.match(ui, /sendReport\('hate_speech'\)/);
