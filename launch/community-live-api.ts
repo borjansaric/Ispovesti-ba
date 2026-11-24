@@ -2,7 +2,7 @@
 const url=Deno.env.get('SUPABASE_URL')!;
 const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const allowed=(Deno.env.get('ALLOWED_ORIGINS')||'https://borjansaric.github.io').split(',');
-const publicActions=new Set(['feed','comments','confession','captcha_config','activate_admin','health']);
+const publicActions=new Set(['feed','comments','confession','daily_highlights','captcha_config','activate_admin','health','track_visit']);
 class HttpError extends Error { status:number; constructor(message:string,status=400){super(message);this.status=status;} }
 const fail=(message:string,status=400):never=>{throw new HttpError(message,status);};
 async function digest(text:string){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -41,7 +41,7 @@ Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin');
  const began=Date.now(),timings:Record<string,number>={};
  const timed=async<T>(name:string,work:()=>Promise<T>):Promise<T>=>{const at=Date.now();try{return await work();}finally{timings[name]=(timings[name]||0)+Date.now()-at;}};
- const timedRpc=(name:string,uid:string|null,action:string,args:Record<string,unknown>={})=>timed(name==='community_live_dispatch'?'database':name==='community_live_security'||name==='community_live_captcha_clearance'?'settings':'admin_database',()=>rpc(name,uid,action,args));
+ const timedRpc=(name:string,uid:string|null,action:string,args:Record<string,unknown>={})=>timed(name==='community_live_dispatch'?'database':name==='community_live_security'||name==='community_live_captcha_clearance'?'settings':name==='community_live_visitor_event'?'analytics_database':'admin_database',()=>rpc(name,uid,action,args));
  const headers:Record<string,string>={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS','X-Content-Type-Options':'nosniff'};
  if(origin&&allowed.includes(origin)){headers['Access-Control-Allow-Origin']=origin;headers['Timing-Allow-Origin']=origin;headers['Access-Control-Expose-Headers']='Server-Timing';}
  const send=(data:unknown,status=200)=>{headers['Server-Timing']=[...Object.entries(timings).map(([name,ms])=>name+';dur='+ms),'server;dur='+(Date.now()-began)].join(', ');return new Response(JSON.stringify(data),{status,headers});};
@@ -57,6 +57,12 @@ Deno.serve(async(req:Request)=>{
   if(!args||typeof args!=='object'||Array.isArray(args))fail('Neispravan zahtjev.');
   if(action==='health'){const c=await timedRpc('community_live_security',null,'public_config');const capabilities=await timedRpc('community_live_dispatch',null,'release_status',{});if(capabilities.vote_changes!==1||capabilities.reply_parent!=='root-comment'||capabilities.comment_meta!=='live-isolated'||capabilities.posting_policy!=='free')fail('Glavni SQL nije usklađen sa release12.',503);return send({environment:'live',version:'launch1',posting_policy:'free',captcha_enabled:c.enabled,capabilities});}
   if(action==='captcha_config')return send(await timedRpc('community_live_security',null,'public_config'));
+  if(action==='track_visit'){
+   const visitorId=String(args.visitor_id||'').toLowerCase();
+   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(visitorId))fail('Neispravan analitički identifikator.');
+   const visitorHash=await digest('ispovesti-analytics-v1:'+serviceKey+':'+visitorId);
+   return send(await timedRpc('community_live_visitor_event',null,'record_visit',{visitor_hash:visitorHash}));
+  }
   if(action==='activate_admin')return send({error:'Koristi postojeći administratorski nalog.'},403);
   let uid:string|null=null;
   if(!publicActions.has(action)){
@@ -155,6 +161,8 @@ Deno.serve(async(req:Request)=>{
    }
    delete args.captcha_token;
   }
+  if(action==='my_confessions')return send(await timedRpc('community_live_my_confessions',uid,action,args));
+  if(['admin_dashboard','admin_comments','admin_reports','admin_audit','admin_analytics'].includes(action))return send(await timedRpc('community_live_admin_read',uid,action,args));
   return send(await timedRpc('community_live_dispatch',uid,action,args));
  }catch(error){if(error instanceof HttpError)return send({error:error.message},error.status);if(error instanceof SyntaxError)return send({error:'Neispravan zahtjev.'},400);return send({error:'Server trenutno nije dostupan. Pokušaj ponovo.'},503);}
 });
