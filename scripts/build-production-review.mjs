@@ -1,6 +1,6 @@
 import {mkdir,copyFile,cp,readFile,writeFile,rm} from 'node:fs/promises';
 const out=new URL('../.production-review/',import.meta.url),root=new URL('../',import.meta.url);await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
-for(const file of ['index.html','app.js','api.js','captcha.js','admin.html','admin.js','config.js','original.css','styles.css','luxury.css','diagnostics.mjs','favicon.svg','share-card.png','privacy.html','terms.html','cookies.html','contact.html'])await copyFile(new URL(file,root),new URL(file,out));
+for(const file of ['index.html','app.js','api.js','captcha.js','submission-store.mjs','admin.html','admin.js','config.js','original.css','styles.css','luxury.css','diagnostics.mjs','favicon.svg','share-card.png','privacy.html','terms.html','cookies.html','contact.html'])await copyFile(new URL(file,root),new URL(file,out));
 await cp(new URL('vendor/',root),new URL('vendor/',out),{recursive:true});await mkdir(new URL('chat/',out),{recursive:true});await mkdir(new URL('admin/',out),{recursive:true});for(const f of ['chat.css','thread-model.mjs','client.mjs','ui.mjs','admin.css','admin.mjs'])await copyFile(new URL('chat/'+f,root),new URL('chat/'+f,out));for(const f of ['admin.css','admin.mjs'])await copyFile(new URL('admin/'+f,root),new URL('admin/'+f,out));
 // Use the same reviewed client modules as preview; config.js selects the live API.
 await copyFile(new URL('chat-admin.html',root),new URL('chat-admin.html',out));await copyFile(new URL('admin.html',root),new URL('admin.html',out));
