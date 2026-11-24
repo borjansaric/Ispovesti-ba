@@ -7,7 +7,7 @@ const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 test('live CAPTCHA is cleared once at entry and checked server-side on submit', async () => {
   const [api, captcha, edge, migration] = await Promise.all([
     read('../api.js'), read('../captcha.js'), read('../launch/community-live-api.ts'),
-    read('../supabase/migrations/20261124180000_live_entry_captcha_clearance.sql')
+    read('../supabase/migrations/20261124175333_live_entry_captcha_clearance.sql')
   ]);
   assert.match(api, /initializeSecurity\(\)/);
   assert.match(api, /ensureCaptchaClearance/);
