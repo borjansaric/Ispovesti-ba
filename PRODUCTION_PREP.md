@@ -25,12 +25,12 @@
 - `/test/` ostaje zaseban i nije prepisan.
 
 ## Live SQL migracije — PRIMIJENJENE
-1. `20261124173000_chat_live_report_parity.sql` — chat prijave koriste `hate_speech`, `spam`, `other` i opis do 500 znakova.
-2. `20261124180000_live_entry_captcha_clearance.sql` — server-side CAPTCHA clearance po anonimnom Auth UID-u.
-3. `20261124190000_live_preview_feature_parity.sql` — reakcije, moje ispovijesti, admin read funkcije, analitika posjeta i retention.
-4. `20261124200000_live_free_chat_parity.sql` — besplatan zajednički chat, uz očuvanje aktivnog kupljenog/vlasničkog pristupa i istorije.
-5. `20261124210000_live_community_report_parity.sql` — community prijave prihvataju `hate_speech` i čuvaju opis do 500 znakova; admin pregledi prikazuju opis.
-6. `20261124220000_live_reporting_fk_indexes.sql` — indeksi za nove/usklađene report i reaction FK veze.
+1. `20261124175331_chat_live_report_parity.sql` — chat prijave koriste `hate_speech`, `spam`, `other` i opis do 500 znakova.
+2. `20261124175333_live_entry_captcha_clearance.sql` — server-side CAPTCHA clearance po anonimnom Auth UID-u.
+3. `20261124175336_live_preview_feature_parity.sql` — reakcije, moje ispovijesti, admin read funkcije, analitika posjeta i retention.
+4. `20261124175339_live_free_chat_parity.sql` — besplatan zajednički chat, uz očuvanje aktivnog kupljenog/vlasničkog pristupa i istorije.
+5. `20261124175342_live_community_report_parity.sql` — community prijave prihvataju `hate_speech` i čuvaju opis do 500 znakova; admin pregledi prikazuju opis.
+6. `20261124175439_live_reporting_fk_indexes.sql` — indeksi za nove/usklađene report i reaction FK veze.
 
 ## Live Edge Functions — DEPLOYOVANE
 - `community-live-api`: verzija 6, postojeći `verify_jwt=false` režim zadržan; sada uključuje entry-only CAPTCHA clearance, posjete, moje ispovijesti i admin read rute.
