@@ -9,24 +9,61 @@ Ova grana je radna priprema. Nije objavljena i nije spojena u `main`.
 - Produkcijski `config.js` mora ostati `mode: "live"` i `chatEnvironment: "live"`.
 - Produkcijski API pozivi moraju ostati na `community-live-api` i `chat-live-api`.
 - CAPTCHA i live zaštite se ne uklanjaju niti zaobilaze.
+- Produkcijski Pages workflow objavljuje samo allowlistu koju priprema `scripts/build-production-review.mjs`; `/test/` se kopira očuvan. Ne objavljivati direktno korijen repozitorija niti mijenjati workflow bez pregleda.
 
-## Provjereno 24.11.2026.
+## Read-only pregled 24.11.2026.
+
+### Okruženja i sadržaj
 - Supabase projekat `Ispovesti-ba` je aktivan.
 - Test i live koriste odvojene šeme: `community_test/chat_test` i `community_live/chat_live`.
-- Test šeme imaju probni sadržaj; `community_live.content` i `chat_live.messages` su bili prazni pri provjeri.
-- Produkcijski repo je stariji od zaključanog previewa u dijelu UI-ja i chat prijava.
-- Preview `app.js` i `api.js` imaju promjene povezane s CAPTCHA inicijalizacijom, auth klijentom, cacheom i pending submission sistemom. Ne kopirati ih naslijepo u live granu.
+- Test šeme imaju probni sadržaj; `community_live.content` i `chat_live.messages` bili su prazni pri provjeri.
+- Nema kopiranja test ispovijesti, komentara ili chat poruka u live.
 
-## Sljedeći koraci
-1. Prenijeti i pregledati UI dorade iz zaključanog previewa, uz očuvanje live API-ja i CAPTCHA toka.
-2. Uskladiti chat meni/prijave i potvrditi kompatibilnost s live chat funkcijom.
-3. Provjeriti stranice, bannere, pravila/privatnost, PWA manifest i APK pripremu.
-4. Uraditi statičku provjeru i testiranje na privremenom preview URL-u, bez live podataka.
-5. Tek nakon zasebne potvrde: objava, domen/DNS i HTTPS.
+### Repo/struktura
+- Preview izvor: `borjansaric/Ispovesti-ba-preview`, snapshot `snapshot/ispovesti-preview-2026-11-24`.
+- Produkcijska pripremna grana: `borjansaric/Ispovesti-ba`, `prepare/production-from-preview-2026-11-24`.
+- Produkcijski repozitorij ima odvojene root live fajlove i `test/` aplikaciju; preview snapshot ima ažurirani root izvor, test Edge Functions i kopiju live Edge Functions/migracija.
+- Preview build pravi hashed module bundle u `dist/`; produkcijski Pages workflow koristi poseban live allowlist build. Build/deploy sistemi nisu zamjenjivi.
+
+### Ključne razlike potvrđene poređenjem fajlova
+| Fajl/oblast | Nalaz | Siguran pristup |
+|---|---|---|
+| `app.js` | Live root ~320 linija / 28.5 KB; preview ~788 linija / 57.2 KB. Preview dodaje feed stanje/sortiranje, direktnu navigaciju, pending submissions, warm-up komentara, dodatne kontrole i reakcije. | Ne zamijeniti cijeli fajl dok se funkcije i live API pozivi ne mapiraju. |
+| `api.js` | Live ima CAPTCHA token po slanju; preview ima clearance po anonimnom UID-u, inicijalizaciju sigurnosti, cache i pending submission tok. | Blokirano za direktno kopiranje: live backend trenutno ne podržava preview clearance model. |
+| `captcha.js` | Preview uvodi action parametar; produkcijski `captcha.js` prema ranijem auditu čita javni CAPTCHA config sa test endpointa, dok token provjerava live API. | Ispraviti live endpoint kao zasebnu, minimalnu promjenu tek nakon provjere builda i konfiguracije; ne mijenjati CAPTCHA model implicitno. |
+| `config.js` | Namjerno različit: live mora ostati `live/live`, preview `live-test/test`. | Sačuvati produkcijski config. |
+| `index.html` | Preview ima nove kontrole/feed/banner i asset reference; preview noindex nije za produkciju. | Prenijeti UI elemente selektivno; zadržati live SEO, canonical/robots pravila i validne produkcijske asset putanje. |
+| `styles.css` | Preview ~33.2 KB / 317 linija; live ~18.6 KB / 135 linija. | Prvo povezati CSS sa stvarnim HTML komponentama; bez wholesale zamjene dok se ne potvrdi zabrana mijenjanja osnovnog `original.css/styles.css` iz specifikacije. |
+| `chat/ui.mjs` | Preview ~11.3 KB / 114 linija; live ~8.8 KB / 51 linija. Preview report UI i meni su znatno prošireni. | Portovati UI sloj po sloj; provjeriti svaku akciju prema live gateway kontraktu. |
+| `chat/client.mjs` | Sličan API poziv, ali import/cache reference različite; oba imaju test-code/recovery exports. | Produkcijski build već filtrira live klijent; nikad ne izložiti test-code generator ili recovery key tok u live bundle. |
+| `chat/chat.css` | Preview ~9.8 KB / 60 linija; live ~7.4 KB / 33 linije. | Prenijeti samo stilove za postojeće/live potvrđene kontrole. |
+| Backend/schema | Preview report UI može očekivati nove report reason/details; live chat schema/gateway se razlikuju. | Prije report UI promjene provjeriti live gateway, SQL constraints i deployed function; bez SQL/Edge Function promjena u ovom zadatku. |
+
+### CAPTCHA i anonimni identitet — blokirajuća razlika
+Read-only preview audit bilježi:
+- Preview/test: CAPTCHA clearance jednom po anonimnom Auth UID-u, server-side potvrda u `community_test.captcha_clearance`.
+- Produkcija: CAPTCHA token pri svakom slanju; live SQL dispatcher nema preview clearance tabelu/RPC.
+- Produkcijski CAPTCHA frontend trenutno čita javni sitekey/enabled status preko test API-ja, a live backend provjerava live podešavanja.
+- ECDSA instalacioni identitet je odbijen; ne uvoditi.
+- Auth brisanje i očuvanje sadržaja nije riješeno; ne dirati FK ili brisanje korisnika.
+
+Zbog toga preview `api.js` / `app.js` nisu direktno prenosivi. Usklađivanje mora zadržati live CAPTCHA ugovor dok se zasebno ne odobri i implementira server-side paritet.
+
+## Migracijski redoslijed
+1. Inventar svih root/live datoteka, `dist/` allowlist builda, `test/`, Pages workflowa i backend ugovora.
+2. Prenos HTML/CSS/UI komponenti koje ne mijenjaju API/security; provjeriti asset reference i mobilni raspored.
+3. Chat UI: meni/report forma samo uz potvrđen live gateway payload i validne live report reason vrijednosti.
+4. Feed/app funkcije: prenos po funkciji, ne zamjena cijelog `app.js`; zadržati live API signatures, CAPTCHA token flow, auth keys i live endpoint.
+5. Pending submissions/cache: analizirati duplicate/idempotency server contract; ne aktivirati dok nije potvrđeno da live backend podržava request IDs i retry semantics.
+6. CAPTCHA config endpoint: live-only minimal fix, sa testom, bez promjene CAPTCHA frekvencije ili clearance modela.
+7. Build/QA: provjeriti live allowlist bundle, `/test/` byte preservation, zabranu test API-ja/test generatora u live bundle, linkove/asset reference, static checks i odvojeni test preview bez live sadržaja.
+8. Završni pregled promjena i eksplicitno odobrenje prije merge/deploy/domain/DNS.
 
 ## Status
 - [x] Odvojena produkcijska pripremna grana kreirana.
-- [x] Pregled konfiguracije i razdvajanja test/live API-ja.
-- [ ] Prenos UI dorada — u toku.
+- [x] Read-only pregled test/live izolacije i Pages build allowliste.
+- [x] Početni inventar ključnih UI/API razlika napravljen.
+- [ ] Potpuni pregled svih root/live i build datoteka.
+- [ ] Prenos UI dorada — nije počeo; API/backend kompatibilnost prvo.
 - [ ] Testiranje i završna provjera — nije urađeno.
 - [ ] Produkcijska objava — nije odobrena/urađena.
