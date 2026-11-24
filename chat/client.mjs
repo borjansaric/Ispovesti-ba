@@ -1,4 +1,4 @@
-import {authClient,isLocal} from '../api.js?v=room3';
+import {authClient,isLocal} from '../api.js?v=20261124-module-singleton1';
 let localPending;
 async function localSession(){
  if(!localPending)localPending=fetch('/api/chat-session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',credentials:'same-origin'}).then(async r=>{if(!r.ok)throw Error('Anonimna prijava nije dostupna.');}).catch(e=>{localPending=null;throw e;});
