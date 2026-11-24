@@ -46,8 +46,11 @@ body::after{
 button{background:transparent;color:var(--gold);padding:7px 5px;border:0;border-radius:0;outline-offset:4px;box-shadow:none}
 button:hover{color:var(--gold-soft);background:transparent}
 button:disabled{opacity:.55}
-.reply-button,.text-button,.icon-button,.comment-report,.comment-heart{
+.reply-button,.text-button,.comment-report,.comment-heart{
  background:transparent;color:var(--gold);padding:5px 7px;margin:0;
+}
+.icon-button{
+ color:var(--gold);padding:5px 7px;margin:0;
 }
 .comment-heart{
  color:var(--gold);background:transparent;
@@ -62,9 +65,11 @@ button:disabled{opacity:.55}
  background:transparent;border:0;border-radius:0;
  text-align:left;color:#ddd;padding:8px 0;
 }
-.menu-links button.active,.side-menu .private-actions button.active{
- color:var(--gold);background:transparent;border:0;
-}
+.side-menu .private-actions button{display:flex;align-items:center;gap:10px}
+.private-action-icon{display:inline-flex;flex:0 0 20px;width:20px;height:20px;align-items:center;justify-content:center;font-size:20px;line-height:1;color:#ffda68;text-shadow:0 0 5.184px rgba(255,218,104,1),0 0 13.824px rgba(255,196,65,.58752);filter:drop-shadow(0 0 3.456px rgba(255,205,85,.65664))}
+.private-action-icon svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3.456px rgba(255,218,104,.96768))}
+
+.side-menu .private-actions button.active{color:var(--gold)}
 .side-menu{background:#101010;border-right:1px solid rgba(214,177,94,.18);box-shadow:none}
 .side-menu .panel{background:transparent;border:0;box-shadow:none}
 
@@ -94,3 +99,46 @@ button:disabled{opacity:.55}
  opacity:.72;
 }
 .site-header h1,.site-header p{position:relative;z-index:1}
+
+/* Subtle gold emphasis for the user's own confession archive. */
+.side-menu .private-panel h2 .my-confessions-link{
+ display:inline-flex;align-items:center;margin:0 0 8px;padding:0;border:0;background:transparent;
+ color:#ead49a;font-size:16px;font-weight:800;letter-spacing:.015em;text-align:left;
+ -webkit-text-stroke:.12px rgba(234,212,154,.35);
+ text-shadow:0 0 1.4px rgba(255,218,104,.36),0 0 3.5px rgba(255,196,65,.15);
+ box-shadow:none;
+}
+.side-menu .private-panel h2 .my-confessions-link:hover,
+.side-menu .private-panel h2 .my-confessions-link.active{
+ color:#f5dfa2;text-shadow:0 0 2.1px rgba(255,218,104,.43),0 0 4.9px rgba(255,196,65,.21);
+ background:transparent;
+}
+.side-menu .private-panel h2 .my-confessions-link:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+
+
+/* Keep the masthead visible without trapping page scroll. */
+html,body{
+ min-height:100%;
+ height:auto;
+}
+body{
+ display:block;
+ min-height:100%;
+ height:auto;
+ overflow:visible;
+}
+.site-header{
+ position:sticky!important;
+ top:0!important;
+ z-index:1001!important;
+ flex:initial!important;
+ background:#090909;
+}
+main#main{
+ position:relative!important;
+ z-index:1;
+ min-height:0;
+ overflow:visible!important;
+ overscroll-behavior:auto!important;
+ -webkit-overflow-scrolling:auto;
+}

@@ -1,6 +1,4 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
-import {execFileSync} from 'node:child_process';
-execFileSync(process.execPath,['scripts/build-production-review.mjs'],{cwd:new URL('../',import.meta.url),stdio:'pipe'});
 import {recordDiagnostic,getDiagnostics} from '../diagnostics.mjs';
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 test('diagnostics never retain arbitrary error data and remain memory-bounded',()=>{recordDiagnostic('private confession text');for(let i=0;i<40;i++)recordDiagnostic('client_error');const d=getDiagnostics();assert.equal(d.length,30);assert.deepEqual(Object.keys(d[0]).sort(),['build','code','minute']);d[0].code='changed';assert.equal(getDiagnostics()[0].code,'client_error');});

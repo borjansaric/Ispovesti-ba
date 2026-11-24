@@ -1,6 +1,6 @@
 import {recoveryRequest} from './client.mjs';
 import {captchaToken,releaseCaptcha} from '../captcha.js?v=room2';
-const c=window.ISPOVESTI_CONFIG||{},login=document.querySelector('#login');
+const c=window.ISPOVESTI_CONFIG||{},login=document.querySelector('#login-panel');
 if(['live-test','live'].includes(c.mode)&&login){
  const toggle=document.createElement('button');toggle.type='button';toggle.className='text-button';toggle.textContent='Zaboravljena lozinka?';toggle.id='forgot-password';
  const section=document.createElement('section');section.hidden=true;

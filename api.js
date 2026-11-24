@@ -1,14 +1,35 @@
-import { captchaToken, prepareCaptcha } from './captcha.js?v=room2';
+import { captchaToken, prepareCaptcha, releaseCaptcha } from './captcha.js?v=room2';
 const config = window.ISPOVESTI_CONFIG || {};
 export const isPreview = config.mode === 'preview';
 export const isLocal = config.mode === 'local';
-export function prepareSubmission(kind,host){if(!isPreview&&!isLocal){prepareCaptcha({kind,host});void session().catch(()=>{});}}
+let captchaClearancePromise,captchaClearanceUid=null;
+async function ensureCaptchaClearance(host=document.body){
+ if(isPreview||isLocal)return true;
+ if(!captchaClearancePromise)captchaClearancePromise=(async()=>{
+  const initialSession=await session(),initialUid=initialSession?.user?.id;
+  if(!initialUid)throw new Error('Anonimna sesija trenutno nije dostupna. Pokušaj kasnije.');
+  if(captchaClearanceUid===initialUid)return true;
+  const current=await networkRequest('captcha_init',{},initialSession);
+  if(current.verified===true){captchaClearanceUid=initialUid;return true;}
+  if(current.required!==true)throw new Error('Sigurnosna provjera nije dostupna. Pokušaj kasnije.');
+  prepareCaptcha({kind:'entry',host,action:'app_entry'});
+  try{
+   const token=await captchaToken({kind:'entry',host,action:'app_entry'});
+   const result=await networkRequest('captcha_init',{captcha_token:token},initialSession);
+   if(result.verified!==true)throw new Error('Sigurnosna provjera nije potvrđena. Pokušaj ponovo.');
+   captchaClearanceUid=(await session()).user.id;return true;
+  }finally{releaseCaptcha(host);}
+ })().finally(()=>{captchaClearancePromise=null;});
+ return captchaClearancePromise;
+}
+export function initializeSecurity(){return ensureCaptchaClearance(document.body);}
+export function prepareSubmission(){if(!isPreview&&!isLocal&&!captchaClearanceUid)void ensureCaptchaClearance(document.body).catch(()=>{});}
 let client, sessionPromise;
 export function authClient(admin = false) {
   if (isPreview) throw new Error('Administracija je dostupna samo na povezanom testnom ili živom okruženju.');
   if (!config.supabaseUrl || !config.publishableKey || !window.supabase) throw new Error('Veza sa serverom nije podešena.');
-  if (admin) return window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-test-admin-session', storage: window.sessionStorage } });
-  return client ||= window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-test-user-session' } });
+  if (admin) return window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-admin-session', storage: window.sessionStorage } });
+  return client ||= window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-user-session' } });
 }
 async function session() {
   if (!sessionPromise) sessionPromise = (async () => {
@@ -37,17 +58,64 @@ async function localRequest(action,args,retry=true){
  if(response.status===401&&protectedAction&&retry){localSessionReady=false;return localRequest(action,args,false);}
  const result=await response.json();if(!response.ok)throw new Error(result.error||'Lokalna provera nije uspela.');return result;
 }
+const readCacheActions=new Set(['feed','comments','confession','daily_highlights']);
+const readCacheDb='ispovesti-read-cache-v1';
+let readCacheDbPromise;
+function openReadCache(){
+ if(!('indexedDB' in window))return Promise.resolve(null);
+ if(!readCacheDbPromise)readCacheDbPromise=new Promise(resolve=>{
+  const req=indexedDB.open(readCacheDb,1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('responses'))req.result.createObjectStore('responses',{keyPath:'key'});};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);req.onblocked=()=>resolve(null);
+ });
+ return readCacheDbPromise;
+}
+async function getReadCache(key){
+ try{const db=await openReadCache();if(!db)return null;return await new Promise(resolve=>{const req=db.transaction('responses','readonly').objectStore('responses').get(key);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>resolve(null);});}catch{return null;}
+}
+async function putReadCache(key,value){
+ try{const db=await openReadCache();if(!db)return;await new Promise(resolve=>{const tx=db.transaction('responses','readwrite');tx.objectStore('responses').put({key,value,savedAt:Date.now()});tx.oncomplete=tx.onerror=tx.onabort=()=>resolve();});}catch{}
+}
+async function clearReadCache(action){
+ try{const db=await openReadCache();if(!db)return;await new Promise(resolve=>{const tx=db.transaction('responses','readwrite'),store=tx.objectStore('responses'),req=store.openCursor();req.onsuccess=()=>{const cursor=req.result;if(!cursor)return;if(cursor.key.startsWith(action+':'))cursor.delete();cursor.continue();};tx.oncomplete=tx.onerror=tx.onabort=()=>resolve();});}catch{}
+}
+function readCacheKey(action,args){return action+':'+JSON.stringify(args||{});}
+async function cachedRead(action,args,network){
+ const key=readCacheKey(action,args),cached=await getReadCache(key);
+ if(cached){
+  // Keep fresh snapshots quiet; only revalidate older entries to avoid duplicate network traffic.
+  if(Date.now()-Number(cached.savedAt||0)>15000)void network().then(async fresh=>{
+   if(JSON.stringify(fresh)!==JSON.stringify(cached.value)){
+    await putReadCache(key,fresh);
+    window.dispatchEvent(new CustomEvent('ispovesti:read-cache-updated',{detail:{action,args,result:fresh}}));
+   }
+  }).catch(()=>{});
+  return cached.value;
+ }
+ const fresh=await network();await putReadCache(key,fresh);return fresh;
+}
 export async function request(action, args = {}, adminSession = null, captchaHost = null) {
   if(config.mode==='local')return localRequest(action,args);
+  if(readCacheActions.has(action)&&!adminSession)return cachedRead(action,args,()=>networkRequest(action,args,adminSession,captchaHost));
+  const result=await networkRequest(action,args,adminSession,captchaHost);
+  if(action==='submit'&&result?.success){if(args.kind==='confession')await clearReadCache('feed');else await clearReadCache('comments');}
+  return result;
+}
+async function networkRequest(action, args = {}, adminSession = null, captchaHost = null) {
+
   if (isPreview) return previewRequest(action, args);
+  if(action==='submit')await ensureCaptchaClearance(captchaHost||document.body);
   const headers = { apikey: config.publishableKey, 'Content-Type': 'application/json' };
-  if (!['feed', 'comments', 'confession', 'daily_highlights', 'captcha_config', 'activate_admin'].includes(action)) {
-    const authAt=performance.now();
-    const s = adminSession || await session();
-    if(action==='submit')performance.measure('ispovesti-submit-session',{start:authAt,end:performance.now()});
-    headers.Authorization = 'Bearer ' + s.access_token;
-  }
-  if(action==='submit'){const at=performance.now();args={...args,captcha_token:await captchaToken({kind:args.kind,host:captchaHost})};performance.measure('ispovesti-submit-captcha',{start:at,end:performance.now()});}
+  const needsSession = !['feed', 'comments', 'confession', 'daily_highlights', 'captcha_config', 'activate_admin', 'track_visit'].includes(action);
+  const authAt=performance.now();
+  const sessionTask = needsSession
+    ? (adminSession ? Promise.resolve(adminSession) : session()).then(s => {
+        if(action==='submit')performance.measure('ispovesti-submit-session',{start:authAt,end:performance.now()});
+        headers.Authorization = 'Bearer ' + s.access_token;
+        return s;
+      })
+    : Promise.resolve(null);
+  await sessionTask;
   const networkAt=performance.now();
   const response = await fetch(config.supabaseUrl + '/functions/v1/community-live-api?forceFunctionRegion=eu-central-1', {
     method: 'POST', headers, body: JSON.stringify({ action, args }), signal: AbortSignal.timeout(20000), cache: 'no-store',
@@ -89,6 +157,9 @@ async function previewRequest(action, a) {
   }
   if (action==='comments') return { items:s.contents.filter(c=>c.confession_id===String(a.confession_id)&&c.parent_id===(a.parent_id?String(a.parent_id):null)&&visible(c)).slice(offset,offset+20).map(c=>({...safe(c),has_replies:s.contents.some(r=>r.parent_id===c.id&&visible(r))})) };
   if (action==='submit') {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(a.request_id || ''))) {
+      throw new Error('Nedostaje ili je neispravan ID zahtjeva za slanje.');
+    }
     const body=a.body.trim(), min=a.kind==='confession'?15:1,max=a.kind==='confession'?5000:1000;
     if ([...body].length<min||[...body].length>max) throw new Error('Tekst nije dozvoljene dužine.');
     if (/(https?[:：]|www\.|[\p{L}\d][\p{L}\d._-]*\.[\p{L}]{2,}|mailto:|ftp:|tel:)/iu.test(body+' '+(a.nickname||''))) throw new Error('Linkovi nisu dozvoljeni.');
@@ -97,6 +168,10 @@ async function previewRequest(action, a) {
     s.contents.push(c);persist();return{success:true,id:c.id};
   }
   if(action==='confession'){if(!visible(item)||item.kind!=='confession')throw new Error('Ispovest nije dostupna.');return{item:safe(item)};}
+  if(action==='my_confessions') {
+    const rows=s.contents.filter(c=>c.mine&&c.kind==='confession').reverse();
+    return{items:rows.slice(offset,offset+20).map(c=>({id:c.id,body:c.body,nickname:c.nickname||null,state:c.state,created_at:c.created_at,published_at:c.published_at||null}))};
+  }
   if(action==='list') {
     let rows=a.list==='my_comments'?s.contents.filter(c=>c.mine&&c.kind!=='confession'&&visible(c)).reverse(): (a.list==='favorites'?s.favorites:s.recent).map(i=>s.contents.find(c=>c.id===i)).filter(visible);
     return{items:rows.slice(offset,offset+20).map(safe)};

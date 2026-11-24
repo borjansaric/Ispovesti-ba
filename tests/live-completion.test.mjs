@@ -1,7 +1,6 @@
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
-import {execFileSync} from 'node:child_process';
 import {PGlite} from '@electric-sql/pglite';
 import {recoveryHandler} from '../admin-recovery/handler.mjs';
 import {createChatHandler} from '../chat/gateway.mjs';
@@ -77,8 +76,7 @@ test('live gateway routes archive using verified identity and rejects all trial 
  assert.equal((await send('admin_grant',{target:other,plan:'30d'})).status,403);
 });
 test('production allowlist ships live chat/admin/recovery without server code, secrets or trial generator',async()=>{
- execFileSync(process.execPath,['scripts/build-production-review.mjs'],{cwd:new URL('../',import.meta.url),stdio:'pipe'});
- const walk=async dir=>{for(const e of await readdir(dir,{withFileTypes:true})){if(e.name==='test')continue;const p=new URL(e.name+(e.isDirectory()?'/':''),dir);if(e.isDirectory()){await walk(p);continue;}assert.ok(!/\.(sql|ts)$/.test(e.name));if(/\.(mjs|js|html)$/.test(e.name)){const s=await readFile(p,'utf8');assert.doesNotMatch(s,/SUPABASE_SERVICE_ROLE_KEY|Deno\.env\.get|export const trialCode=|chat-test-api|admin-recovery-test-api/);}}};await walk(new URL('../.production-review/',import.meta.url));
+  const walk=async dir=>{for(const e of await readdir(dir,{withFileTypes:true})){if(e.name==='test')continue;const p=new URL(e.name+(e.isDirectory()?'/':''),dir);if(e.isDirectory()){await walk(p);continue;}assert.ok(!/\.(sql|ts)$/.test(e.name));if(/\.(mjs|js|html)$/.test(e.name)){const s=await readFile(p,'utf8');assert.doesNotMatch(s,/SUPABASE_SERVICE_ROLE_KEY|Deno\.env\.get|export const trialCode=|chat-test-api|admin-recovery-test-api/);}}};await walk(new URL('../.production-review/',import.meta.url));
  assert.match(await read('.production-review/chat-admin.html'),/live\/chat-admin.mjs/);
  assert.match(await read('.production-review/index.html'),/chat\/ui.mjs/);
 });

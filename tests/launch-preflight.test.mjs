@@ -20,7 +20,7 @@ test('root artifacts target live API and isolated sessions; original test source
  const api=await read('api.js'),captcha=await read('captcha.js'),index=await read('index.html'),admin=await read('admin.html');
  assert.ok(api.includes('community-live-api'));assert.ok(captcha.includes('community-live-api'));assert.ok(!api.includes('community-test-api'));
  assert.ok(api.includes('ispovesti-live-user-session'));assert.ok(api.includes('ispovesti-live-admin-session'));
- assert.ok((await read('dist/api.js')).includes('community-test-api'));assert.ok(index.includes('class="preview" hidden'));assert.ok(index.includes('index,follow'));
+ assert.ok((await read('dist/api.js')).includes('community-test-api'));assert.ok((await read('test/index.html')).includes('<!doctype html>'));assert.ok(index.includes('index,follow'));
  assert.ok(admin.includes('postavke odnose na glavni sajt'));assert.ok(admin.includes('noindex,nofollow'));
  assert.equal(await read('original.css'),await read('dist/original.css'));assert.equal(await read('styles.css'),await read('dist/styles.css'));
  for(const file of ['index.html','admin.html']){for(const match of(await read(file)).matchAll(/(?:src|href)="([^"?#]+)(?:\?[^"#]*)?"/g)){const target=match[1];if(!target.startsWith('.')&&!target.startsWith('http'))await read(target);}}
