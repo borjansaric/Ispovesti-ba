@@ -4,7 +4,7 @@ for(const file of ['index.html','app.js','api.js','captcha.js','submission-store
 await cp(new URL('vendor/',root),new URL('vendor/',out),{recursive:true});await mkdir(new URL('chat/',out),{recursive:true});await mkdir(new URL('admin/',out),{recursive:true});for(const f of ['chat.css','thread-model.mjs','client.mjs','ui.mjs','admin.css','admin.mjs'])await copyFile(new URL('chat/'+f,root),new URL('chat/'+f,out));for(const f of ['admin.css','admin.mjs'])await copyFile(new URL('admin/'+f,root),new URL('admin/'+f,out));
 // Keep the preview client behavior while removing the test endpoint from the live bundle.
 let chatClient=await readFile(new URL('chat/client.mjs',out),'utf8');
-chatClient=chatClient.replace("(config.chatEnvironment==='live'?'chat-live-api':'chat-test-api')","'chat-live-api'");
+chatClient=chatClient.replace("(environment==='test'?'chat-test-api':'chat-live-api')","'chat-live-api'");
 await writeFile(new URL('chat/client.mjs',out),chatClient);
 await copyFile(new URL('chat-admin.html',root),new URL('chat-admin.html',out));await copyFile(new URL('admin.html',root),new URL('admin.html',out));
 await copyFile(new URL('admin-recovery.html',root),new URL('admin-recovery.html',out));
