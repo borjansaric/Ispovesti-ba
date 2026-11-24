@@ -1,5 +1,5 @@
-import {authClient,request} from '../api.js?v=admin-panel-v1';
-import {chatRequest} from '../chat/client.mjs?v=admin-panel-v1';
+import {authClient,request} from '../api.js?v=20261124-module-singleton1';
+import {chatRequest} from '../chat/client.mjs?v=20261124-module-singleton1';
 const $=s=>document.querySelector(s);
 const requestedView=new URLSearchParams(window.location.search).get('view');
 const loginPanel=$('#login-panel'),app=$('#admin-app'),loginForm=$('#login-form'),codeForm=$('#email-code-form');
@@ -35,7 +35,7 @@ async function renderDashboard(){
  setStatus('Učitavam pregled…');const d=await loadDashboard();if(currentView!=='dashboard')return;viewContent.replaceChildren();
  addStatGrid(viewContent,[['Sve ispovijesti',d.confessions?.total],['Objavljene ispovijesti',d.confessions?.published],['Na čekanju',d.confessions?.queued],['Uklonjene ispovijesti',d.confessions?.removed],['Komentari',d.community?.comments],['Odgovori',d.community?.replies],['Reakcije',d.reactions,'Odvojeno od komentara i odgovora'],['Glasovi',d.votes],['Prijave zajednice',d.reports],['Chat poruke',d.chat_messages?.total],['Uklonjene chat poruke',d.chat_messages?.removed],['Prijave chata',d.chat_reports]]);
  viewContent.append(notice('Red objava',d.publisher?.paused?'Automatsko objavljivanje je trenutno pauzirano.':'Automatsko objavljivanje nije pauzirano.'));
- viewContent.append(notice('Analitika posjetilaca nije dostupna','Testni backend trenutno ne bilježi pouzdane anonimne posjete ni povratne posjete. Ne prikazujem izmišljene vrijednosti za zadržavanje 10/20/30 dana.',true));
+ viewContent.append(notice('Analitika posjetilaca','Detaljan pregled jedinstvenih pregledača, povrataka i zadržavanja nalazi se u odjeljku „Analitika posjetilaca“.'));
  setStatus('Podaci su učitani iz žive baze.');
 }
 function sumTrend(rows,key){return rows.reduce((total,row)=>total+Number(row[key]||0),0);}
@@ -53,7 +53,7 @@ function exportStatsCsv(d){
 }
 async function renderStats(){
  setStatus('Učitavam statistiku…');const d=await loadDashboard();if(currentView!=='stats')return;viewContent.replaceChildren();
- const toolbar=el('div','toolbar');toolbar.append(el('span','meta','Izvor: testna baza · dnevni podaci za posljednjih 30 dana'),actionButton('Izvezi CSV',()=>exportStatsCsv(d),'small'));viewContent.append(toolbar);
+ const toolbar=el('div','toolbar');toolbar.append(el('span','meta','Izvor: živa baza · dnevni podaci za posljednjih 30 dana'),actionButton('Izvezi CSV',()=>exportStatsCsv(d),'small'));viewContent.append(toolbar);
  viewContent.append(el('h3','','Sadržaj zajednice'));
  addStatGrid(viewContent,[['Ispovijesti ukupno',d.confessions?.total],['Objavljene',d.confessions?.published],['Na čekanju',d.confessions?.queued],['Uklonjene',d.confessions?.removed],['Komentari ukupno',d.community?.comments],['Komentari objavljeni',d.community?.published_comments],['Odgovori ukupno',d.community?.replies],['Odgovori objavljeni',d.community?.published_replies]]);
  viewContent.append(el('h3','','Aktivnost i reakcije'));
