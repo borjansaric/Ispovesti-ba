@@ -4,7 +4,8 @@ const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className
 const button=(label,run,cls='chat-small')=>{const b=el('button',cls,label);b.type='button';b.onclick=()=>Promise.resolve(run()).catch(e=>alert(e.message));return b;};
 export async function openChat(){
  const dialog=document.querySelector('#dialog'),root=el('section','chat-panel');let stopped=false,polling=false,timer,profile,sending=false,requestId,lastBody,pendingMessage=null,initial=true,noOlder=false,activeActionMenu=null;
- let messages=[];const messageNodes=new Map();
+ let messages=[];let activeReportOptions=null;const messageNodes=new Map();
+ root.addEventListener('click',event=>{if(!activeReportOptions)return;if(event.target.closest('.chat-report-options, .chat-message-menu'))return;activeReportOptions.remove();activeReportOptions=null;});
  if(document.body.classList.contains('menu-open'))document.querySelector('#menu-toggle').click();
  dialog.classList.add('chat-room');document.body.classList.add('chat-open');document.querySelector('#dialog-title').textContent='Anonimni chat';document.querySelector('#dialog-body').replaceChildren(root);
  const close=document.querySelector('#close-dialog');close.setAttribute('aria-label','Vrati se na ispovesti');if(!dialog.open)dialog.showModal();
@@ -24,7 +25,7 @@ export async function openChat(){
    if(!row){
     const own=m.sender===profile.id;row=el('article','chat-message '+(own?'own':'other'));row.dataset.id=id;
     const avatar=el('span','chat-avatar',avatars[m.avatar]||avatars.ghost);avatar.setAttribute('aria-hidden','true');const body=el('p','chat-body',m.body);row.append(avatar,body);
-    const actions=el('details','chat-message-menu');actions.addEventListener('toggle',()=>{if(actions.open){reportOptions.hidden=true;if(activeActionMenu&&activeActionMenu!==actions)activeActionMenu.open=false;activeActionMenu=actions;}else if(activeActionMenu===actions)activeActionMenu=null;});const more=el('summary','','⋮');more.setAttribute('aria-label','Radnje uz poruku');const menu=el('div','chat-message-actions');
+    const actions=el('details','chat-message-menu');actions.addEventListener('toggle',()=>{if(actions.open){if(activeReportOptions){activeReportOptions.remove();activeReportOptions=null;}if(activeActionMenu&&activeActionMenu!==actions)activeActionMenu.open=false;activeActionMenu=actions;}else if(activeActionMenu===actions)activeActionMenu=null;});const more=el('summary','','⋮');more.setAttribute('aria-label','Radnje uz poruku');const menu=el('div','chat-message-actions');
     const reportOptions=el('div','chat-report-options');reportOptions.hidden=true;
     const custom=el('div','chat-report-custom');custom.hidden=true;
     const detail=el('textarea');detail.rows=1;detail.maxLength=500;detail.placeholder='Opiši razlog prijave…';detail.setAttribute('aria-label','Dodatni opis prijave');detail.style.height='28px';detail.addEventListener('input',()=>{detail.style.height='28px';detail.style.height=Math.min(detail.scrollHeight,70)+'px';});
@@ -35,13 +36,13 @@ export async function openChat(){
      try{
       const result=await chatRequest('report',{id:m.id,reason,details:details.trim()});
       status.textContent=result.already_reported?'Već si prijavio ovu poruku.':'Prijava je zabilježena. Hvala.';
-      actions.open=false;
+      actions.open=false;reportOptions.remove();if(activeReportOptions===reportOptions)activeReportOptions=null;
      }catch(error){
       status.textContent=error.message||'Prijava nije uspjela.';
       controls.forEach(control=>control.disabled=false);reportSending=false;
      }
     }
-    const reportButton=button('Prijavi',()=>{const opening=reportOptions.hidden;reportOptions.hidden=!opening;if(opening){row.append(reportOptions);actions.open=false;}});
+    const reportButton=button('Prijavi',()=>{if(activeReportOptions===reportOptions){reportOptions.remove();activeReportOptions=null;return;}if(activeReportOptions)activeReportOptions.remove();activeReportOptions=reportOptions;reportOptions.hidden=false;row.append(reportOptions);actions.open=false;});
     const hateButton=button('Govor mržnje',()=>sendReport('hate_speech'),'chat-small');
     const spamButton=button('Spam',()=>sendReport('spam'),'chat-small');
     const moreReason=button('···',()=>{custom.hidden=!custom.hidden;if(!custom.hidden)detail.focus();},'chat-small');
@@ -78,7 +79,7 @@ export async function openChat(){
  async function loadProfile(){try{profile=await chatRequest('profile');if(stopped)return;root.dataset.ownSide=profile.side||'left';
    account.replaceChildren(el('p','hint','Tvoj anonimni chat ID: '+profile.id),el('p','hint',profile.active?(profile.plan==='free'?'Besplatan pristup':'Paket '+profile.plan+' · ističe '+new Date(profile.expires_at).toLocaleString('sr-Latn')):'Chat trenutno nije dostupan.'));
    blocked.replaceChildren();for(const [i,b]of (profile.blocked||[]).entries())blocked.append(button('Odblokiraj korisnika '+(i+1),async()=>{await chatRequest('unblock',{target:b.id});await loadProfile();}));
-   form.hidden=!profile.active;if(profile.active){status.textContent='';await refresh(false,bootstrap.history);clearInterval(timer);timer=setInterval(()=>refresh(),1500);}else status.textContent='Chat trenutno nije dostupan.';
+   form.hidden=!profile.active;if(profile.active){status.textContent='';await refresh(false);clearInterval(timer);timer=setInterval(()=>refresh(),1500);}else status.textContent='Chat trenutno nije dostupan.';
   }catch(e){resetAccess(e.message);}}
  form.onsubmit=async event=>{
   event.preventDefault();if(sending)return;
