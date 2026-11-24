@@ -8,7 +8,7 @@ test('live community reports accept the preview reasons and optional details', a
   const [app, admin, migration] = await Promise.all([
     read('../app.js'),
     read('../admin/admin.mjs'),
-    read('../supabase/migrations/20261124210000_live_community_report_parity.sql')
+    read('../supabase/migrations/20261124175342_live_community_report_parity.sql')
   ]);
   assert.match(app, /sendReport\('hate_speech'\)/);
   assert.match(app, /sendReport\('other',detail\.value\)/);
