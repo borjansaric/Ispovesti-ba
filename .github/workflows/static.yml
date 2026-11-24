@@ -32,4 +32,4 @@ jobs:
       - name: Verify allowlist output
         run: |
           test -f .production-review/index.html
-          ! grep -R -E 'chat-test-api|admin-recovery-test-api|trialCode|TEST-|Deno\\.env\\.get|SUPABASE_SERVICE_ROLE_KEY' .production-review --exclude-dir=test
+          ! grep -R -E 'chat-test-api|admin-recovery-test-api|trialCode|TEST-|Deno\.env\.get|SUPABASE_SERVICE_ROLE_KEY' .production-review --exclude-dir=test
