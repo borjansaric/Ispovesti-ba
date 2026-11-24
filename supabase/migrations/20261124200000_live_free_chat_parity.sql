@@ -66,3 +66,20 @@ begin
   execute v_definition;
 end
 $migration$;
+
+do $migration$
+declare
+  v_definition text;
+begin
+  v_definition := pg_get_functiondef('public.chat_live_dispatch_v2(uuid,text,jsonb,text)'::regprocedure);
+  v_definition := replace(
+    v_definition,
+    $old$if p_action in ('admin_test_mode','admin_grant','admin_nickname','admin_avatar','admin_issue_code','redeem_code','recovery_set','recover') then raise exception 'Probne radnje i naplata nisu dostupni.' using errcode='42501';end if;$old$,
+    $new$if p_action in ('admin_test_mode','admin_grant','admin_nickname','admin_avatar','admin_issue_code','redeem_code') then raise exception 'Probne radnje i naplata nisu dostupni.' using errcode='42501';end if;$new$
+  );
+  if position('''recovery_set'',''recover''' in v_definition)>0 then
+    raise exception 'Nije moguće bezbjedno omogućiti oporavak anonimnog chat naloga.';
+  end if;
+  execute v_definition;
+end
+$migration$;
