@@ -41,7 +41,7 @@ Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin');
  const began=Date.now(),timings:Record<string,number>={};
  const timed=async<T>(name:string,work:()=>Promise<T>):Promise<T>=>{const at=Date.now();try{return await work();}finally{timings[name]=(timings[name]||0)+Date.now()-at;}};
- const timedRpc=(name:string,uid:string|null,action:string,args:Record<string,unknown>={})=>timed(name==='community_live_dispatch'?'database':name==='community_live_security'?'settings':'admin_database',()=>rpc(name,uid,action,args));
+ const timedRpc=(name:string,uid:string|null,action:string,args:Record<string,unknown>={})=>timed(name==='community_live_dispatch'?'database':name==='community_live_security'||name==='community_live_captcha_clearance'?'settings':'admin_database',()=>rpc(name,uid,action,args));
  const headers:Record<string,string>={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS','X-Content-Type-Options':'nosniff'};
  if(origin&&allowed.includes(origin)){headers['Access-Control-Allow-Origin']=origin;headers['Timing-Allow-Origin']=origin;headers['Access-Control-Expose-Headers']='Server-Timing';}
  const send=(data:unknown,status=200)=>{headers['Server-Timing']=[...Object.entries(timings).map(([name,ms])=>name+';dur='+ms),'server;dur='+(Date.now()-began)].join(', ');return new Response(JSON.stringify(data),{status,headers});};
@@ -135,12 +135,23 @@ Deno.serve(async(req:Request)=>{
    const clean={enabled:args.enabled===true,sitekey,secret_ciphertext:secret?await encrypt(secret):undefined,_session_id:args._session_id,_aal:args._aal};
    return send(await timedRpc('community_live_security',uid,action,clean));
   }
+  if(action==='captcha_init'){
+   const config=await timedRpc('community_live_security',uid,'runtime_config');
+   if(config.enabled!==true)return send({verified:true,disabled:true});
+   if(!config.secret_ciphertext)fail('Sigurnosna provjera nije podešena.',503);
+   const clearance=await timedRpc('community_live_captcha_clearance',uid,'get');
+   if(clearance.verified)return send({verified:true,existing:true});
+   if(typeof args.captcha_token!=='string')return send({verified:false,required:true});
+   await timed('turnstile',async()=>verifyCaptcha(await decrypt(config.secret_ciphertext),args.captcha_token,config.hostname,'app_entry'));
+   await timedRpc('community_live_captcha_clearance',uid,'grant');
+   return send({verified:true});
+  }
   if(action==='submit'){
    const config=await timedRpc('community_live_security',uid,'runtime_config');
    if(config.enabled===true){
     if(!['confession','comment','reply'].includes(args.kind))fail('Neispravna vrsta sadržaja.');
-    if(!config.secret_ciphertext)fail('Sigurnosna provjera nije podešena.',503);
-    await timed('turnstile',async()=>verifyCaptcha(await decrypt(config.secret_ciphertext),args.captcha_token,config.hostname,'submit_'+args.kind));
+    const clearance=await timedRpc('community_live_captcha_clearance',uid,'get');
+    if(!clearance.verified)fail('Prvo završi sigurnosnu provjeru pri ulasku.',403);
    }
    delete args.captcha_token;
   }
