@@ -7,6 +7,7 @@ const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 test('branch-based GitHub Pages excludes backend and development sources', async () => {
   const config = await read('../_config.yml');
   const lines = config.split('\n');
+  assert.ok(!lines.includes('  - test'), 'the separate test path must remain available');
   for (const entry of ['launch','supabase','tests','scripts','docs','chat/gateway.mjs','live/chat-index.ts','live/recovery-index.ts','admin-recovery/handler.mjs','admin-recovery/sandbox','admin-recovery/reset-template.html','admin-prep/*.sql','admin-prep/telemetry-local.mjs','admin-prep/banner-local.mjs','AGENTS.md','AGENTS.html','PROJECT_RULES.md','PROJECT_RULES.html','PRODUCTION_PREP.md','PRODUCTION_PREP.html']) {
     assert.ok(lines.includes('  - ' + entry), entry);
   }
