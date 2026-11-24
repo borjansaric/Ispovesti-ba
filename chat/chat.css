@@ -1,8 +1,7 @@
 /* Scoped additions only. The site's original black/gold styles are preserved. */
-#banner-slot{position:sticky;top:0;z-index:100003;display:flex;align-items:center;justify-content:center;min-height:60px;padding:0 9px;box-sizing:border-box;background:#090909}#banner-slot .partner-banner-placeholder{width:100%;max-width:760px;min-height:52px;margin:0 auto;padding:5px 9px}body.chat-open #banner-slot{visibility:hidden}
 body.chat-open,body.thread-open{overflow:hidden}
 #dialog.chat-room{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#111;overflow:hidden;box-sizing:border-box}
-.chat-room .dialog-heading{position:absolute;top:max(7px,env(safe-area-inset-top));left:9px;z-index:3;margin:0}.chat-room .dialog-heading h2{display:none}.chat-room #close-dialog{font-size:26px;width:34px;height:34px;margin:0;padding:0;background:transparent;color:var(--muted)}
+.chat-room .dialog-heading{position:absolute;top:max(7px,env(safe-area-inset-top));left:9px;z-index:100003;margin:0}.chat-room .dialog-heading h2{display:none}.chat-room #close-dialog{font-size:26px;width:34px;height:34px;margin:0;padding:0;background:transparent;color:var(--muted)}
 .chat-room #dialog-body{height:100%}.chat-room .chat-panel{height:100%;min-height:0;display:flex;flex-direction:column;padding:0;box-sizing:border-box}.chat-topbar{height:44px;min-height:44px;padding-top:env(safe-area-inset-top);box-sizing:content-box}.chat-settings{position:absolute;top:max(9px,env(safe-area-inset-top));right:12px;z-index:5}.chat-settings>summary{cursor:pointer;font-size:24px;line-height:28px;list-style:none;color:var(--gold)}.chat-settings>summary::-webkit-details-marker{display:none}.chat-settings-content{position:absolute;right:0;top:34px;width:min(340px,calc(100vw - 26px));max-height:75dvh;overflow:auto;padding:16px;background:#1d1d1d;border:1px solid #625332;border-radius:9px;box-sizing:border-box;box-shadow:0 8px 24px #0008;font-size:13px}.chat-settings h2{font-size:17px}.chat-settings p{line-height:1.55}.chat-small{font-size:12px;background:transparent;color:var(--gold);padding:6px;border:0;margin:2px}
 .chat-panel .chat-status{font-size:12px;color:var(--muted);padding:0 12px;margin:0;min-height:0}.chat-status:empty{display:none}.chat-messages{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;overflow-anchor:none}
 .chat-panel .chat-message{display:flex;align-items:flex-end;gap:8px;max-width:min(82%,650px);margin:0;padding:0;border:0;background:none;position:relative;flex-shrink:0;overflow-wrap:anywhere}.chat-panel .chat-avatar{display:block;flex-shrink:0;width:30px;line-height:34px;font-size:26px;background:none;border:0;outline:0;box-shadow:none;border-radius:0;text-align:center}.chat-panel .chat-body{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:8px 11px;background:#202020;border-radius:11px;font-size:15px;line-height:1.5;min-width:0}.chat-panel[data-own-side=left] .own,.chat-panel[data-own-side=right] .other{align-self:flex-start}.chat-panel[data-own-side=left] .other,.chat-panel[data-own-side=right] .own{align-self:flex-end;flex-direction:row-reverse}.chat-panel .own .chat-body{background:#302919}
@@ -47,6 +46,12 @@ body.inline-thread-open .site-header,body.inline-thread-open #feed-title,body.in
 }
 
 /* Report reasons and the expandable description follow the confession-report pattern. */
+/* Keep report reasons inside the viewport for left-aligned messages. */
+.chat-panel[data-own-side="right"] .chat-message.other .chat-report-options,
+.chat-panel[data-own-side="left"] .chat-message.own .chat-report-options{
+ left:0;
+ right:auto;
+}
 .chat-report-options{position:absolute;right:0;bottom:calc(100% + 5px);z-index:30;display:flex;flex-direction:column;align-items:flex-start;gap:3px;box-sizing:border-box;width:max-content;min-width:124px;max-width:min(92vw,360px);margin-top:4px;padding:8px 12px;border:0;border-radius:8px;background:radial-gradient(ellipse at 14% 22%,rgba(255,248,218,.96) 0 7%,transparent 26%),radial-gradient(ellipse at 84% 76%,rgba(214,177,94,.9) 0 8%,transparent 31%),linear-gradient(118deg,#d9c58f 0%,#fff9e9 28%,#b99143 53%,#f6edda 78%,#c5a35c 100%);box-shadow:0 8px 22px rgba(0,0,0,.42);color:#17130a}
 .chat-report-options[hidden],.chat-report-custom[hidden]{display:none}
 .chat-report-options>button{flex:0 0 auto;width:auto;min-width:0;margin:0;padding:5px 3px;border:0;border-radius:0;background:transparent;color:#241b0a;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:none;text-align:left}
@@ -57,3 +62,10 @@ body.inline-thread-open .site-header,body.inline-thread-open #feed-title,body.in
 .chat-report-custom textarea::placeholder{color:#493a1b;opacity:.8}
 .chat-report-custom textarea:focus{border-bottom-color:#17130a;outline:0}
 .chat-report-custom button{width:auto;flex:0 0 auto;font-size:11px;padding:5px 3px;color:#241b0a}
+
+/* Mirror report menu positioning for right-aligned messages: open toward screen center. */
+.chat-panel[data-own-side="right"] .chat-message.own .chat-report-options,
+.chat-panel[data-own-side="left"] .chat-message.other .chat-report-options{
+ left:auto;
+ right:0;
+}
