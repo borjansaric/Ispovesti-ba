@@ -1,28 +1,86 @@
-import {chatRequest} from './client.mjs?v=room2';import {trialCode} from './trial-client.mjs';import {isLocal} from '../api.js?v=room2';
-if(isLocal)import('../admin-prep/archive-ui.mjs').then(m=>m.mountArchive(document.querySelector('#chat-admin-tools')));
-if(isLocal)import('../admin-prep/advertising-ui.mjs').then(m=>m.mountAdvertising(document.querySelector('#chat-admin-tools')));
-if(isLocal)import('../admin-prep/owner-chat-ui.mjs').then(m=>m.mountOwnerChat(document.querySelector('#chat-admin-tools')));
-if(isLocal)import('../admin-prep/metrics-ui.mjs').then(m=>m.mountMetrics(document.querySelector('#chat-admin-tools')));
-if(isLocal)import('../admin-prep/community-moderation-ui.mjs').then(m=>m.mountCommunityModeration(document.querySelector('#chat-admin-tools')));
-const $=s=>document.querySelector(s),status=t=>$('#chat-admin-status').textContent=t;
-const run=async fn=>{try{await fn();}catch(e){status(e.message);}};
-async function gate(){await chatRequest('admin_status',{},true);$('#chat-admin-tools').hidden=false;$('#chat-owner-login').hidden=true;status('Zaštićena administracija chata.');}
-$('#chat-owner-login').onsubmit=event=>{event.preventDefault();run(async()=>{const r=await fetch('/api/chat-owner-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:$('#chat-owner-key').value}),credentials:'same-origin'});$('#chat-owner-key').value='';const d=await r.json();if(!r.ok)throw Error(d.error);await gate();});};
-if(isLocal){$('#chat-owner-login').hidden=false;status('Lokalni pregled koristi zaseban privatni ključ. Postojeća Supabase lozinka se ne mijenja.');const hash=new URLSearchParams(location.hash.slice(1));const key=hash.get('owner');if(key){history.replaceState(null,'',location.pathname);$('#chat-owner-key').value=key;$('#chat-owner-login').requestSubmit();}}
-else run(async()=>{try{await gate();}catch{status('Prvo se prijavi u postojeći administratorski panel lozinkom i kodom na e-mail.');}});
-for(const [id,enabled]of [['trial-enable',true],['trial-disable',false]])$('#'+id).onclick=()=>run(async()=>{await chatRequest('admin_test_mode',{enabled},true);status(enabled?'Probna prava su uključena samo na testnom serveru.':'Probna prava su isključena.');});
-function purchase(form,action,args){let busy=false,request_id=null,last=null;$(form).onsubmit=event=>{event.preventDefault();if(busy)return;busy=true;const b=event.submitter;b.disabled=true;run(async()=>{try{const payload={target:$('#chat-target').value.trim(),...args()};const fingerprint=JSON.stringify(payload);if(last!==fingerprint){request_id=crypto.randomUUID();last=fingerprint;}await chatRequest(action,{...payload,request_id},true);request_id=null;last=null;status('Probna radnja je uspješno izvršena. Nema naplate.');}finally{busy=false;b.disabled=false;}});};}
-purchase('#chat-grant','admin_grant',()=>({plan:$('#chat-plan').value}));purchase('#chat-nickname','admin_nickname',()=>({nickname:$('#chat-name').value}));purchase('#chat-avatar','admin_avatar',()=>({avatar:$('#chat-avatar-choice').value}));
-let cursor;async function messages(more=false){const r=await chatRequest('admin_messages',more?{before:cursor}:{},true);if(!more)$('#chat-admin-messages').replaceChildren();for(const m of r.items){const row=document.createElement('article');row.className='story chat-admin-row';const body=document.createElement('p');body.textContent=m.body;const meta=document.createElement('p');meta.className='hint';meta.textContent=m.generated_nickname+' · '+new Date(m.created_at).toLocaleString()+' · '+(m.removed?'Uklonjeno':'Objavljeno');row.append(meta,body);for(const report of m.reports){const p=document.createElement('p');p.textContent='Prijava: '+report.reason;row.append(p);}const b=document.createElement('button');b.className='action';b.textContent=m.removed?'Vrati poruku':'Ukloni poruku';b.onclick=()=>run(async()=>{await chatRequest(m.removed?'admin_restore':'admin_remove',{id:m.id},true);await messages();});row.append(b);for(const [title,action,args]of [['Blokiraj nalog 24 sata','admin_ban',{target:m.sender,hours:24,reason:'Moderacija'}],['Ukloni blokadu','admin_unban',{target:m.sender}]]){const btn=document.createElement('button');btn.className='action';btn.textContent=title;btn.onclick=()=>run(async()=>{await chatRequest(action,args,true);status('Moderatorska radnja je izvršena.');});row.append(btn);}$('#chat-admin-messages').append(row);}cursor=r.items.at(-1)?.id;$('#chat-admin-more').hidden=r.items.length<100;}
-$('#chat-refresh').onclick=()=>run(()=>messages());$('#chat-admin-more').onclick=()=>run(()=>messages(true));
-if(isLocal){
- const follow=document.createElement('button');follow.type='button';follow.className='action';follow.textContent='Pokreni praćenje uživo';$('#chat-admin-tools').append(follow);let liveTimer=null,liveBusy=false;
- const tick=async()=>{if(liveBusy||document.hidden)return;liveBusy=true;try{await messages()}catch(e){status(e.message)}finally{liveBusy=false}};
- follow.onclick=()=>{if(liveTimer){clearInterval(liveTimer);liveTimer=null;follow.textContent='Pokreni praćenje uživo';return}void tick();liveTimer=setInterval(tick,5000);follow.textContent='Zaustavi praćenje uživo'};
- const logout=document.createElement('button');logout.type='button';logout.className='action';logout.textContent='Odjavi se';logout.onclick=async()=>{try{await fetch('/api/chat-owner-logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',credentials:'same-origin'});clearInterval(liveTimer);liveTimer=null;follow.textContent='Pokreni praćenje uživo';$('#chat-admin-tools').hidden=true;$('#chat-owner-login').hidden=false;status('Odjavljen si iz probnog panela.')}catch{status('Odjava nije uspjela.')}};$('#chat-admin-tools').append(logout);
- window.addEventListener('pagehide',()=>clearInterval(liveTimer),{once:true});
+import {authClient,request} from '../api.js?v=20261122-chat-admin2';
+import {chatRequest} from './client.mjs?v=20261122-chat-admin1';
+const $=selector=>document.querySelector(selector);
+const loginPanel=$('#login-panel'),archivePanel=$('#archive-panel'),loginForm=$('#login-form');
+const loginStatus=$('#login-status'),archiveStatus=$('#archive-status'),messages=$('#messages'),olderButton=$('#older'),codeForm=$('#email-code-form');
+let emailChallenge=null,currentSession=null;
+let adminClient,oldestId=null,loaded=0,busy=false;
+const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+const date=value=>value?new Date(value).toLocaleString('sr-Latn-RS',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+const reportReasonLabel=reason=>({hate_speech:'Govor mržnje',spam:'Spam',other:'Drugo',abuse:'Uvredljiv sadržaj',threat:'Prijetnja'}[reason]||reason);
+function renderMessage(item){
+ const card=node('article','message'+(item.removed?' removed':''));
+ const head=node('div','message-head');
+ head.append(node('strong','',item.generated_nickname||'Anonimni učesnik'),node('time','',date(item.created_at)));
+ if(item.removed)head.append(node('span','removed-label','UKLONJENA PORUKA'));
+ const body=node('p','message-body',item.body);
+ card.append(head,body);
+ const reports=Array.isArray(item.reports)?item.reports:[];
+ if(reports.length){
+  const section=node('section','reports');section.append(node('h3','','Prijave ('+reports.length+')'));
+  for(const report of reports){section.append(node('p','report','Razlog: '+reportReasonLabel(report.reason)+' · '+date(report.created_at)));if(report.details)section.append(node('p','report-detail','Dodatni opis: '+report.details));}
+  card.append(section);
+ }else card.append(node('p','no-reports','Nema prijava.'));
+ return card;
 }
-
-$('#chat-profiles-refresh').onclick=()=>run(async()=>{const r=await chatRequest('admin_profiles',{},true);$('#chat-target').replaceChildren();for(const p of r.items){const option=document.createElement('option');option.value=p.id;option.textContent=p.nickname+' · '+p.id;$('#chat-target').append(option);}});
-
-let issueBusy=false,issuePending;$('#chat-code-issue').onsubmit=event=>{event.preventDefault();if(issueBusy)return;issueBusy=true;const b=event.submitter;b.disabled=true;run(async()=>{try{const plan=$('#chat-code-plan').value;if(!issuePending||issuePending.plan!==plan)issuePending={plan,code:trialCode(),request_id:crypto.randomUUID()};const r=await chatRequest('admin_issue_code',issuePending,true);$('#chat-code-out').textContent=issuePending.code+' · važi do '+new Date(r.expires_at).toLocaleString('sr-Latn');issuePending=null;status('Probni pristupni kod je napravljen. SMS nije poslan i nema naplate.');}finally{issueBusy=false;b.disabled=false;}});};
+async function loadArchive(older=false){
+ if(busy)return;busy=true;olderButton.disabled=true;archiveStatus.textContent='Učitavam…';
+ try{
+  const data=await chatRequest('admin_messages',older&&oldestId?{before:oldestId}:{},true);
+  const items=Array.isArray(data.items)?data.items:[];
+  if(!older)messages.replaceChildren();
+  for(const item of items)messages.append(renderMessage(item));
+  if(items.length)oldestId=items.at(-1).id;
+  loaded+=items.length;
+  $('#archive-count').textContent='Prikazano '+loaded+' poruka · najnovije prve';
+  olderButton.hidden=items.length<100;
+  archiveStatus.textContent=items.length?'':'Nema više poruka za prikaz.';
+ }catch(error){
+  archiveStatus.textContent=error.message||'Arhiva trenutno nije dostupna.';
+  if(!older)olderButton.hidden=true;
+ }finally{busy=false;olderButton.disabled=false;}
+}
+async function verifyAdmin(){
+ await chatRequest('admin_status',{},true);
+ loginPanel.hidden=true;archivePanel.hidden=false;loaded=0;oldestId=null;
+ await loadArchive(false);
+}
+async function beginEmailVerification(session){
+ currentSession=session;
+ const state=await request('admin_email_status',{},session);
+ if(state.verified){await verifyAdmin();return;}
+ const started=await request('admin_email_begin',{},session);
+ if(started.limited)throw new Error('Sačekaj najmanje jednu minutu prije novog koda.');
+ emailChallenge=started.challenge;
+ codeForm.hidden=false;
+ loginStatus.textContent='Poslala sam sigurnosni kod na unaprijed podešenu administratorsku e-mail adresu. Unesi ga ovdje.';
+}
+adminClient=authClient(true);
+loginForm.addEventListener('submit',async event=>{
+ event.preventDefault();const submit=loginForm.querySelector('button');submit.disabled=true;loginStatus.textContent='Provjeravam prijavu…';
+ try{
+  const {data,error}=await adminClient.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value});
+  if(error)throw error;
+  await beginEmailVerification(data.session);
+ }catch(error){loginStatus.textContent=error.message||'Prijava nije potvrđena. Provjeri administratorski nalog.';try{await adminClient.auth.signOut();}catch{}}
+ finally{submit.disabled=false;}
+});
+codeForm.addEventListener('submit',async event=>{
+ event.preventDefault();const submit=codeForm.querySelector('button');submit.disabled=true;loginStatus.textContent='Provjeravam sigurnosni kod…';
+ try{
+  if(!currentSession||!emailChallenge)throw new Error('Prijavi se ponovo.');
+  const result=await request('admin_email_verify',{challenge:emailChallenge,code:$('#email-code').value.trim()},currentSession);
+  if(result.relogin){await adminClient.auth.signOut();codeForm.hidden=true;loginStatus.textContent='Sigurnosna postavka je obnovljena. Prijavi se ponovo lozinkom.';return;}
+  if(result.verified!==true)throw new Error('E-mail potvrda nije uspjela.');
+  codeForm.hidden=true;emailChallenge=null;await verifyAdmin();
+ }catch(error){loginStatus.textContent=error.message||'Kod nije potvrđen. Pokušaj ponovo.';}
+ finally{submit.disabled=false;}
+});
+olderButton.addEventListener('click',()=>loadArchive(true));
+$('#sign-out').addEventListener('click',async()=>{
+ await adminClient.auth.signOut();archivePanel.hidden=true;loginPanel.hidden=false;messages.replaceChildren();loginForm.reset();codeForm.reset();codeForm.hidden=true;emailChallenge=null;currentSession=null;loginStatus.textContent='Odjavljeni ste.';
+});
+adminClient.auth.getSession().then(async({data,error})=>{
+ if(error||!data.session)return;
+ try{await beginEmailVerification(data.session);}catch(error){loginStatus.textContent='Sesija postoji, ali je potrebna nova prijava lozinkom za potvrdu e-maila.';}
+});

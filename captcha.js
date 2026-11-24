@@ -15,7 +15,7 @@ async function settings(){
   settingsAt=Date.now();
   settingsPromise=(async()=>{
    const c=window.ISPOVESTI_CONFIG;
-   const r=await fetch(c.supabaseUrl+'/functions/v1/community-live-api?forceFunctionRegion=eu-central-1',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
+   const r=await fetch(c.supabaseUrl+'/functions/v1/community-test-api?forceFunctionRegion=eu-central-1',{method:'POST',headers:{apikey:c.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({action:'captcha_config',args:{}}),cache:'no-store',signal:AbortSignal.timeout(15000)});
    if(!r.ok)throw new Error('Nije moguće provjeriti sigurnosna podešavanja. Pokušaj ponovo.');
    return r.json();
   })().catch(e=>{settingsPromise=null;throw e;});
@@ -53,15 +53,17 @@ function challenge({kind,host,sitekey,action}={}){
  return {prepare:()=>{void start().catch(()=>{});},take:async()=>{const value=await start();if(value){if(consumed)throw new Error('Slanje je već u toku.');consumed=true;token=null;cleanup();}return value;},dispose:()=>{disposed=true;fail('Obrazac je zatvoren.');}};
 }
 const forms=new WeakMap();
-export function prepareCaptcha({kind,host}={}){
+export function prepareCaptcha({kind,host,action}={}){
  if(!host||!kind)return;
+ const challengeAction=action||'submit_'+kind;
  let entry=forms.get(host);
- if(!entry||entry.kind!==kind){entry?.control.dispose();entry={kind,control:challenge({kind,host})};forms.set(host,entry);}
+ if(!entry||entry.kind!==kind||entry.action!==challengeAction){entry?.control.dispose();entry={kind,action:challengeAction,control:challenge({kind,host,action:challengeAction})};forms.set(host,entry);}
  entry.control.prepare();
 }
 export async function captchaToken(options={}){
  const entry=options.host&&forms.get(options.host);
- if(entry&&entry.kind===options.kind&&!options.sitekey&&!options.action)return entry.control.take();
+ const action=options.action||'submit_'+options.kind;
+ if(entry&&entry.kind===options.kind&&entry.action===action&&!options.sitekey)return entry.control.take();
  const control=challenge(options);try{return await control.take();}finally{control.dispose();}
 }
 export function releaseCaptcha(host){const entry=forms.get(host);entry?.control.dispose();forms.delete(host);}

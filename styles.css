@@ -1,17 +1,31 @@
+/* Compact copy control in the confession card corner; icon matches the report mark size. */
+.story{position:relative}
+.story>.action.share-story-corner{position:absolute;top:4px;right:4px;z-index:3;display:inline-flex;align-items:center;justify-content:center;margin:0;padding:2px 4px;border:0;border-radius:0;background:transparent;color:var(--gold);font-family:Arial,sans-serif;font-size:13px;font-weight:normal;line-height:1;box-shadow:none}
+.story>.action.share-story-corner:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Keep the menu's visible focus highlight only on the All Confessions entry. */
+.side-menu button:focus-visible:not(.nav-button[data-view="new"]){outline:0;box-shadow:none}
+.side-menu .nav-button[data-view="new"].menu-open-focus{outline:0;border:2px solid var(--gold);border-radius:5px;box-sizing:border-box;}
+
 /* Original site rules live verbatim in original.css. New functional controls only. */
-:root{color-scheme:dark}button,input,textarea,select{font-family:Arial,sans-serif}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:3px}[hidden]{display:none}.load-more[hidden]{display:none}
+:root{color-scheme:dark}button,input,textarea,select{font-family:Arial,sans-serif}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:3px}[hidden]{display:none}
 .body-text{white-space:pre-wrap;overflow-wrap:anywhere}.story .story-content{margin:0}.story-nickname{font-size:12px;color:var(--muted);margin-bottom:1px}
 
 .comment-card{display:block;text-align:left;width:100%;border:0;background:transparent;color:var(--text);font-weight:normal;padding:0;margin:0}.comment-card .body-text{margin:0}.story-meta{font-size:11px;color:var(--muted);margin:0 0 1px}.avatar{display:none}.story-meta time{margin-left:8px}.context-menu{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.replies{margin-left:12px;padding-left:8px}.comments-area{margin-top:2px;padding-top:2px}.comment-title{cursor:default}
-.form{margin:5px 0 8px}.form label{display:block;font-size:12px;color:var(--gold);margin:0 0 2px}
+.form{margin:5px 0 8px}.form.discussion-form{width:calc(min(86vw,310px) - 20px);max-width:100%}.form label{display:block;font-size:12px;color:var(--gold);margin:0 0 2px}
 .form label textarea,.form input{display:block;margin-top:1px;background:transparent;color:var(--text);border:0;border-bottom:1px solid var(--gold);border-radius:0;box-shadow:none;padding:4px 2px;font:inherit;outline:0}
-.form label textarea:not(.discussion-textarea){width:65vw;max-width:100%;height:30px;min-height:30px;resize:vertical}.form label textarea.discussion-textarea{width:65vw;max-width:100%;height:32px;min-height:32px;max-height:32px;resize:none;padding:1px 2px}.form input{width:45vw;max-width:100%;min-height:34px}
+.form label textarea:not(.discussion-textarea){display:block;box-sizing:border-box;width:calc(100% - 85px);max-width:100%;height:30px;min-height:30px;resize:none;overflow:hidden;appearance:none;-webkit-appearance:none}.form label textarea.discussion-textarea{width:65vw;max-width:100%;height:32px;min-height:32px;max-height:32px;resize:none;padding:1px 2px}.form input{width:45vw;max-width:100%;min-height:34px}
 .form label textarea:focus,.form input:focus{border-bottom-color:var(--gold-soft);outline:0}
 .form .row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:5px}.form .hint{margin:4px 0}
 .form select{display:block;width:65vw;max-width:100%;margin-top:3px;background:transparent;color:var(--gold);border:0;border-bottom:1px solid var(--gold);border-radius:0;padding:7px 2px;font:inherit}
-.side-menu .form>label:first-child{font-size:12px}.side-menu .form textarea{font-size:14px}
-.text-button{background:transparent;color:var(--gold);font-size:12px;font-weight:normal;padding:6px 0;margin:9px 12px 0 0}.error{color:#f3a29b}.preview{position:fixed;right:10px;bottom:8px;z-index:900;background:#191919e8;color:var(--muted);font-size:10px;padding:3px 8px;pointer-events:none}body.menu-open{overflow:hidden}
-dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;border:1px solid #625332;border-radius:12px;padding:22px;background:var(--panel);color:var(--text)}dialog::backdrop{background:#000b}.dialog-heading{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}.dialog-heading h2{margin:0}.icon-button{background:transparent;color:var(--muted);font-size:25px;font-weight:normal;margin:0;padding:0 6px}#toast{position:fixed;z-index:1100;bottom:26px;left:50%;transform:translateX(-50%);max-width:calc(100% - 28px);width:max-content;background:#302819;padding:12px 18px;color:var(--text);font-size:13px}#toast:empty{display:none}.admin{max-width:800px;margin:40px auto;padding:20px}.admin-tools{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.brand{font-size:30px;color:var(--gold);font-weight:bold;text-decoration:none}
+/* Sidebar actions: the confession composer opens in the shared dialog. */
+.side-menu .panel h2 .compose-trigger{display:block;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#c9ad70;font-size:18px;font-weight:850;line-height:1.25;text-align:left;-webkit-text-stroke:0 transparent;text-shadow:none;box-shadow:none}
+.side-menu .panel h2 .compose-trigger:hover{color:#d8c18a;background:transparent;text-shadow:none}
+.menu-footer-links{display:flex;align-items:center;gap:8px;width:100%;margin-top:8px}
+.menu-footer-links .text-button{flex:1 1 0;min-width:0;margin:0;padding:5px 0;text-align:center;font-size:11px;white-space:nowrap}
+.side-menu .private-panel .chat-entry-button{display:block;width:calc(100% - 18px);margin:8px auto 0;padding:11px 8px;border:1px solid #e5c77d;border-radius:5px;background:linear-gradient(135deg,#8d6b2f 0%,#f7e4a4 17%,#c69d4b 38%,#fff1bd 52%,#b48735 73%,#f2d88f 100%);color:#17130a;font-size:14px;font-weight:900;letter-spacing:.16em;text-align:center;text-shadow:0 1px 0 rgba(255,255,255,.34);box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -2px 4px rgba(80,49,8,.28),0 4px 12px rgba(0,0,0,.42)}
+.side-menu .private-panel .chat-entry-button:hover{background:linear-gradient(135deg,#a17a37 0%,#ffedb2 17%,#d5ad5c 38%,#fff7d8 52%,#c19745 73%,#f9e3a0 100%);color:#090806}.error{color:#f3a29b}.preview{position:fixed;right:10px;bottom:8px;z-index:900;background:#191919e8;color:var(--muted);font-size:10px;padding:3px 8px;pointer-events:none}body.menu-open{overflow:hidden}
+dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;border:1px solid #625332;border-radius:12px;padding:22px;background:var(--panel);color:var(--text)}dialog::backdrop{background:#000b}.dialog-heading{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}.dialog-heading h2{margin:0}.icon-button{background:transparent;font-size:25px;font-weight:normal}#toast{position:fixed;z-index:1100;bottom:26px;left:50%;transform:translateX(-50%);max-width:calc(100% - 28px);width:max-content;background:#302819;padding:12px 18px;color:var(--text);font-size:13px}#toast:empty{display:none}.admin{max-width:800px;margin:40px auto;padding:20px}.admin-tools{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.brand{font-size:30px;color:var(--gold);font-weight:bold;text-decoration:none}
 @media(prefers-reduced-motion:reduce){body::before,body::after,*,*::before,*::after{transition:none}}
 .captcha-check{max-width:100%;margin-top:8px}.admin #totp-qr{display:block;max-width:100%;height:auto;background:white;margin:12px 0}.admin #totp-open{display:block;width:fit-content;margin:12px 0}.admin #totp-secret{max-width:100%}.admin #logout{margin-bottom:16px}
 
@@ -69,20 +83,33 @@ dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;bo
 .story-actions>.action.report.reported,.comment-actions>.action.comment-report.reported{color:#ed5555}
 .story-actions>.action-spacer,.comment-actions>.action-spacer{flex:1 1 auto;min-width:4px;height:1px;background:transparent;border:0;padding:0;margin:0}
 
+/* Discreet comment reactions: centered in the flexible space between replies and report. */
+.comment-reaction-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:32px}
+.comment-reaction-wrap>.comment-reaction-trigger{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:0;width:32px;height:32px;margin:0;padding:4px 5px;border:0;border-radius:0;background:transparent;color:var(--gold);font-size:16px;line-height:1;opacity:.58;box-shadow:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.comment-reaction-wrap>.comment-reaction-trigger::after{content:"";position:absolute;left:50%;top:50%;width:32px;height:44px;transform:translate(-50%,-50%)}
+.comment-reaction-wrap>.comment-reaction-trigger:hover,.comment-reaction-wrap>.comment-reaction-trigger:focus-visible,.comment-reaction-wrap>.comment-reaction-trigger[aria-expanded="true"]{opacity:1;color:var(--gold-soft);text-shadow:0 0 6px rgba(255,218,104,.35)}
+.comment-reaction-menu{position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);z-index:25;display:flex;align-items:center;justify-content:center;gap:3px;width:max-content;max-width:calc(100vw - 24px);padding:7px 8px;border:1px solid rgba(218,183,101,.72);border-radius:9px;background:linear-gradient(135deg,#17140e 0%,#292114 52%,#17140e 100%);box-shadow:0 7px 20px rgba(0,0,0,.62),inset 0 0 0 1px rgba(255,224,157,.08)}
+.comment-reaction-option{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:34px;margin:0;padding:2px;border:0;border-radius:6px;background:transparent;color:var(--gold);font-size:20px;line-height:1;box-shadow:none}
+.comment-reaction-option:hover,.comment-reaction-option[aria-pressed="true"]{background:rgba(218,183,101,.16);box-shadow:inset 0 0 0 1px rgba(218,183,101,.35)}
+.comment-actions>.action-spacer{flex-basis:0}
+
 /* Inline report menu: gold and ivory highlights with readable dark text. */
 .report-menu{position:absolute;right:0;bottom:calc(100% + 5px);z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:124px;max-width:min(92vw,360px);padding:8px 12px;border:0;border-radius:8px;background:radial-gradient(ellipse at 14% 22%,rgba(255,248,218,.96) 0 7%,transparent 26%),radial-gradient(ellipse at 84% 76%,rgba(214,177,94,.9) 0 8%,transparent 31%),linear-gradient(118deg,#d9c58f 0%,#fff9e9 28%,#b99143 53%,#f6edda 78%,#c5a35c 100%);box-shadow:0 8px 22px rgba(0,0,0,.42);color:#17130a}
 .report-option,.report-more,.report-send{flex:0 0 auto;margin:0;padding:5px 3px;border:0;border-radius:0;background:transparent;color:#241b0a;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:none}
 .report-option:hover,.report-more:hover,.report-send:hover{background:transparent;color:#000}
-.report-more{font-size:17px;letter-spacing:2px}.report-custom{display:flex;align-items:center;gap:8px;min-width:0}.report-custom[hidden]{display:none}
-.report-custom textarea{width:min(34vw,150px);min-width:70px;min-height:28px;max-height:70px;resize:vertical;margin:0;padding:5px 2px;border:0;border-bottom:1px solid #6d5420;border-radius:0;background:transparent;color:#17130a;font:inherit;font-size:12px;outline:0}
+.report-more{position:relative;font-size:17px;letter-spacing:2px}.report-more::after{content:"";position:absolute;left:100%;top:0;width:18px;height:100%}.report-custom{display:flex;align-items:center;gap:8px;min-width:0}.report-custom[hidden]{display:none}
+.report-custom textarea{box-sizing:border-box;width:min(34vw,150px);min-width:70px;height:28px;min-height:28px;max-height:70px;overflow:hidden;resize:none;margin:0;padding:5px 2px;border:0;border-bottom:1px solid #6d5420;border-radius:0;background:transparent;color:#17130a;font:inherit;font-size:12px;outline:0}
 .report-custom textarea::placeholder{color:#493a1b;opacity:.8}.report-custom textarea:focus{border-bottom-color:#17130a;outline:0}.report-send{font-size:11px}
 
 
 /* Nickname field and submit action share one row; the submit button sits to the right of the gold name underline. */
 .form .identity-row{display:flex;align-items:flex-end;gap:12px;margin-top:5px;min-width:0}
 .form .identity-row>label{flex:0 1 45vw;width:45vw;max-width:45vw;min-width:0;margin:0}
-.form .identity-row input{width:100%;max-width:100%;min-height:18px;height:18px;margin-top:0;padding:0 2px;line-height:14px}
+.form .identity-row input{box-sizing:border-box;width:92.857142857%;max-width:100%;min-height:18px;height:18px;margin-top:0;padding:0 2px;line-height:14px}
 .form .identity-row>button{flex:0 0 auto;width:auto;margin:0 0 2px;white-space:nowrap}
+.form .identity-row>button.send-confession{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1;white-space:normal}
+
+
 
 /* Compact entries on the private My Comments page only. */
 .my-comment-entry{padding:5px 0;margin-bottom:3px}
@@ -132,3 +159,158 @@ dialog{max-width:560px;width:calc(100% - 28px);max-height:90dvh;overflow:auto;bo
 :is(.story-actions>.action.favorite,.comment-actions>.comment-heart).selected[data-heart-style="38"]{--heart-color:#ffebaa;--heart-glow:0 0 6px rgba(255,232,153,0.72),0 0 30px rgba(255,205,70,0.66),0 0 24px rgba(255,184,30,.42)}
 :is(.story-actions>.action.favorite,.comment-actions>.comment-heart).selected[data-heart-style="39"]{--heart-color:#ffe18b;--heart-glow:0 0 8px rgba(255,232,153,0.72),0 0 30px rgba(255,205,70,0.66),0 0 24px rgba(255,184,30,.42)}
 :is(.story-actions>.action.favorite,.comment-actions>.comment-heart).selected[data-heart-style="40"]{--heart-color:#fff7da;--heart-glow:0 0 10px rgba(255,232,153,0.72),0 0 30px rgba(255,205,70,0.66),0 0 24px rgba(255,184,30,.42)}
+:is(.story-actions>.action.favorite,.comment-actions>.comment-heart).selected[data-heart-style="41"]{color:transparent;background-image:linear-gradient(115deg,#ff3030 0%,#ff9d24 17%,#ffe34d 33%,#38c85a 50%,#2788ff 67%,#7650db 83%,#ef55c8 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 5px rgba(255,255,255,.72)) drop-shadow(0 0 10px rgba(125,91,255,.5))}
+
+/* Small-screen layout: keep discussion controls and composers inside the viewport. */
+@media(max-width:600px){
+ body{padding-right:10px}
+ #main,main,.story,.comment,.comment-card,.inline-thread,.thread-replies{min-width:0;max-width:100%}
+ .story-actions,.comment-actions{gap:5px;flex-wrap:wrap}
+ .vote-controls{gap:8px}
+ 
+ .form.discussion-form{width:calc(min(86vw,310px) - 18px)}
+ .form label textarea:not(.discussion-textarea),
+ .form label textarea.discussion-textarea{width:100%;max-width:100%}
+ .form .identity-row{gap:8px}
+ .form .identity-row>label{flex:1 1 0;width:auto;max-width:none}
+ .form .identity-row input{box-sizing:border-box;width:92.857142857%;min-height:28px;height:28px}
+ .form .identity-row>button{max-width:42%;white-space:normal}
+ .form .row{flex-wrap:wrap}
+ .daily-tab{font-size:13px}
+ dialog{padding:16px}
+}
+
+
+/* Compact, borderless vertical feed sorting controls beneath the chat entry. */
+.menu-sort{width:calc(100% - 18px);margin:10px auto 0}
+.menu-sort-label{margin:0 0 5px;color:var(--gold);font-size:12px;line-height:1.3}
+.menu-sort-options{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.menu-sort-option{display:flex;align-items:center;justify-content:flex-start;min-width:0;min-height:30px;margin:0;padding:3px 0;border:0;border-radius:0;background:transparent;color:var(--gold);font-size:17px;line-height:1;box-shadow:none}
+.menu-sort-option[data-feed-sort="random"]{font-size:12px;letter-spacing:.02em}
+.menu-sort-option:hover{border:0;background:transparent;color:var(--gold-soft);text-shadow:0 0 6px rgba(255,218,104,.28)}
+.menu-sort-option.active{border:0;background:transparent;color:var(--gold-soft);box-shadow:none;text-shadow:0 0 7px rgba(255,218,104,.55)}
+
+/* Reserved sidebar banner for a future Ispovesti.ba partner. */
+.partner-banner-placeholder{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:calc(100% - 18px);min-height:88px;margin:14px auto 8px;padding:11px 9px;border:1px solid #d9b765;border-radius:7px;background:linear-gradient(112deg,#6e4b1e 0%,#b88b3e 16%,#f5dfa0 34%,#c79a49 52%,#fff0bd 67%,#9b702c 84%,#e6c779 100%);color:#211706;text-align:center;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.62),inset 0 -3px 7px rgba(76,45,7,.3),0 4px 14px rgba(0,0,0,.4);position:relative;overflow:hidden}
+.partner-banner-placeholder::before{content:"";position:absolute;inset:4px;border:1px solid rgba(255,248,220,.48);border-radius:4px;pointer-events:none}
+.partner-banner-kicker{font-size:9px;font-weight:900;letter-spacing:.24em;color:#4b3513}
+.partner-banner-title{font-size:16px;font-weight:900;line-height:1.15;text-shadow:0 1px 0 rgba(255,255,255,.45)}
+.partner-banner-note{font-size:9px;font-weight:700;letter-spacing:.03em;color:#493516}
+
+
+/* Dedicated confession view: retain the existing dark-and-gold atmosphere without adding a frame. */
+.direct-story{margin-top:2px}
+.direct-story-back{display:inline-block;margin:0 0 12px;padding:0;border:0;background:transparent;color:var(--gold);font-size:13px;font-weight:700;box-shadow:none}
+.direct-story-back:hover{background:transparent;color:var(--gold-soft)}
+
+/* Site navigation gutter and menu trigger belong to the site shell, not chat. */
+html,body{touch-action:pan-y pinch-zoom}body{padding-left:max(32px,env(safe-area-inset-left))}
+#menu-toggle,body.menu-open #menu-toggle{position:fixed;z-index:1002;left:0;top:max(10px,env(safe-area-inset-top));transform:none;width:44px;height:44px;padding:0;margin:0;border:0;border-radius:0 0 8px 0;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);color:var(--gold);font-size:21px;font-weight:normal;line-height:1;letter-spacing:-2.2px;touch-action:manipulation}
+#menu-toggle::after{content:"";position:absolute;inset:0;width:32px;height:44px}
+body.menu-open #menu-toggle{display:none}
+.comment.pending{opacity:.78}
+.comment-pending{color:var(--muted);font-size:11px}
+
+/* Compact comment-count control opens only the comment composer, never the discussion list. */
+.story-actions>.comment-entry-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:0;margin:0;padding:4px 5px;border:0;border-radius:0;background:transparent;color:var(--gold);font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:none}
+.story-actions>.comment-entry-button:hover,.story-actions>.comment-entry-button[aria-expanded="true"]{background:transparent;color:var(--gold-soft);text-shadow:0 0 6px rgba(255,218,104,.32)}
+.story-actions>.comment-entry-button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.comment-compose-area:not([hidden]){margin-top:8px}
+.comment-compose-area .discussion-form{margin-top:0}
+
+ 
+/* Floating quick-compose control: visible only while the sidebar is closed. */
+#quick-compose{position:fixed;z-index:999;left:0;top:max(58px,calc(env(safe-area-inset-top) + 48px));display:flex;align-items:center;justify-content:center;width:44px;height:38px;margin:0;padding:6px;border:0;border-radius:0;background:transparent;color:var(--gold);box-shadow:none;touch-action:manipulation}
+#quick-compose svg{display:block;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#quick-compose:hover{background:transparent;color:var(--gold-soft)}
+#quick-compose:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+body.menu-open #quick-compose{display:none}
+
+
+/* The reaction picker is a hidden discovery hotspot; only the community's
+   leading reaction remains visible. */
+.comment-reaction-wrap{position:relative;min-width:32px;width:32px;height:32px}
+.comment-reaction-indicator{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;font-size:16px;line-height:1;pointer-events:none}
+.comment-reaction-wrap>.comment-reaction-trigger{position:absolute;inset:0;width:32px;height:32px;min-width:32px;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:transparent;opacity:0;box-shadow:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.comment-reaction-wrap>.comment-reaction-trigger::after{content:"";position:absolute;inset:-6px}
+.comment-reaction-wrap>.comment-reaction-trigger:hover,
+.comment-reaction-wrap>.comment-reaction-trigger:active,
+.comment-reaction-wrap>.comment-reaction-trigger[aria-expanded="true"]{background:transparent;color:transparent;opacity:0;box-shadow:none;text-shadow:none}
+.comment-reaction-wrap>.comment-reaction-trigger:focus-visible{outline:1px solid rgba(218,183,101,.5);outline-offset:2px}
+
+
+/* Accessible text-size controls directly beneath the quick-compose pen. */
+#font-size-controls{position:fixed;z-index:999;left:0;top:max(99px,calc(env(safe-area-inset-top) + 89px));display:flex;flex-direction:column;align-items:stretch;gap:2px;width:44px;margin:0;padding:0}
+#font-size-controls button{display:flex;align-items:center;justify-content:center;width:44px;height:27px;min-height:27px;margin:0;padding:0;border:0;border-radius:0 6px 6px 0;background:#111;color:var(--gold);font-size:15px;font-weight:700;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.35);touch-action:manipulation}
+#font-size-controls button:hover{background:#222;color:var(--gold-soft)}
+#font-size-controls button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+body.menu-open #font-size-controls{display:none}
+
+
+/* Place the existing gold menu banner above the masthead; all page content follows beneath it. */
+.site-header{padding-top:8px}
+.site-header>.partner-banner-placeholder{width:100%;max-width:760px;min-height:88px;margin:0 auto 12px}
+
+/* Floating controls: force transparent surfaces, including browser and pseudo-element painting. */
+button#menu-toggle,
+button#menu-toggle:hover,
+button#menu-toggle:active,
+button#menu-toggle:focus,
+button#menu-toggle:focus-visible,
+body.menu-open button#menu-toggle,
+#quick-compose,
+#quick-compose:hover,
+#quick-compose:active,
+#font-size-controls button,
+#font-size-controls button:hover,
+#font-size-controls button:active,
+#font-size-controls button:focus,
+#font-size-controls button:focus-visible{
+ background:transparent!important;
+ background-color:transparent!important;
+ background-image:none!important;
+ box-shadow:none!important;
+ filter:none!important;
+ -webkit-appearance:none!important;
+ appearance:none!important;
+}
+button#menu-toggle::before,
+button#menu-toggle::after,
+#quick-compose::before,
+#quick-compose::after,
+#font-size-controls button::before,
+#font-size-controls button::after{
+ background:transparent!important;
+ box-shadow:none!important;
+}
+
+/* Keep the complete masthead visible while the confession feed scrolls. */
+.site-header{
+ position:sticky;
+ top:0;
+ z-index:1001;
+ isolation:isolate;
+ background:#090909;
+ padding:8px 10px 12px;
+ border-bottom:1px solid rgba(214,177,94,.16);
+}
+.site-header>.partner-banner-placeholder{
+ width:100%;
+ max-width:760px;
+ min-height:88px;
+ margin:0 auto 8px;
+}
+.site-header h1{margin:0}
+.site-header p{margin:7px auto 0}
+
+/* Locally saved submissions: black-and-gold preview recovery panel. */
+.pending-submissions{margin:12px 0;padding:14px;border:1px solid rgba(255,218,104,.28);border-radius:12px;background:#171717;color:#f3f0e8}
+.pending-submissions[hidden]{display:none}
+.pending-submissions>h2{margin:0 0 6px;color:#ffda68;font-size:1rem}
+.pending-submissions-note{margin:0 0 10px;color:#c8c1b2;font-size:.88rem}
+.pending-submission-list{display:grid;gap:10px}
+.pending-submission{padding:10px;border:1px solid rgba(255,255,255,.1);border-radius:9px}
+.pending-submission>strong{color:#ffda68}
+.pending-submission-text{margin:5px 0 9px;white-space:pre-wrap;overflow-wrap:anywhere;color:#eee}
+.pending-submission-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pending-discard{color:#c9c1b5}

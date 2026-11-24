@@ -1,4 +1,4 @@
-import {authClient,isLocal} from '../api.js?v=20261119-live-align1';
+import {authClient,isLocal} from '../api.js?v=room3';
 let localPending;
 async function localSession(){
  if(!localPending)localPending=fetch('/api/chat-session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',credentials:'same-origin'}).then(async r=>{if(!r.ok)throw Error('Anonimna prijava nije dostupna.');}).catch(e=>{localPending=null;throw e;});
@@ -8,11 +8,11 @@ export async function chatRequest(action,args={},admin=false){
  const headers={'Content-Type':'application/json'};let url;
  if(isLocal){await localSession();url='/api/chat';}
  else{
-  const config=window.ISPOVESTI_CONFIG||{};const environment=config.chatEnvironment;if(!['test','live'].includes(environment))throw Error('Chat okruženje nije podešeno.');
+  const config=window.ISPOVESTI_CONFIG||{};const environment=config.chatEnvironment;if(environment!=='test'&&environment!=='live')throw Error('Chat okruženje nije podešeno.');
   const sb=authClient(admin);let {data,error}=await sb.auth.getSession();if(error)throw error;
   if(!data.session&&!admin){const signed=await sb.auth.signInAnonymously();if(signed.error)throw signed.error;data=signed.data;}
   if(!data.session)throw Error('Prvo se prijavi kao administrator.');
-  headers.Authorization='Bearer '+data.session.access_token;headers.apikey=config.publishableKey;url=config.supabaseUrl+'/functions/v1/chat-'+(environment==='live'?'live':'test')+'-api';
+  headers.Authorization='Bearer '+data.session.access_token;headers.apikey=config.publishableKey;url=config.supabaseUrl+'/functions/v1/'+(environment==='test'?'chat-test-api':'chat-live-api');
  }
  const r=await fetch(url,{method:'POST',headers,body:JSON.stringify({action,args}),credentials:'same-origin',signal:AbortSignal.timeout(15000),cache:'no-store'});const d=await r.json();
  if(!r.ok){const e=Error(d.error||'Chat trenutno nije dostupan.');e.status=r.status;throw e;}return d;
