@@ -1,13 +1,14 @@
 import {authClient,request} from '../api.js?v=admin-panel-v1';
 import {chatRequest} from '../chat/client.mjs?v=admin-panel-v1';
 const $=s=>document.querySelector(s);
+const requestedView=new URLSearchParams(window.location.search).get('view');
 const loginPanel=$('#login-panel'),app=$('#admin-app'),loginForm=$('#login-form'),codeForm=$('#email-code-form');
 const loginStatus=$('#login-status'),appStatus=$('#app-status'),viewContent=$('#view-content');
 const viewTitle=$('#view-title'),viewDescription=$('#view-description'),viewKicker=$('#view-kicker'),signOut=$('#sign-out');
 const adminClient=authClient(true);
 let currentSession=null,emailChallenge=null,currentView='dashboard',chatMessages=[],oldestChatId=null;
-const labels={dashboard:'Kontrolna tabla',confessions:'Ispovijesti',comments:'Komentari i odgovori',reports:'Prijave',chat:'Chat',stats:'Statistika',analytics:'Analitika posjetilaca',audit:'Evidencija radnji',queue:'Red objava'};
-const descriptions={dashboard:'Sažetak stanja sajta, sadržaja i aktivnosti zajednice.',confessions:'Pregled, pretraga, uklanjanje i vraćanje ispovijesti.',comments:'Pregled komentara i odgovora, uz kontekst i moderatorske radnje.',reports:'Prijave sadržaja zajednice i poruka iz anonimnog chata.',chat:'Arhiva poruka, anonimni profili i postojeće moderatorske radnje.',stats:'Svi trenutno raspoloživi mjerljivi pokazatelji iz žive baze.',analytics:'Anonimno zadržavanje posjetilaca nakon 10, 20 i 30 dana.',audit:'Hronološka evidencija administratorskih radnji iz zajednice i chata.',queue:'Sadržaj na čekanju i kontrola pauziranja automatskog objavljivanja.'};
+const labels={dashboard:'Kontrolna tabla',confessions:'Ispovijesti',comments:'Komentari i odgovori',reports:'Prijave',chat:'Arhiva chata',stats:'Statistika',analytics:'Analitika posjetilaca',audit:'Evidencija radnji',queue:'Red objava'};
+const descriptions={dashboard:'Sažetak stanja sajta, sadržaja i aktivnosti zajednice.',confessions:'Pregled, pretraga, uklanjanje i vraćanje ispovijesti.',comments:'Pregled komentara i odgovora, uz kontekst i moderatorske radnje.',reports:'Prijave sadržaja zajednice i poruka iz anonimnog chata.',chat:'Kompletna arhiva poruka, anonimni profili i moderatorske radnje na jednom mjestu.',stats:'Svi trenutno raspoloživi mjerljivi pokazatelji iz žive baze.',analytics:'Anonimno zadržavanje posjetilaca nakon 10, 20 i 30 dana.',audit:'Hronološka evidencija administratorskih radnji iz zajednice i chata.',queue:'Sadržaj na čekanju i kontrola pauziranja automatskog objavljivanja.'};
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;};
 const fmt=value=>Number(value||0).toLocaleString('sr-Latn-RS');
 const date=value=>value?new Date(value).toLocaleString('sr-Latn-RS',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
@@ -113,17 +114,21 @@ async function renderReports(offset){
 }
 async function renderChat(){
  setStatus('Učitavam chat arhivu i profile…');viewContent.replaceChildren();chatMessages=[];oldestChatId=null;
- viewContent.append(el('div','toolbar','Postojeće serverske moderatorske radnje; istorija je učitana iz chat_test.'));
+ viewContent.append(el('div','toolbar',window.ISPOVESTI_CONFIG?.chatEnvironment==='test'?'Arhiva i moderatorske radnje · testno okruženje.':'Arhiva i moderatorske radnje · produkcijsko okruženje.'));
  const profilesTitle=el('h3','','Anonimni profili'),profiles=el('div','profile-grid');viewContent.append(profilesTitle,profiles);
  const banForm=el('form','inline-form'),target=el('input'),hours=el('input'),reason=el('input'),ban=el('button','','Blokiraj nalog');target.placeholder='Javni ID anonimnog profila';target.required=true;hours.type='number';hours.min='1';hours.max='720';hours.value='24';hours.required=true;reason.placeholder='Razlog blokade';ban.type='submit';banForm.append(target,hours,reason,ban);viewContent.append(banForm);
  banForm.addEventListener('submit',async e=>{e.preventDefault();if(!confirm('Blokirati ovaj chat nalog?'))return;await chatRequest('admin_ban',{target:target.value.trim(),hours:Number(hours.value),reason:reason.value.trim()},true);setStatus('Nalog je blokiran.');});
  const unbanForm=el('form','inline-form'),unbanId=el('input'),unban=el('button','secondary','Ukloni blokadu');unbanId.placeholder='Javni ID za uklanjanje blokade';unbanId.required=true;unban.type='submit';unbanForm.append(unbanId,unban);viewContent.append(unbanForm);
- const title=el('h3','','Arhiva chat poruka'),list=el('div','list'),older=actionButton('Učitaj starije poruke',loadOlderChat,'secondary small');viewContent.append(title,list,older);
- try{const [p,m]=await Promise.all([chatRequest('admin_profiles',{},true),chatRequest('admin_messages',{},true)]);if(currentView!=='chat')return;
-  if(!(p.items||[]).length)profiles.append(empty('Nema anonimnih profila.'));
+ const title=el('h3','','Arhiva chat poruka'),list=el('div','list'),older=actionButton('Učitaj starije poruke',loadOlderChat,'secondary small'),search=searchInput('Pretraži poruke, nadimak ili ID…',q=>filterList(list,q));viewContent.append(title,search,list,older);
+ try{
+  const profileRequest=chatRequest('admin_profiles',{},true).catch(error=>({items:[],error}));
+  const [m,p]=await Promise.all([chatRequest('admin_messages',{},true),profileRequest]);
+  if(currentView!=='chat')return;
+  if(!(p.items||[]).length)profiles.append(empty(p.error?'Lista profila trenutno nije dostupna.':'Nema anonimnih profila.'));
   for(const item of (p.items||[])){const card=el('article','profile-card');card.dataset.search=[item.nickname,item.id].join(' ').toLowerCase();card.append(el('strong','',item.nickname||'Anonimni učesnik'),el('p','meta','Javni ID: '+item.id),el('p','meta','Avatar: '+(item.avatar||'—')));card.append(actionButton('Kopiraj ID',()=>navigator.clipboard.writeText(item.id),'secondary small'));profiles.append(card);}
-  chatMessages=m.items||[];oldestChatId=chatMessages.length?chatMessages[chatMessages.length-1].id:null;renderChatMessages(list,chatMessages);older.hidden=chatMessages.length<100;setStatus('Učitano '+chatMessages.length+' poruka i '+(p.items||[]).length+' profila.');
- }catch(e){list.append(empty(e.message||'Chat arhiva nije dostupna.'));setStatus('Chat administracija nije dostupna.');}
+  chatMessages=m.items||[];oldestChatId=chatMessages.length?chatMessages[chatMessages.length-1].id:null;renderChatMessages(list,chatMessages);older.hidden=chatMessages.length<100;
+  setStatus('Učitano '+chatMessages.length+' poruka i '+(p.items||[]).length+' profila.'+(p.error?' Arhiva radi; lista profila trenutno nije dostupna.':''));
+ }catch(e){list.append(empty(e.message||'Chat arhiva nije dostupna.'));setStatus('Chat arhiva trenutno nije dostupna.');}
 }
 function renderChatMessages(list,items){list.replaceChildren();if(!items.length){list.append(empty('Nema poruka.'));return;}for(const m of items){const c=el('article','message-card');c.dataset.search=[m.body,m.generated_nickname,m.id].join(' ').toLowerCase();const head=el('div','card-head');head.append(el('strong','',m.generated_nickname||'Anonimni učesnik'),pill(m.removed?'Uklonjena':'Sačuvana',m.removed?'removed':''));c.append(head,el('p','meta','Poruka #'+m.id+' · '+date(m.created_at)+' · '+(m.reports?.length||0)+' prijava'),el('p','card-body',m.body));const actions=el('div','card-actions');actions.append(actionButton(m.removed?'Vrati poruku':'Ukloni poruku',async()=>{if(!m.removed&&!confirm('Ukloniti ovu poruku iz javnog chata?'))return;await chatRequest(m.removed?'admin_restore':'admin_remove',{id:m.id},true);setView('chat');},m.removed?'small':'small danger'));c.append(actions);if(m.reports?.length){const reports=el('div','report-lines');for(const r of m.reports){reports.append(el('p','',reportReasonLabel(r.reason)+' · '+date(r.created_at)));if(r.details)reports.append(el('p','report-detail','Dodatni opis: '+r.details));}c.append(reports);}list.append(c);}}
 async function loadOlderChat(){
@@ -170,7 +175,7 @@ async function renderAnalytics(){
  viewContent.append(el('p','meta','Početak evidentiranja: '+since+'. Identifikator važi samo u istom pregledaču i na istom uređaju; brisanje podataka sajta ili korišćenje drugog uređaja može se prikazati kao novi posjetilac. Analitički zapisi čuvaju se najviše 180 dana.'));
  setStatus('Anonimna analitika je učitana.');
 }
-async function verifyAdmin(session){currentSession=session;await community('admin_session');loginPanel.hidden=true;app.hidden=false;signOut.hidden=false;setView('dashboard');}
+async function verifyAdmin(session){currentSession=session;await community('admin_session');loginPanel.hidden=true;app.hidden=false;signOut.hidden=false;setView(labels[requestedView]?requestedView:'dashboard');}
 async function beginEmailVerification(session){
  currentSession=session;const state=await request('admin_email_status',{},session);if(state.verified){await verifyAdmin(session);return;}
  const started=await request('admin_email_begin',{},session);if(started.limited)throw new Error('Sačekaj najmanje jednu minutu prije novog koda.');
