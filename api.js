@@ -24,11 +24,11 @@ async function ensureCaptchaClearance(host=document.body){
 }
 export function initializeSecurity(){return ensureCaptchaClearance(document.body);}
 export function prepareSubmission(){if(!isPreview&&!isLocal&&!captchaClearanceUid)void ensureCaptchaClearance(document.body).catch(()=>{});}
-let client, sessionPromise;
+let client, adminClient, sessionPromise;
 export function authClient(admin = false) {
   if (isPreview) throw new Error('Administracija je dostupna samo na povezanom testnom ili živom okruženju.');
   if (!config.supabaseUrl || !config.publishableKey || !window.supabase) throw new Error('Veza sa serverom nije podešena.');
-  if (admin) return window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-admin-session', storage: window.sessionStorage } });
+  if (admin) return adminClient ||= window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-admin-session', storage: window.sessionStorage } });
   return client ||= window.supabase.createClient(config.supabaseUrl, config.publishableKey, { auth: { storageKey: 'ispovesti-live-user-session' } });
 }
 async function session() {
