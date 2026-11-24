@@ -1,6 +1,6 @@
-import {chatRequest} from './chat/client.mjs?v=room3';
+import {chatRequest} from './chat/client.mjs?v=20261124-module-singleton1';
 import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
-import { request, authClient, isPreview, isLocal, prepareSubmission, initializeSecurity } from './api.js?v=20261119-instant-cache3';
+import { request, authClient, isPreview, isLocal, prepareSubmission, initializeSecurity } from './api.js?v=20261124-module-singleton1';
 import { listPendingSubmissions, savePendingSubmission, deletePendingSubmission } from './submission-store.mjs';
 const $ = s => document.querySelector(s);
 
