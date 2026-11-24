@@ -462,3 +462,36 @@ begin
   execute v_definition;
 end
 $migration$;
+
+create or replace function community_live.purge_visitor_days()
+returns bigint
+language plpgsql
+set search_path to ''
+as $function$
+declare
+  v_deleted bigint := 0;
+begin
+  if current_user not in ('postgres','service_role') then
+    raise exception 'Zabranjen pristup.' using errcode='42501';
+  end if;
+  delete from community_live.visitor_days
+  where visit_day < (clock_timestamp() at time zone 'UTC')::date - 180;
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end
+$function$;
+
+revoke all on function community_live.purge_visitor_days() from public,anon,authenticated;
+grant execute on function community_live.purge_visitor_days() to service_role;
+
+do $retention$
+begin
+  if not exists(select 1 from cron.job where jobname='community-live-visitor-days-retention') then
+    perform cron.schedule(
+      'community-live-visitor-days-retention',
+      '17 3 * * *',
+      'select community_live.purge_visitor_days();'
+    );
+  end if;
+end
+$retention$;
