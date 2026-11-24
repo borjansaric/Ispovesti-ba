@@ -48,15 +48,18 @@
 - CI run #65 provjerava dodatne indekse i novi test; rezultat se još čeka.
 - Security advisor nakon migracija nije prijavio nove probleme na novim tabelama. Postojeće napomene uključuju isključenu zaštitu od kompromitovanih lozinki i upozorenja za namjerno anonimne/servisne RLS obrasce.
 - Performance advisor je prijavio dvije FK veze bez indeksa u live report/reaction tabelama; migracija #6 ih pokriva.
-- PR #3 je spojen u `main` commitom `605c4bbf81859fd1f0d7bda1aed31796db47b6a7`.
-- GitHub Pages workflow #144 uspješno je prošao live preflight, produkcijski build i deploy; Pages build/deploy workflow #142 takođe je uspješno završen.
+- PR #3 je spojen u `main` commitom `605c4bbf81859fd1f0d7bda1aed31796db47b6a7`; PR #4 je spojen commitom `a6ffdd95d01e41dbc856573cb4fd9a785e365c72`.
+- GitHub Pages Jekyll build/deploy #144 uspješno je objavio sigurni root build; custom preflight/allowlist workflow #146 takođe je prošao.
+- Jekyll artifact nakon hotfixa je pregledan: nema `launch/`, `supabase/`, `tests/`, `scripts/`, `docs/`, Edge Function source-a, recovery sandboxa ni trial-code/test endpointa; `vendor/supabase.js` i odvojeni `/test/` su sačuvani.
 - Live Edge Functions su aktivne: `community-live-api` v6 i `chat-live-api` v2.
 
 ## Završno stanje
 - [x] Šest live SQL migracija primijenjeno i evidentirano pod odgovarajućim verzijama.
 - [x] Obje live Edge Functions deployovane i aktivne.
 - [x] Produkcijski CI prošao.
-- [x] GitHub Pages preflight, build i deploy prošli.
+- [x] GitHub Pages Jekyll build i deploy prošli nakon publikacijskog hotfixa.
+- [x] Custom backend preflight i allowlist provjera prošli.
+- [x] Jekyll artifact pregledan i potvrđeno da ne sadrži backend, SQL, test-suite ni interne dokumente.
 - [x] Preview snapshot i `/test/` ostali netaknuti; testni podaci nisu kopirani u live.
 
 **Trenutno stanje: Ispovesti.ba je objavljen na https://borjansaric.github.io/Ispovesti-ba/.**
