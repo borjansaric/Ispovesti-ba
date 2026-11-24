@@ -1,0 +1,31 @@
+title: Ispovesti.ba
+url: https://borjansaric.github.io
+baseurl: /Ispovesti-ba
+exclude:
+  - .github
+  - .gitignore
+  - README.md
+  - LICENSE
+  - PRODUCTION_PREP.md
+  - package.json
+  - package-lock.json
+  - scripts
+  - tests
+  - launch
+  - supabase
+  - dist
+  - chat/gateway.mjs
+  - live/chat-index.ts
+  - live/recovery-index.ts
+  - admin-recovery/handler.mjs
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - vendor/bundle
+  - vendor/cache
+  - vendor/gems
+  - vendor/ruby
+  - .sass-cache
+  - .jekyll-cache
+  - .bundle
