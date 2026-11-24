@@ -6,6 +6,7 @@ await cp(new URL('vendor/',root),new URL('vendor/',out),{recursive:true});await 
 let chatClient=await readFile(new URL('chat/client.mjs',out),'utf8');
 chatClient=chatClient.replace("(environment==='test'?'chat-test-api':'chat-live-api')","'chat-live-api'");
 chatClient=chatClient.replace("if(environment!=='test'&&environment!=='live')","if(environment!=='live')");
+chatClient=chatClient.split('\\n').filter(line=>!line.startsWith('export const trialCode=')).join('\\n');
 await writeFile(new URL('chat/client.mjs',out),chatClient);
 await copyFile(new URL('chat-admin.html',root),new URL('chat-admin.html',out));await copyFile(new URL('admin.html',root),new URL('admin.html',out));
 await copyFile(new URL('admin-recovery.html',root),new URL('admin-recovery.html',out));
