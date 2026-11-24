@@ -30,3 +30,13 @@ body.menu-open #menu-toggle{letter-spacing:normal;font-size:23px}
 
 /* Keep the active inline discussion clear while dimming the surrounding feed. */
 body.inline-thread-open .site-header,body.inline-thread-open #feed-title,body.inline-thread-open footer,body.inline-thread-open .story:not(.thread-active-story),.thread-active-story>.story-content,.thread-active-story>.story-date,.thread-active-story>.story-nickname,.thread-active-story>.story-actions,.thread-active-story .comment-title,.thread-active-story .comment:not(.thread-active-comment):not(.inline-thread .comment),.thread-active-story .comment-list>.form{filter:blur(3px) brightness(.65)}
+
+/* Expand the three-dot hit area only to the right, without shifting its visible icon. */
+.chat-message-menu>summary{position:relative}
+.chat-message-menu>summary::after{content:"";position:absolute;left:100%;top:0;width:18px;height:100%}
+
+/* Report choices use the reason codes accepted by the live chat SQL contract. */
+.chat-report-options{display:flex;flex-direction:column;gap:2px;margin-top:4px;padding-top:4px;border-top:1px solid #625332}
+.chat-report-options[hidden]{display:none}
+.chat-report-options button{font-size:11px;padding:5px 7px}
+.chat-report-options button:disabled{opacity:.55}
