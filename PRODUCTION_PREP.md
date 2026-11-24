@@ -1,61 +1,59 @@
-# Ispovesti.ba — priprema pune paritetne produkcije
+# Ispovesti.ba — produkcijsko usklađivanje
 
 ## Izvor istine
-- Zaključani testni snapshot: `borjansaric/Ispovesti-ba-preview`, grana `snapshot/ispovesti-preview-2026-11-24`.
+- Zaključani preview: `borjansaric/Ispovesti-ba-preview`, grana `snapshot/ispovesti-preview-2026-11-24`.
 - Snapshot commit: `2b2b6c36df904e2b6d93bb82d246d7fa53fccebb`.
 - Produkcijska pripremna grana: `prepare/production-from-preview-2026-11-24`.
-- Ovaj dokument prati pripremu; ne predstavlja odobrenje za objavu.
+- PR #3: https://github.com/borjansaric/Ispovesti-ba/pull/3
 
 ## Nepromjenjive granice
-- Testni snapshot ostaje netaknut.
-- Produkcijski `main` ostaje netaknut dok se ne završe pregled i odobrenje.
-- Nema automatskog deploya, promjene DNS-a ili povezivanja domena.
-- Nema kopiranja testnih ispovijesti, komentara, poruka, korisnika ili administratorskih podataka u live.
-- Produkcijski klijenti moraju koristiti live API-je i live šeme; testni kodovi i probna prava ne smiju biti dostupni u produkciji.
-- CAPTCHA, autentifikacija, RLS, ograničenja i administratorska zaštita ne smiju biti uklonjeni niti zaobiđeni.
+- Preview snapshot ostaje netaknut.
+- Produkcijski `main` ostaje netaknut do završetka provjera i merge-a.
+- Nema promjene DNS-a ili domena.
+- Nema kopiranja testnih ispovijesti, komentara, chat poruka, korisnika ili administratorskih podataka u live.
+- Postojeće legacy tabele u `public` nisu dirane.
+- CAPTCHA, autentifikacija, RLS, rate limits i administratorska zaštita ostaju aktivni.
 
-## Preneseno na pripremnu granu
-- Frontend i klijentski moduli iz zaključanog preview-a preneseni su u produkcijski root: `index.html`, `app.js`, `api.js`, `captcha.js`, `config.js`, CSS, chat UI/klijent, administratorski UI i zavisni moduli.
-- Produkcijska konfiguracija je prilagođena na `mode: live` i `chatEnvironment: live`.
-- Community API klijent i CAPTCHA konfiguracioni poziv usmjereni su na `community-live-api`; chat klijent bira `chat-live-api`.
-- Live auth storage i lokalna evidencija nedovršenih slanja imaju zasebne live nazive.
-- U javnom početnom HTML-u uklonjen je preview `noindex,nofollow`; administratorske stranice zadržavaju zabranu indeksiranja.
-- Produkcijski review build sada uključuje nove community i chat admin module.
-- Live chat gateway prosljeđuje polje `details` uz prijavu poruke.
+## Frontend i build
+- Preview frontend i klijentski moduli preneseni su u produkcijski root i prilagođeni na `mode: live`, `community-live-api` i `chat-live-api`.
+- Live auth storage i lokalna evidencija nedovršenih slanja imaju odvojene live nazive.
+- CAPTCHA ostaje entry-only: Turnstile se provjerava pri ulasku, a server provjerava clearance pri slanju.
+- Gornji banner slot je sticky i skriva se dok je chat otvoren.
+- Administratorski oporavak je ponovo povezan sa live admin login panelom; CSP dozvoljava Cloudflare Turnstile.
+- Produkcijski chat admin ulaz zadržava postojeći sigurni `live/chat-admin.mjs` modul i arhivski prikaz.
+- Review build gradi javni paket jednom prije testova i iz njega uklanja test API i trial-code generator.
+- `/test/` ostaje zaseban i nije prepisan.
 
-## Pripremljene, ali NEPRIMIJENJENE SQL migracije
-- `20261124173000_chat_live_report_parity.sql`: usklađuje live prijave chata sa preview ugovorom: `hate_speech`, `spam`, `other` i opcioni opis do 500 znakova.
-- `20261124180000_live_entry_captcha_clearance.sql`: dodaje server-side CAPTCHA clearance po anonimnom Auth UID-u i provjeru pri slanju.
-- `20261124190000_live_preview_feature_parity.sql`: priprema live reakcije, privatnu listu mojih ispovijesti, administratorske preglede, analitiku posjeta i obavezni request ID.
-- `20261124200000_live_free_chat_parity.sql`: priprema besplatan zajednički chat kao u preview-u, uz očuvanje aktivnog kupljenog/vlasničkog pristupa i javnu istoriju poruka.
-- Nijedna migracija iz ove pripremne grane nije primijenjena na Supabase.
+## Live SQL migracije — PRIMIJENJENE
+1. `20261124173000_chat_live_report_parity.sql` — chat prijave koriste `hate_speech`, `spam`, `other` i opis do 500 znakova.
+2. `20261124180000_live_entry_captcha_clearance.sql` — server-side CAPTCHA clearance po anonimnom Auth UID-u.
+3. `20261124190000_live_preview_feature_parity.sql` — reakcije, moje ispovijesti, admin read funkcije, analitika posjeta i retention.
+4. `20261124200000_live_free_chat_parity.sql` — besplatan zajednički chat, uz očuvanje aktivnog kupljenog/vlasničkog pristupa i istorije.
+5. `20261124210000_live_community_report_parity.sql` — community prijave prihvataju `hate_speech` i čuvaju opis do 500 znakova; admin pregledi prikazuju opis.
+6. `20261124220000_live_reporting_fk_indexes.sql` — indeksi za nove/usklađene report i reaction FK veze.
 
-## Pripremljen, ali NEOBJAVLJEN backend kod
-- `launch/community-live-api.ts` sada sadrži planirani tok `captcha_init`: provjera postojeće clearance potvrde, Turnstile akcija `app_entry`, upis potvrde i provjera potvrde pri slanju.
-- Live community API sada priprema rute za `track_visit`, `my_confessions` i administratorske read akcije.
-- Chat live SQL migracija priprema besplatan pristup kao u preview-u; chat report ugovor prenosi opis prijave.
-- `chat/gateway.mjs` prosljeđuje `details` za prijave.
-- Edge Functions nisu deployovane; produkcijski endpointi i dalje izvršavaju trenutno deployovane verzije.
+## Live Edge Functions — DEPLOYOVANE
+- `community-live-api`: verzija 6, postojeći `verify_jwt=false` režim zadržan; sada uključuje entry-only CAPTCHA clearance, posjete, moje ispovijesti i admin read rute.
+- `chat-live-api`: verzija 2, postojeći `verify_jwt=false` režim zadržan; koristi `live/chat-index.ts` i `chat/gateway.mjs`, sa preview report ugovorom i besplatnim pristupom.
+- Nisu mijenjani `community-test-api`, `chat-test-api` ni `admin-recovery-live-api`.
 
-## Preostalo prije odobrenja
-1. Uskladiti sve live SQL funkcije i šeme sa funkcijama koje preview frontend koristi: feed sortiranje, reakcije, glasanje, komentari/odgovori, privatne liste, moje ispovijesti, dnevni izbor, analitika posjeta, obavještenja, administratorski pregledi i moderacija.
-2. Pregledati i testirati migracije na izolovanom okruženju prije bilo kakve primjene na live.
-3. Uskladiti chat SQL, administratorske prikaze i izvještaje sa novim UI ugovorom.
-4. Uskladiti community Edge Function sa svim akcijama koje šalje preview klijent; provjeriti autentifikaciju, rate limits, CAPTCHA i dozvoljene origin-e.
-5. Pokrenuti build, sve relevantne testove i statičke provjere; provjeriti da live bundle ne sadrži test API-je, probne kodove ili testne generator-e.
-6. Provjeriti da se `/test/` i postojeće privatne/administratorske stranice ne mijenjaju neželjeno.
-7. Napraviti završni pregled diff-a i tek nakon posebnog odobrenja planirati objavu.
+## Podaci i izolacija
+- `community_live.content`: 0 zapisa; `chat_live.messages`: 0 poruka.
+- `community_test.content`: 77 zapisa; `chat_test.messages`: 26 poruka — nijedan testni zapis nije kopiran u live.
+- Legacy `public` tabele ostale su netaknute: 17 ispovijesti, 25 komentara, 2 glasa i 91 privatna lista.
+- Live CAPTCHA je aktivna; free chat je uključen. Nisu promijenjeni postojeći administratorski nalozi ili korisničke sesije.
 
-## Trenutno stanje
-- [x] Zaključani preview snapshot identifikovan.
-- [x] Produkcijska pripremna grana odvojena od `main`.
-- [x] Glavni frontend i klijentski moduli preneseni.
-- [x] Produkcijska konfiguracija i API destinacije prilagođene.
-- [x] Pripremljene SQL migracije za chat prijave, CAPTCHA clearance, reakcije/analitiku/admin read funkcije i besplatan chat.
-- [x] Pripremljen live community Edge Function kod za CAPTCHA clearance, posjete, moje ispovijesti i administratorske preglede.
-- [ ] Potpun SQL/API paritet za sve funkcije preview-a (uključujući preostale razlike dispatch/chat admin funkcija i bezbjednosnih pravila).
-- [ ] Build i automatski testovi uspješno izvršeni.
-- [ ] Završni pregled i odobrenje.
-- [ ] Deploy (nije odobren niti izvršen).
+## Provjere
+- CI run #64 prošao je kompletan `npm test`.
+- CI run #65 provjerava dodatne indekse i novi test; rezultat se još čeka.
+- Security advisor nakon migracija nije prijavio nove probleme na novim tabelama. Postojeće napomene uključuju isključenu zaštitu od kompromitovanih lozinki i upozorenja za namjerno anonimne/servisne RLS obrasce.
+- Performance advisor je prijavio dvije FK veze bez indeksa u live report/reaction tabelama; migracija #6 ih pokriva.
+- Produkcijski `main` i GitHub Pages još nisu ažurirani. Statički deploy će pokrenuti postojeći `check-live-ready` preflight nakon merge-a.
 
-**Ova grana je radna priprema, ne gotova produkcija.**
+## Preostalo
+1. Sačekati zelen CI za najnoviji commit.
+2. Merge-ovati PR #3.
+3. Sačekati GitHub Pages workflow: preflight, build i deploy.
+4. Provjeriti završni status deploy-a i da live endpointi odgovaraju.
+
+**Trenutno stanje: live SQL i Edge Functions su ažurirani; javni statički sajt još nije objavljen iz pripremne grane.**
