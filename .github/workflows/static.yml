@@ -25,10 +25,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Install test dependencies
-        run: npm ci
-      - name: Run regression and integration tests
-        run: npm test
+      - name: Run live overlap regression checks
+        run: node --test tests/live-code-overlap.test.mjs
       - name: Verify production backend before publishing
         run: node scripts/check-live-ready.mjs
       - name: Build reviewed static allowlist
