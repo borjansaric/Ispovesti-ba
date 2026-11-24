@@ -19,6 +19,13 @@ test('production chat client contains only the live endpoint and no trial genera
   assert.match(client, /environment!=='live'/);
 });
 
+test('custom preflight validates the allowlist without competing for the Pages deployment', async () => {
+  const workflow = await read('../.github/workflows/static.yml');
+  assert.match(workflow, /Verify production backend before publishing/);
+  assert.match(workflow, /Build reviewed static allowlist/);
+  assert.doesNotMatch(workflow, /actions\/deploy-pages|upload-pages-artifact/);
+});
+
 test('robots excludes the separate test site from indexing', async () => {
   const robots = await read('../robots.txt');
   assert.match(robots, /Disallow: \/Ispovesti-ba\/test\//);
