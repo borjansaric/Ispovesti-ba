@@ -25,6 +25,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Install test dependencies
+        run: npm ci
+      - name: Run regression and integration tests
+        run: npm test
       - name: Verify production backend before publishing
         run: node scripts/check-live-ready.mjs
       - name: Build reviewed static allowlist
