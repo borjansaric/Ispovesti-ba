@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 
 test('live chat preparation enables preview-compatible free access and recovery', async () => {
-  const migration = await read('../supabase/migrations/20261124200000_live_free_chat_parity.sql');
+  const migration = await read('../supabase/migrations/20261124175339_live_free_chat_parity.sql');
   const [ui, client, gateway] = await Promise.all([
     read('../chat/ui.mjs'), read('../chat/client.mjs'), read('../chat/gateway.mjs')
   ]);
