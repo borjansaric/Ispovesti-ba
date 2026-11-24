@@ -23,7 +23,15 @@ export async function openChat(){
   const frag=document.createDocumentFragment();for(const m of items){const own=m.sender===profile.id,row=el('article','chat-message '+(own?'own':'other'));row.dataset.id=m.id;
    const avatar=el('span','chat-avatar',avatars[m.avatar]||avatars.ghost);avatar.setAttribute('aria-hidden','true');row.append(avatar,el('p','chat-body',m.body));
    const actions=el('details','chat-message-menu'),more=el('summary','','⋮');more.setAttribute('aria-label','Radnje uz poruku');const menu=el('div','chat-message-actions');
-   menu.append(button('Prijavi',async()=>{const reason=prompt('Razlog: abuse, threat, spam ili other','spam');if(reason){await chatRequest('report',{id:m.id,reason});status.textContent='Prijava je poslata.';actions.open=false;}}));
+   const reportOptions=el('div','chat-report-options');reportOptions.hidden=true;let reportSending=false;
+   async function sendReport(reason){
+    if(reportSending)return;reportSending=true;const controls=[...reportOptions.querySelectorAll('button')];controls.forEach(control=>control.disabled=true);
+    try{await chatRequest('report',{id:m.id,reason});status.textContent='Prijava je zabilježena. Hvala.';reportOptions.hidden=true;actions.open=false;}
+    catch(e){status.textContent=e.message;throw e;}
+    finally{controls.forEach(control=>control.disabled=false);reportSending=false;}
+   }
+   menu.append(button('Prijavi',()=>{reportOptions.hidden=!reportOptions.hidden;}),reportOptions);
+   for(const [label,reason] of [['Uvredljiv sadržaj','abuse'],['Prijetnja','threat'],['Spam','spam'],['Ostalo','other']])reportOptions.append(button(label,()=>sendReport(reason)));
    if(!own)menu.append(button('Sakrij ovog korisnika',async()=>{await chatRequest('block',{target:m.sender});await loadProfile();}));actions.append(more,menu);if(m.id===openId)actions.open=true;row.append(actions);frag.append(row);
   }list.replaceChildren(frag);if(older)list.scrollTop=oldTop+list.scrollHeight-oldHeight;else if(atBottom)list.scrollTop=list.scrollHeight;else list.scrollTop=oldTop;initial=false;
  }
