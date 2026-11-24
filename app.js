@@ -1,6 +1,6 @@
 import {chatRequest} from './chat/client.mjs?v=live1';
 import {collectReplies,replyCounterText} from './chat/thread-model.mjs?v=progressive11';
-import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=20261119-live-align1';
+import { request, isPreview, isLocal, prepareSubmission } from './api.js?v=20261124-live-captcha-config1';
 const $ = s => document.querySelector(s);
 const feed = $('#feed'), dialog = $('#dialog');
 const dailyTabs={confession:$('#daily-confessions'),comment:$('#daily-comments')};
