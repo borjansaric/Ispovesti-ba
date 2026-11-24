@@ -209,7 +209,7 @@ begin
   end if;
   raise exception 'Nepoznata administratorska read radnja.';
 end
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.community_live_my_confessions(p_uid uuid, p_action text, p_args jsonb DEFAULT '{}'::jsonb)
  RETURNS jsonb
@@ -246,7 +246,7 @@ begin
 
   return jsonb_build_object('items', v_items);
 end
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.community_live_submit_check(p_uid uuid, p_action text, p_args jsonb DEFAULT '{}'::jsonb)
  RETURNS jsonb
@@ -287,7 +287,7 @@ begin
     'verified', v_verified
   );
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.community_live_visitor_event(p_uid uuid, p_action text, p_args jsonb DEFAULT '{}'::jsonb)
  RETURNS jsonb
@@ -318,7 +318,7 @@ BEGIN
   END IF;
   RETURN jsonb_build_object('recorded', v_inserted > 0);
 END
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION community_live.content_reaction(p_uid uuid, p_action text, p_args jsonb DEFAULT '{}'::jsonb)
  RETURNS jsonb
@@ -420,7 +420,7 @@ begin
     'locked_at',case when v_row.user_id is null then null else v_row.first_reacted_at + interval '10 minutes' end
   );
 end;
-$function$
+$function$;
 
 
 revoke all on function public.community_live_admin_read(uuid,text,jsonb) from public,anon,authenticated;
